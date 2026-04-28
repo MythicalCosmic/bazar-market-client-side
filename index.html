@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Bazar Market</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#2DB84B',
+              'primary-dark': '#229e3f',
+              'primary-light': '#eaf8ee',
+            },
+            fontFamily: {
+              sans: ['Nunito', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
+
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Nunito', sans-serif;
+        background: #b8d4b8;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      #app {
+        width: 100%;
+        max-width: 390px;
+        min-height: 100vh;
+        background: #f5f7f5;
+        position: relative;
+        overflow-x: hidden;
+        box-shadow: 0 0 80px rgba(0,0,0,0.25);
+      }
+
+      ::-webkit-scrollbar { width: 0; height: 0; }
+      .scroll-x { overflow-x: auto; scrollbar-width: none; }
+      .scroll-x::-webkit-scrollbar { display: none; }
+
+      /* Transitions */
+      .fade-enter-active, .fade-leave-active { transition: opacity 0.18s ease; }
+      .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+      .slide-up-enter-active { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+      .slide-up-leave-active  { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
+      .slide-up-enter-from    { opacity: 0; transform: translateY(40px); }
+      .slide-up-leave-to      { opacity: 0; transform: translateY(40px); }
+
+      .list-enter-active { transition: all 0.25s ease; }
+      .list-leave-active  { transition: all 0.2s ease; }
+      .list-enter-from    { opacity: 0; transform: translateX(-16px); }
+      .list-leave-to      { opacity: 0; transform: translateX(16px); }
+
+      /* Press / card animations */
+      .btn-press { transition: transform 0.12s; cursor: pointer; }
+      .btn-press:active { transform: scale(0.88); }
+      .product-card { transition: transform 0.14s; }
+      .product-card:active { transform: scale(0.96); }
+
+      /* Splash */
+      .splash-bg { background: #2DB84B; }
+
+      /* Banner */
+      .banner-bg { background: linear-gradient(135deg, #2DB84B 0%, #1aac40 55%, #0d8c30 100%); }
+
+      /* Badges */
+      .badge-new { background: linear-gradient(135deg, #2DB84B, #1a9e38); }
+      .badge-hot { background: linear-gradient(135deg, #ff6b35, #e84545); }
+
+      /* Cart FAB pulse */
+      @keyframes pop {
+        0%   { transform: scale(0.4); opacity: 0; }
+        70%  { transform: scale(1.25); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .pop { animation: pop 0.3s cubic-bezier(0.36,0.07,0.19,0.97); }
+
+      /* Radio */
+      .radio-outer {
+        width: 20px; height: 20px; border-radius: 50%;
+        border: 2px solid #ddd;
+        display: flex; align-items: center; justify-content: center;
+        transition: border-color 0.15s;
+      }
+      .radio-outer.active { border-color: #2DB84B; }
+      .radio-inner {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: #2DB84B;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
