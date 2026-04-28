@@ -1,115 +1,113 @@
 <script setup>
-// src/components/BottomNav.vue
 import { useCartStore } from '../stores/cartStore.js'
 import { currentRoute, useRouter } from '../router/index.js'
+import { useI18n } from '../i18n/index.js'
+import { useTelegram } from '../composables/useTelegram.js'
 
 const { totalCount } = useCartStore()
 const { navigate } = useRouter()
+const { t } = useI18n()
+const { haptic } = useTelegram()
 
 const navItems = [
-  { id: 'home',       label: 'Главная',   icon: 'home'  },
-  { id: 'categories', label: 'Категории', icon: 'heart' },
-  { id: 'orders',     label: 'Заказы',    icon: 'clock' },
-  { id: 'profile',    label: 'Профиль',   icon: 'user'  },
+  { id: 'home',       labelKey: 'nav.home',       icon: 'home'  },
+  { id: 'categories', labelKey: 'nav.categories', icon: 'grid'  },
+  { id: 'favorites',  labelKey: 'nav.favorites',  icon: 'heart' },
+  { id: 'orders',     labelKey: 'nav.orders',     icon: 'receipt' },
+  { id: 'profile',    labelKey: 'nav.profile',    icon: 'user'  },
 ]
+
+function onNav(id) {
+  haptic('selection')
+  navigate(id)
+}
 </script>
 
 <template>
   <nav
-    class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-white z-40 flex items-center"
-    style="box-shadow: 0 -4px 24px rgba(0,0,0,0.08); border-top: 1px solid #f0f0f0"
+    class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-40 safe-bottom"
+    style="background: rgba(var(--nav-bg), 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border);"
   >
-    <button
-      v-for="item in navItems"
-      :key="item.id"
-      @click="navigate(item.id)"
-      class="flex-1 py-2.5 flex flex-col items-center gap-0.5 relative"
-    >
-      <span
-        v-if="currentRoute === item.id"
-        class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary"
-      />
+    <div class="flex items-center px-1 py-1.5">
+      <button
+        v-for="item in navItems" :key="item.id"
+        @click="onNav(item.id)"
+        class="flex-1 py-1.5 flex flex-col items-center gap-0.5 relative btn-press rounded-xl transition-all duration-200"
+      >
+        <div v-if="currentRoute === item.id" class="absolute inset-1 rounded-xl transition-all duration-300" style="background: var(--primary-light)"></div>
 
-      <template v-if="item.icon === 'home'">
-        <svg :class="['w-6 h-6', currentRoute === item.id ? 'text-primary' : 'text-gray-400']"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <polyline points="9 22 9 12 15 12 15 22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </template>
+        <!-- Home -->
+        <template v-if="item.icon === 'home'">
+          <svg class="w-[22px] h-[22px] relative z-10 transition-colors" :class="currentRoute === item.id ? 'text-primary' : ''" :style="currentRoute !== item.id ? 'color: var(--text-tertiary)' : ''"
+            :fill="currentRoute === item.id ? 'currentColor' : 'none'" :stroke="currentRoute === item.id ? 'none' : 'currentColor'" viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" :stroke-width="currentRoute === item.id ? 0 : 2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path v-if="currentRoute === item.id" d="M9 22V12h6v10" fill="var(--primary-light)"/>
+            <polyline v-else points="9 22 9 12 15 12 15 22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </template>
 
-      <template v-else-if="item.icon === 'heart'">
-        <svg :class="['w-6 h-6', currentRoute === item.id ? 'text-primary' : 'text-gray-400']"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </template>
+        <!-- Grid -->
+        <template v-else-if="item.icon === 'grid'">
+          <svg class="w-[22px] h-[22px] relative z-10 transition-colors" :class="currentRoute === item.id ? 'text-primary' : ''" :style="currentRoute !== item.id ? 'color: var(--text-tertiary)' : ''"
+            :fill="currentRoute === item.id ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="2" :stroke-width="currentRoute === item.id ? 0 : 2"/>
+            <rect x="14" y="3" width="7" height="7" rx="2" :stroke-width="currentRoute === item.id ? 0 : 2"/>
+            <rect x="3" y="14" width="7" height="7" rx="2" :stroke-width="currentRoute === item.id ? 0 : 2"/>
+            <rect x="14" y="14" width="7" height="7" rx="2" :stroke-width="currentRoute === item.id ? 0 : 2"/>
+          </svg>
+        </template>
 
-      <template v-else-if="item.icon === 'clock'">
-        <svg :class="['w-6 h-6', currentRoute === item.id ? 'text-primary' : 'text-gray-400']"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke-width="2"/>
-          <polyline points="12 6 12 12 16 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </template>
+        <!-- Heart -->
+        <template v-else-if="item.icon === 'heart'">
+          <svg class="w-[22px] h-[22px] relative z-10 transition-colors" :class="currentRoute === item.id ? 'text-primary' : ''" :style="currentRoute !== item.id ? 'color: var(--text-tertiary)' : ''"
+            :fill="currentRoute === item.id ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" :stroke-width="currentRoute === item.id ? 0 : 2"/>
+          </svg>
+        </template>
 
-      <template v-else-if="item.icon === 'user'">
-        <svg :class="['w-6 h-6', currentRoute === item.id ? 'text-primary' : 'text-gray-400']"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="12" cy="7" r="4" stroke-width="2"/>
-        </svg>
-      </template>
+        <!-- Receipt -->
+        <template v-else-if="item.icon === 'receipt'">
+          <svg class="w-[22px] h-[22px] relative z-10 transition-colors" :class="currentRoute === item.id ? 'text-primary' : ''" :style="currentRoute !== item.id ? 'color: var(--text-tertiary)' : ''"
+            :fill="currentRoute === item.id ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" :stroke-width="currentRoute === item.id ? 0 : 2" stroke-linecap="round"/>
+            <rect x="9" y="3" width="6" height="4" rx="1" :stroke-width="currentRoute === item.id ? 0 : 2"/>
+            <path v-if="currentRoute !== item.id" d="M9 12h6M9 16h4" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </template>
 
-      <span :class="['text-[10px] font-bold', currentRoute === item.id ? 'text-primary' : 'text-gray-400']">
-        {{ item.label }}
-      </span>
-    </button>
+        <!-- User -->
+        <template v-else-if="item.icon === 'user'">
+          <svg class="w-[22px] h-[22px] relative z-10 transition-colors" :class="currentRoute === item.id ? 'text-primary' : ''" :style="currentRoute !== item.id ? 'color: var(--text-tertiary)' : ''"
+            :fill="currentRoute === item.id ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" :stroke-width="currentRoute === item.id ? 0 : 2" stroke-linecap="round"/>
+            <circle cx="12" cy="7" r="4" :stroke-width="currentRoute === item.id ? 0 : 2"/>
+          </svg>
+        </template>
+
+        <span class="text-[9px] font-bold relative z-10 transition-colors" :class="currentRoute === item.id ? 'text-primary' : ''" :style="currentRoute !== item.id ? 'color: var(--text-tertiary)' : ''">
+          {{ t(item.labelKey) }}
+        </span>
+      </button>
+    </div>
   </nav>
 
+  <!-- Cart FAB -->
   <Teleport to="#app">
     <button
-      v-if="totalCount > 0 && currentRoute !== 'cart' && currentRoute !== 'checkout'"
+      v-if="totalCount > 0 && !['cart','checkout'].includes(currentRoute)"
       @click="navigate('cart')"
-      class="btn-press"
-      style="
-        position: fixed;
-        bottom: 80px;
-        right: calc(50% - 390px/2 + 16px);
-        width: 56px;
-        height: 56px;
-        background: #2DB84B;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 50;
-        box-shadow: 0 6px 20px rgba(45,184,75,0.5);
-        border: none;
-        cursor: pointer;
-      "
-    >
-      <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
-        <path d="M16 10a4 4 0 0 1-8 0" stroke-linecap="round"/>
+      class="fixed bottom-20 right-4 w-14 h-14 bg-primary rounded-full flex items-center justify-center z-50 btn-press pop pulse-ring"
+      style="box-shadow: 0 6px 20px var(--primary-glow);">
+      <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span style="
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        background: #ef4444;
-        color: white;
-        font-size: 10px;
-        font-weight: 900;
-        border-radius: 9999px;
-        min-width: 18px;
-        height: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 4px;
-      ">{{ totalCount }}</span>
+      <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">{{ totalCount }}</span>
     </button>
   </Teleport>
 </template>
+
+<style scoped>
+nav { --nav-bg: 255, 255, 255; }
+:root.dark nav, .dark nav { --nav-bg: 26, 26, 26; }
+</style>

@@ -1,0 +1,225 @@
+export default {
+  // Navigation
+  'nav.home': 'Home',
+  'nav.categories': 'Categories',
+  'nav.orders': 'Orders',
+  'nav.profile': 'Profile',
+
+  // Header
+  'header.current_location': 'Current location',
+  'header.search_placeholder': 'Search...',
+
+  // Home
+  'home.featured': 'Popular products',
+  'home.see_all': 'See all',
+  'home.for_you': 'For you',
+  'home.categories': 'Categories',
+
+  // Categories
+  'cat.all': 'New',
+  'cat.hot': 'Hot',
+  'cat.dairy': 'Dairy',
+  'cat.bread': 'Bread & Bakery',
+  'cat.sweets': 'Sweets',
+  'cat.fruits': 'Fruits',
+  'cat.drinks': 'Drinks',
+  'cat.snacks': 'Snacks',
+  'cat.hygiene': 'Hygiene',
+
+  // Product badges
+  'badge.new': 'NEW',
+  'badge.hot': 'HOT',
+
+  // Cart
+  'cart.title': 'Cart',
+  'cart.items_count': 'Items',
+  'cart.empty_title': 'Cart is empty',
+  'cart.empty_subtitle': 'Add products from catalog',
+  'cart.go_catalog': 'To catalog',
+  'cart.add_more': 'Add to order?',
+  'cart.add': '+ Add',
+  'cart.your_order': 'Your order',
+  'cart.products': 'Products',
+  'cart.discount': 'Discount',
+  'cart.delivery': 'Delivery',
+  'cart.total': 'Total',
+  'cart.checkout': 'Checkout',
+  'cart.clear_confirm': 'Clear cart?',
+  'cart.clear_subtitle': 'All items will be removed',
+  'cart.clear_yes': 'Yes, clear',
+  'cart.promo_code': 'Promo code',
+  'cart.promo_applied': 'Promo code applied!',
+
+  // Checkout
+  'checkout.title': 'Checkout',
+  'checkout.home': 'Home',
+  'checkout.phone': 'Phone',
+  'checkout.delivery_time': 'Delivery time',
+  'checkout.delivery_minutes': '25-30 min',
+  'checkout.payment': 'Payment method',
+  'checkout.cash': 'Cash on delivery',
+  'checkout.total': 'Total',
+  'checkout.place_order': 'Place order',
+  'checkout.detecting_location': 'Detecting location...',
+  'checkout.detecting_address': 'Detecting address...',
+  'checkout.address_unknown': 'Address not found',
+  'checkout.location_detected': 'Location detected',
+  'checkout.location_default': 'Tashkent (default)',
+  'checkout.location_unavailable': 'Geolocation unavailable',
+  'checkout.change': 'Change',
+  'checkout.you_are_here': 'You are here',
+
+  // Orders
+  'orders.title': 'My orders',
+  'orders.empty_title': 'No orders',
+  'orders.empty_subtitle': 'Your orders will appear here',
+  'orders.total': 'Total',
+  'orders.repeat': 'Repeat',
+  'orders.track': 'Track',
+  'orders.expected_arrival': 'Expected arrival',
+  'orders.arriving_in': 'About {min} min',
+  'orders.status.accepted': 'Accepted',
+  'orders.status.preparing': 'Preparing',
+  'orders.status.on_way': 'On the way',
+  'orders.status.delivered': 'Delivered',
+  'orders.status_label.preparing': 'Preparing',
+  'orders.status_label.delivering': 'On the way',
+  'orders.status_label.delivered': 'Delivered',
+
+  // Profile
+  'profile.username': 'User',
+  'profile.edit': 'Edit',
+  'profile.orders_count': 'Orders',
+  'profile.favorites_count': 'Favorites',
+  'profile.coupons_count': 'Coupons',
+  'profile.my_orders': 'My orders',
+  'profile.categories': 'Categories',
+  'profile.my_coupons': 'My coupons',
+  'profile.payment_methods': 'Payment methods',
+  'profile.help': 'Help & Support',
+  'profile.logout': 'Log out',
+  'profile.language': 'Language',
+  'profile.theme': 'Theme',
+  'profile.theme_light': 'Light',
+  'profile.theme_dark': 'Dark',
+  'profile.theme_auto': 'Auto',
+  'profile.settings': 'Settings',
+  'profile.save': 'Save',
+  'profile.cancel': 'Cancel',
+  'profile.name': 'Name',
+  'profile.phone': 'Phone',
+
+  'profile.not_verified': 'Not verified',
+
+  // Checkout (extra)
+  'checkout.card': 'Card',
+
+  // Register
+  'register.title': 'Sign up',
+  'register.subtitle': 'Register to place orders',
+  'register.first_name': 'First name',
+  'register.last_name': 'Last name',
+  'register.first_name_placeholder': 'Enter your first name',
+  'register.last_name_placeholder': 'Enter your last name',
+  'register.phone': 'Phone number',
+  'register.send_code': 'Send code',
+  'register.skip': 'Later',
+  'register.verify_title': 'Verification',
+  'register.verify_subtitle': 'Enter the code sent to your phone',
+  'register.code_sent_to': 'Code sent to:',
+  'register.resend': 'Resend code',
+  'register.verify': 'Verify',
+  'register.fill_all': 'Fill in all fields',
+  'register.invalid_phone': 'Invalid phone number',
+  'register.enter_code': 'Enter 6-digit code',
+  'register.wrong_code': 'Wrong code',
+
+  // Settings
+  'settings.language_desc': 'Choose app language',
+  'settings.theme_desc': 'Light or dark mode',
+  'settings.notifications': 'Notifications',
+  'settings.notifications_desc': 'Order status updates',
+
+  // Support
+  'support.title': 'Help Center',
+  'support.hero_title': 'How can we help you?',
+  'support.hero_subtitle': 'We are always here to help',
+  'support.contact_us': 'Contact us',
+  'support.call': 'Call us',
+  'support.telegram': 'Telegram',
+  'support.email': 'Email',
+  'support.faq_title': 'Frequently asked questions',
+  'support.faq1_q': 'How do I place an order?',
+  'support.faq1_a': 'Add items to your cart and tap checkout. Select your address and payment method.',
+  'support.faq2_q': 'How long does delivery take?',
+  'support.faq2_a': 'Usually 25-30 minutes. You can track the exact time on the order status page.',
+  'support.faq3_q': 'Can I cancel an order?',
+  'support.faq3_a': 'Yes, you can cancel before it starts being prepared.',
+  'support.faq4_q': 'What payment methods are available?',
+  'support.faq4_a': 'We accept card payments and cash on delivery.',
+  'support.working_hours': 'Working hours',
+  'support.every_day': 'Every day',
+
+  // Favorites
+  'favorites.title': 'Favorites',
+  'favorites.empty_title': 'No favorites yet',
+  'favorites.empty_subtitle': 'Save products you like',
+
+  // Payment methods
+  'payment.card_title': 'Card',
+  'payment.card_desc': 'Visa, Mastercard, Humo, UzCard',
+  'payment.cash_title': 'Cash',
+  'payment.cash_desc': 'Pay on delivery',
+  'payment.info': 'You can also change the payment method during checkout.',
+
+  // Logout
+  'logout.title': 'Log out?',
+  'logout.subtitle': 'You will be signed out of your account',
+  'logout.confirm': 'Yes, log out',
+
+  'profile.verify_to_order': 'Register to place orders',
+
+  // Nav extras
+  'nav.favorites': 'Favorites',
+
+  // Addresses
+  'addresses.title': 'Addresses',
+  'addresses.add_new': 'New address',
+  'addresses.label_placeholder': 'Label (e.g. Home, Work)',
+  'addresses.address_placeholder': 'Enter address',
+  'addresses.default': 'Default',
+  'addresses.empty_title': 'No addresses',
+  'addresses.empty_subtitle': 'Add a delivery address',
+  'addresses.pick_on_map': 'Pick on map',
+  'addresses.selected_address': 'Selected address',
+  'addresses.tap_map': 'Tap the map to select',
+  'addresses.choose_label': 'Choose a label',
+  'addresses.label_home': 'Home',
+  'addresses.label_work': 'Work',
+  'addresses.label_other': 'Other',
+  'addresses.custom_label': 'Label name',
+  'addresses.save_address': 'Save address',
+  'addresses.comment': 'Comment',
+  'addresses.comment_placeholder': 'Additional info (entrance, floor, door...)',
+
+  // Coupons
+  'coupons.title': 'Coupons',
+  'coupons.desc_first_order': 'Discount on first order',
+  'coupons.desc_dairy': 'Dairy products discount',
+  'coupons.desc_free_delivery': 'Free delivery',
+  'coupons.expired': 'Expired',
+  'coupons.valid_until': 'Valid until:',
+  'coupons.have_code': 'Have a promo code?',
+  'coupons.enter_code': 'Enter code',
+  'coupons.apply': 'Apply',
+
+  // Currency
+  'currency': 'sum',
+
+  // Common
+  'common.go_catalog': 'To catalog',
+  'common.back': 'Back',
+  'common.yes': 'Yes',
+  'common.no': 'No',
+  'common.loading': 'Loading...',
+}

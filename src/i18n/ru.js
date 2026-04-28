@@ -1,0 +1,225 @@
+export default {
+  // Navigation
+  'nav.home': 'Главная',
+  'nav.categories': 'Категории',
+  'nav.orders': 'Заказы',
+  'nav.profile': 'Профиль',
+
+  // Header
+  'header.current_location': 'Текущий адрес',
+  'header.search_placeholder': 'Поиск...',
+
+  // Home
+  'home.featured': 'Популярные товары',
+  'home.see_all': 'Все',
+  'home.for_you': 'Для вас',
+  'home.categories': 'Категории',
+
+  // Categories
+  'cat.all': 'Новинки',
+  'cat.hot': 'Горячие',
+  'cat.dairy': 'Молочные продукты',
+  'cat.bread': 'Хлеб и выпечка',
+  'cat.sweets': 'Сладости',
+  'cat.fruits': 'Фрукты',
+  'cat.drinks': 'Напитки',
+  'cat.snacks': 'Снеки',
+  'cat.hygiene': 'Гигиена',
+
+  // Product badges
+  'badge.new': 'НОВОЕ',
+  'badge.hot': 'ХИТ',
+
+  // Cart
+  'cart.title': 'Корзина',
+  'cart.items_count': 'Товаров',
+  'cart.empty_title': 'Корзина пуста',
+  'cart.empty_subtitle': 'Добавьте товары из каталога',
+  'cart.go_catalog': 'В каталог',
+  'cart.add_more': 'Добавить к заказу?',
+  'cart.add': '+ Добавить',
+  'cart.your_order': 'Ваш заказ',
+  'cart.products': 'Товары',
+  'cart.discount': 'Скидка',
+  'cart.delivery': 'Доставка',
+  'cart.total': 'Итого',
+  'cart.checkout': 'Оформить заказ',
+  'cart.clear_confirm': 'Очистить корзину?',
+  'cart.clear_subtitle': 'Все товары будут удалены',
+  'cart.clear_yes': 'Да, очистить',
+  'cart.promo_code': 'Промокод',
+  'cart.promo_applied': 'Промокод применён!',
+
+  // Checkout
+  'checkout.title': 'Оформление',
+  'checkout.home': 'Дом',
+  'checkout.phone': 'Телефон',
+  'checkout.delivery_time': 'Время доставки',
+  'checkout.delivery_minutes': '25-30 мин',
+  'checkout.payment': 'Способ оплаты',
+  'checkout.cash': 'Наличными при доставке',
+  'checkout.total': 'Общее',
+  'checkout.place_order': 'Заказать',
+  'checkout.detecting_location': 'Определяем местоположение...',
+  'checkout.detecting_address': 'Определяем адрес...',
+  'checkout.address_unknown': 'Адрес не определён',
+  'checkout.location_detected': 'Местоположение определено',
+  'checkout.location_default': 'Ташкент (по умолчанию)',
+  'checkout.location_unavailable': 'Геолокация недоступна',
+  'checkout.change': 'Изменить',
+  'checkout.you_are_here': 'Вы здесь',
+
+  // Orders
+  'orders.title': 'Мои заказы',
+  'orders.empty_title': 'Нет заказов',
+  'orders.empty_subtitle': 'Ваши заказы появятся здесь',
+  'orders.total': 'Итого',
+  'orders.repeat': 'Повторить',
+  'orders.track': 'Отследить',
+  'orders.expected_arrival': 'Ожидаемое прибытие',
+  'orders.arriving_in': 'Примерно через {min} мин',
+  'orders.status.accepted': 'Принят',
+  'orders.status.preparing': 'Готовится',
+  'orders.status.on_way': 'В пути',
+  'orders.status.delivered': 'Доставлен',
+  'orders.status_label.preparing': 'Готовится',
+  'orders.status_label.delivering': 'В пути',
+  'orders.status_label.delivered': 'Доставлен',
+
+  // Profile
+  'profile.username': 'Пользователь',
+  'profile.edit': 'Изменить',
+  'profile.orders_count': 'Заказов',
+  'profile.favorites_count': 'Избранных',
+  'profile.coupons_count': 'Купонов',
+  'profile.my_orders': 'Мои заказы',
+  'profile.categories': 'Категории',
+  'profile.my_coupons': 'Мои купоны',
+  'profile.payment_methods': 'Методы оплаты',
+  'profile.help': 'Помощь и поддержка',
+  'profile.logout': 'Выйти',
+  'profile.language': 'Язык',
+  'profile.theme': 'Тема',
+  'profile.theme_light': 'Светлая',
+  'profile.theme_dark': 'Тёмная',
+  'profile.theme_auto': 'Авто',
+  'profile.settings': 'Настройки',
+  'profile.save': 'Сохранить',
+  'profile.cancel': 'Отмена',
+  'profile.name': 'Имя',
+  'profile.phone': 'Телефон',
+
+  'profile.not_verified': 'Не подтверждён',
+
+  // Checkout (extra)
+  'checkout.card': 'Картой',
+
+  // Register
+  'register.title': 'Регистрация',
+  'register.subtitle': 'Зарегистрируйтесь, чтобы сделать заказ',
+  'register.first_name': 'Имя',
+  'register.last_name': 'Фамилия',
+  'register.first_name_placeholder': 'Введите имя',
+  'register.last_name_placeholder': 'Введите фамилию',
+  'register.phone': 'Номер телефона',
+  'register.send_code': 'Отправить код',
+  'register.skip': 'Позже',
+  'register.verify_title': 'Подтверждение',
+  'register.verify_subtitle': 'Введите код, отправленный на ваш телефон',
+  'register.code_sent_to': 'Код отправлен на:',
+  'register.resend': 'Отправить повторно',
+  'register.verify': 'Подтвердить',
+  'register.fill_all': 'Заполните все поля',
+  'register.invalid_phone': 'Неверный номер телефона',
+  'register.enter_code': 'Введите 6-значный код',
+  'register.wrong_code': 'Неверный код',
+
+  // Settings
+  'settings.language_desc': 'Выберите язык приложения',
+  'settings.theme_desc': 'Светлая или тёмная тема',
+  'settings.notifications': 'Уведомления',
+  'settings.notifications_desc': 'Обновления заказов',
+
+  // Support
+  'support.title': 'Центр помощи',
+  'support.hero_title': 'Чем мы можем помочь?',
+  'support.hero_subtitle': 'Мы всегда готовы помочь вам',
+  'support.contact_us': 'Связаться с нами',
+  'support.call': 'Позвонить',
+  'support.telegram': 'Telegram',
+  'support.email': 'Электронная почта',
+  'support.faq_title': 'Часто задаваемые вопросы',
+  'support.faq1_q': 'Как сделать заказ?',
+  'support.faq1_a': 'Добавьте товары в корзину и нажмите «Оформить заказ». Выберите адрес и способ оплаты.',
+  'support.faq2_q': 'Сколько времени занимает доставка?',
+  'support.faq2_a': 'Обычно доставляем за 25-30 минут. Точное время можно отслеживать на странице заказа.',
+  'support.faq3_q': 'Можно ли отменить заказ?',
+  'support.faq3_a': 'Да, вы можете отменить заказ до начала его приготовления.',
+  'support.faq4_q': 'Какие способы оплаты доступны?',
+  'support.faq4_a': 'Мы принимаем оплату картой и наличными при доставке.',
+  'support.working_hours': 'Время работы',
+  'support.every_day': 'Ежедневно',
+
+  // Favorites
+  'favorites.title': 'Избранное',
+  'favorites.empty_title': 'Избранное пусто',
+  'favorites.empty_subtitle': 'Отмечайте понравившиеся товары',
+
+  // Payment methods
+  'payment.card_title': 'Картой',
+  'payment.card_desc': 'Visa, Mastercard, Humo, UzCard',
+  'payment.cash_title': 'Наличными',
+  'payment.cash_desc': 'Оплата при доставке',
+  'payment.info': 'Способ оплаты можно изменить при оформлении заказа.',
+
+  // Logout
+  'logout.title': 'Выйти из аккаунта?',
+  'logout.subtitle': 'Вы будете отключены от аккаунта',
+  'logout.confirm': 'Да, выйти',
+
+  'profile.verify_to_order': 'Зарегистрируйтесь для оформления заказов',
+
+  // Nav extras
+  'nav.favorites': 'Избранное',
+
+  // Addresses
+  'addresses.title': 'Адреса',
+  'addresses.add_new': 'Новый адрес',
+  'addresses.label_placeholder': 'Название (напр. Дом, Работа)',
+  'addresses.address_placeholder': 'Введите адрес',
+  'addresses.default': 'Основной',
+  'addresses.empty_title': 'Нет адресов',
+  'addresses.empty_subtitle': 'Добавьте адрес доставки',
+  'addresses.pick_on_map': 'Выбрать на карте',
+  'addresses.selected_address': 'Выбранный адрес',
+  'addresses.tap_map': 'Нажмите на карту для выбора',
+  'addresses.choose_label': 'Выберите метку',
+  'addresses.label_home': 'Дом',
+  'addresses.label_work': 'Работа',
+  'addresses.label_other': 'Другое',
+  'addresses.custom_label': 'Название метки',
+  'addresses.save_address': 'Сохранить адрес',
+  'addresses.comment': 'Комментарий',
+  'addresses.comment_placeholder': 'Доп. информация (подъезд, этаж, дверь...)',
+
+  // Coupons
+  'coupons.title': 'Купоны',
+  'coupons.desc_first_order': 'Скидка на первый заказ',
+  'coupons.desc_dairy': 'Скидка на молочные продукты',
+  'coupons.desc_free_delivery': 'Бесплатная доставка',
+  'coupons.expired': 'Истёк',
+  'coupons.valid_until': 'Действует до:',
+  'coupons.have_code': 'Есть промокод?',
+  'coupons.enter_code': 'Введите код',
+  'coupons.apply': 'Применить',
+
+  // Currency
+  'currency': 'сум',
+
+  // Common
+  'common.go_catalog': 'В каталог',
+  'common.back': 'Назад',
+  'common.yes': 'Да',
+  'common.no': 'Нет',
+  'common.loading': 'Загрузка...',
+}

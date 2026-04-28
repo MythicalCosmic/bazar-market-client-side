@@ -1,66 +1,26 @@
 <script setup>
-// src/views/OrdersView.vue
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from '../router/index.js'
+import { useFormat } from '../composables/useFormat.js'
+import { useI18n } from '../i18n/index.js'
+import { getOrderHistory } from '../services/api.js'
 
 const { navigate } = useRouter()
+const { formatPrice } = useFormat()
+const { t, getLocalizedName } = useI18n()
 
-const orders = ref([
-  {
-    id: '#ORD-1042',
-    status: 'delivering',
-    statusLabel: 'В пути',
-    date: '25 апр, 2026',
-    time: '14:32',
-    arrivalMin: 12,
-    address: 'Мустакиллик кчаси 52 уй',
-    items: [
-      { name: 'Яйца 10 штук', qty: 1, price: 20000 },
-      { name: 'Кола зеро 0,5', qty: 2, price: 7000 },
-      { name: 'Хлеб', qty: 1, price: 3000 },
-    ],
-    total: 37000,
-    progress: 65,
-  },
-  {
-    id: '#ORD-1041',
-    status: 'preparing',
-    statusLabel: 'Готовится',
-    date: '25 апр, 2026',
-    time: '14:10',
-    arrivalMin: 25,
-    address: 'Мустакиллик кчаси 52 уй',
-    items: [
-      { name: 'Орбит фреш', qty: 3, price: 5000 },
-      { name: 'Сыр 200г', qty: 1, price: 25000 },
-    ],
-    total: 40000,
-    progress: 30,
-  },
-  {
-    id: '#ORD-1038',
-    status: 'delivered',
-    statusLabel: 'Доставлен',
-    date: '24 апр, 2026',
-    time: '11:15',
-    arrivalMin: 0,
-    address: 'Мустакиллик кчаси 52 уй',
-    items: [
-      { name: 'Молоко 1л', qty: 2, price: 12000 },
-    ],
-    total: 24000,
-    progress: 100,
-  },
-])
+const orders = ref([])
+const isLoading = ref(true)
 
-function formatPrice(v) {
-  return new Intl.NumberFormat('ru-RU').format(v) + ' сум'
-}
+onMounted(async () => {
+  orders.value = await getOrderHistory()
+  isLoading.value = false
+})
 
 const statusConfig = {
-  preparing:  { color: '#f59e0b', bg: '#fef3c7', icon: '👨‍🍳', steps: ['Принят', 'Готовится', 'В пути', 'Доставлен'] },
-  delivering: { color: '#2DB84B', bg: '#eaf8ee', icon: '🛵', steps: ['Принят', 'Готовится', 'В пути', 'Доставлен'] },
-  delivered:  { color: '#6b7280', bg: '#f3f4f6', icon: '✅', steps: ['Принят', 'Готовится', 'В пути', 'Доставлен'] },
+  preparing:  { color: '#f59e0b', icon: '👨‍🍳' },
+  delivering: { color: '#2DB84B', icon: '🛵' },
+  delivered:  { color: '#6b7280', icon: '✅' },
 }
 
 const activeStep = {
@@ -68,36 +28,38 @@ const activeStep = {
   delivering: 2,
   delivered:  3,
 }
+
+const steps = ['orders.status.accepted', 'orders.status.preparing', 'orders.status.on_way', 'orders.status.delivered']
 </script>
 
 <template>
   <div class="pb-28 pt-4 px-4">
 
-    <!-- Title -->
-    <h1 class="text-xl font-black text-gray-900 mb-4">Мои заказы</h1>
+    <h1 class="text-xl font-black mb-4" style="color: var(--text-primary)">{{ t('orders.title') }}</h1>
+
+    <!-- Loading -->
+    <div v-if="isLoading" class="flex flex-col gap-4">
+      <div v-for="i in 2" :key="i" class="skeleton h-[200px] rounded-2xl"></div>
+    </div>
 
     <!-- Order cards -->
-    <div class="flex flex-col gap-4">
+    <div v-else class="flex flex-col gap-4">
       <div
         v-for="order in orders"
         :key="order.id"
-        class="bg-white rounded-2xl overflow-hidden"
-        style="box-shadow: 0 2px 14px rgba(0,0,0,0.07)"
+        class="rounded-2xl overflow-hidden"
+        style="background: var(--surface); box-shadow: 0 2px 14px var(--shadow)"
       >
         <!-- Card header -->
         <div class="px-4 pt-4 pb-3 flex items-center justify-between">
           <div>
-            <p class="text-sm font-black text-gray-900">{{ order.id }}</p>
-            <p class="text-xs text-gray-400 font-semibold mt-0.5">{{ order.date }} · {{ order.time }}</p>
+            <p class="text-sm font-black" style="color: var(--text-primary)">{{ order.id }}</p>
+            <p class="text-xs font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ order.date }} · {{ order.time }}</p>
           </div>
-          <!-- Status badge -->
-          <div
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
-            :style="{ background: statusConfig[order.status].bg }"
-          >
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style="background: var(--primary-light)">
             <span class="text-sm">{{ statusConfig[order.status].icon }}</span>
             <span class="text-xs font-black" :style="{ color: statusConfig[order.status].color }">
-              {{ order.statusLabel }}
+              {{ t('orders.status_label.' + order.status) }}
             </span>
           </div>
         </div>
@@ -105,9 +67,7 @@ const activeStep = {
         <!-- Progress steps -->
         <div class="px-4 pb-3">
           <div class="flex items-center justify-between relative">
-            <!-- Progress line background -->
-            <div class="absolute top-3 left-3 right-3 h-0.5 bg-gray-100 z-0"></div>
-            <!-- Progress line fill -->
+            <div class="absolute top-3 left-3 right-3 h-0.5 z-0" style="background: var(--surface-tertiary)"></div>
             <div
               class="absolute top-3 left-3 h-0.5 z-0 transition-all duration-500"
               :style="{
@@ -115,108 +75,89 @@ const activeStep = {
                 background: statusConfig[order.status].color
               }"
             ></div>
-
-            <!-- Step dots -->
             <div
-              v-for="(step, i) in statusConfig[order.status].steps"
+              v-for="(stepKey, i) in steps"
               :key="i"
               class="flex flex-col items-center z-10 gap-1"
             >
               <div
                 class="w-6 h-6 rounded-full flex items-center justify-center transition-all"
-                :style="{
-                  background: i <= activeStep[order.status]
-                    ? statusConfig[order.status].color
-                    : '#f0f0f0',
-                }"
+                :style="{ background: i <= activeStep[order.status] ? statusConfig[order.status].color : 'var(--surface-tertiary)' }"
               >
-                <svg v-if="i <= activeStep[order.status]"
-                  class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-if="i <= activeStep[order.status]" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
               <span class="text-[9px] font-bold text-center whitespace-nowrap"
-                :style="{ color: i <= activeStep[order.status] ? statusConfig[order.status].color : '#9ca3af' }">
-                {{ step }}
+                :style="{ color: i <= activeStep[order.status] ? statusConfig[order.status].color : 'var(--text-tertiary)' }">
+                {{ t(stepKey) }}
               </span>
             </div>
           </div>
         </div>
 
-        <!-- Arrival time — только для активных заказов -->
+        <!-- Arrival time -->
         <div
           v-if="order.status !== 'delivered'"
           class="mx-4 mb-3 rounded-xl px-3 py-2.5 flex items-center gap-2"
-          :style="{ background: statusConfig[order.status].bg }"
+          style="background: var(--primary-light)"
         >
           <span class="text-lg">⏱️</span>
           <div>
-            <p class="text-[10px] text-gray-500 font-semibold">Ожидаемое прибытие</p>
+            <p class="text-[10px] font-semibold" style="color: var(--text-secondary)">{{ t('orders.expected_arrival') }}</p>
             <p class="text-sm font-black" :style="{ color: statusConfig[order.status].color }">
-              Примерно через {{ order.arrivalMin }} мин
+              {{ t('orders.arriving_in', { min: order.arrivalMin }) }}
             </p>
           </div>
         </div>
 
-        <!-- Divider -->
-        <div class="h-px bg-gray-50 mx-4"></div>
+        <div class="h-px mx-4" style="background: var(--border)"></div>
 
         <!-- Items -->
         <div class="px-4 py-3 flex flex-col gap-1.5">
-          <div
-            v-for="item in order.items"
-            :key="item.name"
-            class="flex items-center justify-between"
-          >
+          <div v-for="(item, idx) in order.items" :key="idx" class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-gray-100 text-[10px] font-black text-gray-500 flex items-center justify-center">
+              <span class="w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center" style="background: var(--surface-secondary); color: var(--text-secondary)">
                 {{ item.qty }}
               </span>
-              <span class="text-xs font-semibold text-gray-700">{{ item.name }}</span>
+              <span class="text-xs font-semibold" style="color: var(--text-primary)">{{ getLocalizedName(item.name) }}</span>
             </div>
-            <span class="text-xs font-bold text-gray-800">{{ formatPrice(item.price * item.qty) }}</span>
+            <span class="text-xs font-bold" style="color: var(--text-primary)">{{ formatPrice(item.price * item.qty) }}</span>
           </div>
         </div>
 
-        <!-- Divider -->
-        <div class="h-px bg-gray-50 mx-4"></div>
+        <div class="h-px mx-4" style="background: var(--border)"></div>
 
-        <!-- Total + repeat button -->
+        <!-- Total + action -->
         <div class="px-4 py-3 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-gray-400 font-semibold">Итого</p>
-            <p class="text-sm font-black text-gray-900">{{ formatPrice(order.total) }}</p>
+            <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('orders.total') }}</p>
+            <p class="text-sm font-black" style="color: var(--text-primary)">{{ formatPrice(order.total) }}</p>
           </div>
           <button
             v-if="order.status === 'delivered'"
             @click="navigate('home')"
             class="text-xs font-black text-primary border border-primary px-4 py-2 rounded-xl btn-press"
-          >
-            🔄 Повторить
-          </button>
+          >🔄 {{ t('orders.repeat') }}</button>
           <button
             v-else
-            @click="navigate('checkout')"
-            class="text-xs font-black text-white px-4 py-2 rounded-xl btn-press"
-            style="background: #2DB84B; box-shadow: 0 3px 10px rgba(45,184,75,0.35)"
-          >
-            📍 Отследить
-          </button>
+            class="text-xs font-black text-white px-4 py-2 rounded-xl btn-press bg-primary"
+            style="box-shadow: 0 3px 10px var(--primary-glow)"
+          >📍 {{ t('orders.track') }}</button>
         </div>
-
       </div>
     </div>
 
-    <!-- Empty state если нет заказов -->
-    <div v-if="orders.length === 0" class="flex flex-col items-center justify-center py-24">
+    <!-- Empty state -->
+    <div v-if="!isLoading && orders.length === 0" class="flex flex-col items-center justify-center py-24">
       <div class="text-7xl mb-5">📦</div>
-      <p class="text-xl font-black text-gray-700">Нет заказов</p>
-      <p class="text-sm text-gray-400 text-center mt-2">Ваши заказы появятся здесь</p>
+      <p class="text-xl font-black" style="color: var(--text-primary)">{{ t('orders.empty_title') }}</p>
+      <p class="text-sm text-center mt-2" style="color: var(--text-tertiary)">{{ t('orders.empty_subtitle') }}</p>
       <button
         @click="navigate('home')"
         class="mt-6 bg-primary text-white font-black px-8 py-3 rounded-2xl btn-press"
-        style="box-shadow: 0 4px 16px rgba(45,184,75,0.35)"
-      >В каталог</button>
+        style="box-shadow: 0 4px 16px var(--primary-glow)"
+      >{{ t('common.go_catalog') }}</button>
     </div>
 
   </div>
