@@ -114,6 +114,22 @@ export default {
   // Checkout (extra)
   'checkout.card': 'Картой',
 
+  // Login
+  'login.welcome': 'Добро пожаловать!',
+  'login.title': 'Вход',
+  'login.subtitle': 'Войдите в свой аккаунт',
+  'login.password': 'Пароль',
+  'login.password_placeholder': 'Введите пароль',
+  'login.create_password': 'Создайте пароль',
+  'login.password_hint': 'Минимум 4 символа',
+  'login.password_short': 'Пароль слишком короткий (минимум 4 символа)',
+  'login.invalid_credentials': 'Неверный телефон или пароль',
+  'login.forgot_password': 'Забыли пароль?',
+  'login.button': 'Войти',
+  'login.or': 'или',
+  'login.no_account': 'Нет аккаунта? Зарегистрируйтесь',
+  'login.have_account': 'Есть аккаунт? Войти',
+
   // Register
   'register.title': 'Регистрация',
   'register.subtitle': 'Зарегистрируйтесь, чтобы сделать заказ',

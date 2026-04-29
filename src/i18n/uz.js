@@ -114,6 +114,22 @@ export default {
   // Checkout (extra)
   'checkout.card': 'Karta orqali',
 
+  // Login
+  'login.welcome': 'Xush kelibsiz!',
+  'login.title': 'Kirish',
+  'login.subtitle': 'Hisobingizga kiring',
+  'login.password': 'Parol',
+  'login.password_placeholder': 'Parolni kiriting',
+  'login.create_password': 'Parol yarating',
+  'login.password_hint': 'Kamida 4 ta belgi',
+  'login.password_short': 'Parol juda qisqa (kamida 4 ta belgi)',
+  'login.invalid_credentials': 'Telefon yoki parol noto\'g\'ri',
+  'login.forgot_password': 'Parolni unutdingizmi?',
+  'login.button': 'Kirish',
+  'login.or': 'yoki',
+  'login.no_account': 'Hisobingiz yo\'qmi? Ro\'yxatdan o\'ting',
+  'login.have_account': 'Hisobingiz bormi? Kiring',
+
   // Register
   'register.title': 'Ro\'yxatdan o\'tish',
   'register.subtitle': 'Buyurtma berish uchun ro\'yxatdan o\'ting',

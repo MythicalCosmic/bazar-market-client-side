@@ -22,14 +22,29 @@ export function useAuth() {
     }
   }
 
+  async function login(phone, password) {
+    // Fake API: accept any password with 4+ chars
+    await new Promise((r) => setTimeout(r, 500))
+    const saved = JSON.parse(localStorage.getItem('bazar-user') || 'null')
+    if (saved && saved.phone === phone) {
+      setUser(saved)
+      return { success: true }
+    }
+    // Simulate: in production, backend validates credentials
+    if (password.length >= 4) {
+      const data = { firstName: 'User', lastName: '', phone, verified: true }
+      setUser(data)
+      return { success: true }
+    }
+    return { success: false }
+  }
+
   async function sendCode(phone) {
-    // Fake API: in production, backend sends SMS
     await new Promise((r) => setTimeout(r, 500))
     return { success: true }
   }
 
   async function verifyCode(phone, code) {
-    // Fake API: accept any 6-digit code
     await new Promise((r) => setTimeout(r, 500))
     if (code.length === 6) {
       return { success: true }
@@ -37,8 +52,8 @@ export function useAuth() {
     return { success: false, error: 'Invalid code' }
   }
 
-  function register(firstName, lastName, phone) {
-    const data = { firstName, lastName, phone, verified: true }
+  function register(firstName, lastName, phone, password) {
+    const data = { firstName, lastName, phone, password, verified: true }
     setUser(data)
     return data
   }
@@ -54,6 +69,7 @@ export function useAuth() {
     getUser,
     setUser,
     updateProfile,
+    login,
     sendCode,
     verifyCode,
     register,

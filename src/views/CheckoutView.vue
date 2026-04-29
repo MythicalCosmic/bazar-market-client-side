@@ -86,7 +86,7 @@ function initMap(lat, lng) {
 }
 
 onMounted(() => {
-  if (!isAuthenticated.value) { navigate('register'); return }
+  if (!isAuthenticated.value) { navigate('login'); return }
 
   locationStatus.value = t('checkout.detecting_location')
   addressText.value = t('checkout.detecting_address')
@@ -116,7 +116,7 @@ onUnmounted(() => {
 })
 
 function placeOrder() {
-  if (!isAuthenticated.value) { navigate('register'); return }
+  if (!isAuthenticated.value) { navigate('login'); return }
   clearCart()
   navigate('orders')
 }

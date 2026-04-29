@@ -3,7 +3,7 @@ import { ref } from 'vue'
 export const currentRoute = ref('splash')
 export const routeParams = ref({})
 
-const routeOrder = ['splash', 'home', 'categories', 'favorites', 'cart', 'checkout', 'orders', 'profile', 'settings', 'support', 'payment-methods', 'register', 'addresses', 'coupons']
+const routeOrder = ['splash', 'home', 'categories', 'favorites', 'cart', 'checkout', 'orders', 'profile', 'settings', 'support', 'payment-methods', 'login', 'register', 'addresses', 'coupons']
 
 let previousRoute = 'splash'
 export const transitionName = ref('fade')

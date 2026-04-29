@@ -12,6 +12,7 @@ import SettingsView       from './views/SettingsView.vue'
 import SupportView        from './views/SupportView.vue'
 import FavoritesView      from './views/FavoritesView.vue'
 import PaymentMethodsView from './views/PaymentMethodsView.vue'
+import LoginView          from './views/LoginView.vue'
 import RegisterView       from './views/RegisterView.vue'
 import AddressesView      from './views/AddressesView.vue'
 import CouponsView        from './views/CouponsView.vue'
@@ -35,6 +36,7 @@ const showNav = ['home', 'categories', 'favorites', 'orders', 'profile']
         <SettingsView       v-else-if="currentRoute === 'settings'"       key="settings" />
         <SupportView        v-else-if="currentRoute === 'support'"        key="support"  />
         <PaymentMethodsView v-else-if="currentRoute === 'payment-methods'" key="payments" />
+        <LoginView          v-else-if="currentRoute === 'login'"           key="login"    />
         <RegisterView       v-else-if="currentRoute === 'register'"       key="register" />
         <AddressesView      v-else-if="currentRoute === 'addresses'"      key="addresses"/>
         <CouponsView        v-else-if="currentRoute === 'coupons'"        key="coupons"  />

@@ -114,6 +114,22 @@ export default {
   // Checkout (extra)
   'checkout.card': 'Card',
 
+  // Login
+  'login.welcome': 'Welcome back!',
+  'login.title': 'Log in',
+  'login.subtitle': 'Sign in to your account',
+  'login.password': 'Password',
+  'login.password_placeholder': 'Enter password',
+  'login.create_password': 'Create a password',
+  'login.password_hint': 'At least 4 characters',
+  'login.password_short': 'Password too short (at least 4 characters)',
+  'login.invalid_credentials': 'Invalid phone or password',
+  'login.forgot_password': 'Forgot password?',
+  'login.button': 'Log in',
+  'login.or': 'or',
+  'login.no_account': 'Don\'t have an account? Sign up',
+  'login.have_account': 'Already have an account? Log in',
+
   // Register
   'register.title': 'Sign up',
   'register.subtitle': 'Register to place orders',

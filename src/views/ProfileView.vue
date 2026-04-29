@@ -101,8 +101,8 @@ const menuGroups = [
         <p class="text-sm font-black text-orange-600">{{ t('profile.not_verified') }}</p>
         <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('profile.verify_to_order') }}</p>
       </div>
-      <button @click="navigate('register')" class="bg-orange-500 text-white text-xs font-black px-3 py-2 rounded-xl btn-press flex-shrink-0">
-        {{ t('register.title') }}
+      <button @click="navigate('login')" class="bg-orange-500 text-white text-xs font-black px-3 py-2 rounded-xl btn-press flex-shrink-0">
+        {{ t('login.button') }}
       </button>
     </div>
 
