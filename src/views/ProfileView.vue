@@ -5,11 +5,11 @@ import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
 import { useTelegram } from '../composables/useTelegram.js'
 import { useFavorites } from '../stores/favoritesStore.js'
-import { getReferral } from '../services/api.js'
+import { getReferral, getOrders, getFavorites } from '../services/api.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
-const { user, isAuthenticated, updateProfile, logout } = useAuth()
+const { user, isLoggedIn, isVerified, isAuthenticated, updateProfile, logout } = useAuth()
 const { user: tgUser, isAvailable: isTg, close: closeTg } = useTelegram()
 const { count: favCount } = useFavorites()
 
@@ -17,14 +17,29 @@ const referralCode = ref('')
 const referralLink = ref('')
 const totalReferrals = ref(0)
 const referralCopied = ref(false)
+const ordersCount = ref(0)
+const favoritesCount = ref(0)
 
 onMounted(async () => {
-  if (!isAuthenticated.value) return
+  if (!isLoggedIn.value) return
   try {
-    const data = await getReferral()
-    referralCode.value = data.referral_code || ''
-    referralLink.value = data.referral_link || ''
-    totalReferrals.value = data.total_referrals || 0
+    const [referralData, ordersData, favData] = await Promise.allSettled([
+      getReferral(),
+      getOrders({ per_page: 1 }),
+      getFavorites({ per_page: 1 }),
+    ])
+    if (referralData.status === 'fulfilled') {
+      referralCode.value = referralData.value.referral_code || ''
+      referralLink.value = referralData.value.referral_link || ''
+      totalReferrals.value = referralData.value.total_referrals || 0
+    }
+    if (ordersData.status === 'fulfilled') {
+      const orders = ordersData.value
+      ordersCount.value = Array.isArray(orders) ? orders.length : 0
+    }
+    if (favData.status === 'fulfilled') {
+      favoritesCount.value = Array.isArray(favData.value) ? favData.value.length : 0
+    }
   } catch {}
 })
 
@@ -96,8 +111,8 @@ const menuGroups = [
 <template>
   <div class="pb-28 px-4 pt-5">
 
-    <!-- Unverified banner -->
-    <div v-if="!isAuthenticated" class="rounded-2xl p-4 mb-4 flex items-center gap-3 border-2 border-orange-400/30"
+    <!-- Not logged in -->
+    <div v-if="!isLoggedIn" class="rounded-2xl p-4 mb-4 flex items-center gap-3 border-2 border-orange-400/30"
       style="background: rgba(251,191,36,0.08)">
       <div class="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0">
         <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,6 +125,23 @@ const menuGroups = [
       </div>
       <button @click="navigate('login')" class="bg-orange-500 text-white text-xs font-black px-3 py-2 rounded-xl btn-press flex-shrink-0">
         {{ t('login.button') }}
+      </button>
+    </div>
+
+    <!-- Logged in but not verified -->
+    <div v-else-if="isLoggedIn && !isVerified" class="rounded-2xl p-4 mb-4 flex items-center gap-3 border-2 border-blue-400/30"
+      style="background: rgba(59,130,246,0.08)">
+      <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+        <svg width="20" height="20" class="text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-black text-blue-600">{{ t('verify.banner_title') }}</p>
+        <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('verify.banner_subtitle') }}</p>
+      </div>
+      <button @click="navigate('verify')" class="bg-blue-500 text-white text-xs font-black px-3 py-2 rounded-xl btn-press flex-shrink-0">
+        {{ t('verify.verify_now') }}
       </button>
     </div>
 
@@ -159,15 +191,15 @@ const menuGroups = [
     <div class="rounded-2xl p-4 mb-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
       <div class="flex items-center divide-x" style="border-color: var(--border)">
         <div class="flex-1 flex flex-col items-center py-1 cursor-pointer btn-press" @click="navigate('orders')">
-          <p class="text-xl font-black text-primary">45</p>
+          <p class="text-xl font-black text-primary">{{ ordersCount }}</p>
           <p class="text-[10px] font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ t('profile.orders_count') }}</p>
         </div>
         <div class="flex-1 flex flex-col items-center py-1 cursor-pointer btn-press" @click="navigate('favorites')">
-          <p class="text-xl font-black text-primary">{{ favCount }}</p>
+          <p class="text-xl font-black text-primary">{{ favoritesCount }}</p>
           <p class="text-[10px] font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ t('profile.favorites_count') }}</p>
         </div>
         <div class="flex-1 flex flex-col items-center py-1 cursor-pointer btn-press" @click="navigate('coupons')">
-          <p class="text-xl font-black text-primary">2</p>
+          <p class="text-xl font-black text-primary">0</p>
           <p class="text-[10px] font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ t('profile.coupons_count') }}</p>
         </div>
       </div>

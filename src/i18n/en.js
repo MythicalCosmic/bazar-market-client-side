@@ -247,6 +247,14 @@ export default {
   'common.no': 'No',
   'common.loading': 'Loading...',
 
+  'verify.title': 'Phone verification',
+  'verify.subtitle': 'Verify your phone to place orders',
+  'verify.banner_title': 'Phone not verified',
+  'verify.banner_subtitle': 'Verify via SMS',
+  'verify.verify_now': 'Verify',
+  'verify.will_receive_sms': 'An SMS code will be sent to this number',
+  'verify.send_sms': 'Send SMS',
+
   'checkout.note': 'Note',
   'checkout.note_placeholder': 'Additional instructions for your order...',
   'checkout.select_address': 'Select an address',

@@ -247,6 +247,14 @@ export default {
   'common.no': 'Нет',
   'common.loading': 'Загрузка...',
 
+  'verify.title': 'Подтверждение телефона',
+  'verify.subtitle': 'Подтвердите телефон для оформления заказов',
+  'verify.banner_title': 'Телефон не подтверждён',
+  'verify.banner_subtitle': 'Подтвердите через SMS',
+  'verify.verify_now': 'Подтвердить',
+  'verify.will_receive_sms': 'На этот номер будет отправлен SMS-код',
+  'verify.send_sms': 'Отправить SMS',
+
   'checkout.note': 'Комментарий',
   'checkout.note_placeholder': 'Дополнительные пожелания к заказу...',
   'checkout.select_address': 'Выберите адрес',

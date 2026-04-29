@@ -5,7 +5,9 @@ const user = ref(null)
 const token = ref(getToken())
 
 export function useAuth() {
-  const isAuthenticated = computed(() => !!token.value && !!user.value?.verified)
+  const isLoggedIn = computed(() => !!token.value && !!user.value)
+  const isVerified = computed(() => !!user.value?.verified)
+  const isAuthenticated = computed(() => isLoggedIn.value && isVerified.value)
 
   async function fetchProfile() {
     try {
@@ -61,7 +63,7 @@ export function useAuth() {
         first_name: firstName,
         last_name: lastName,
         password,
-        language: localStorage.getItem('bazar-locale') || 'uz',
+        language: ['uz', 'ru'].includes(localStorage.getItem('bazar-locale')) ? localStorage.getItem('bazar-locale') : 'uz',
       })
       setToken(data.session_key)
       token.value = data.session_key
@@ -135,6 +137,8 @@ export function useAuth() {
   return {
     user,
     token,
+    isLoggedIn,
+    isVerified,
     isAuthenticated,
     getUser,
     fetchProfile,

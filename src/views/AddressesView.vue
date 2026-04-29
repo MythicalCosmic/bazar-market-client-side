@@ -117,15 +117,19 @@ function closeMapPicker() {
 }
 
 function saveAddress() {
-  if (!pickedAddress.value || pickingStatus.value) return
+  if (!pickedAddress.value || pickingStatus.value || !marker) return
   const labelObj = labels.find(l => l.id === selectedLabel.value)
   const label = selectedLabel.value === 'other' && customLabel.value.trim()
     ? customLabel.value.trim()
     : t(labelObj.nameKey)
-  const fullAddress = comment.value.trim()
-    ? `${pickedAddress.value} (${comment.value.trim()})`
-    : pickedAddress.value
-  addAddress(label, fullAddress)
+  const pos = marker.getLatLng()
+  addAddress({
+    label,
+    address: pickedAddress.value,
+    lat: pos.lat,
+    lng: pos.lng,
+    comment: comment.value.trim(),
+  })
   closeMapPicker()
 }
 

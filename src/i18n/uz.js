@@ -248,6 +248,15 @@ export default {
   'common.loading': 'Yuklanmoqda...',
 
   // Checkout extras
+  // Verify
+  'verify.title': 'Telefon tasdiqlash',
+  'verify.subtitle': 'Buyurtma berish uchun telefoningizni tasdiqlang',
+  'verify.banner_title': 'Telefon tasdiqlanmagan',
+  'verify.banner_subtitle': 'SMS orqali tasdiqlang',
+  'verify.verify_now': 'Tasdiqlash',
+  'verify.will_receive_sms': 'Ushbu raqamga SMS kod yuboriladi',
+  'verify.send_sms': 'SMS yuborish',
+
   'checkout.note': 'Izoh',
   'checkout.note_placeholder': 'Buyurtma uchun qo\'shimcha izoh...',
   'checkout.select_address': 'Manzilni tanlang',
