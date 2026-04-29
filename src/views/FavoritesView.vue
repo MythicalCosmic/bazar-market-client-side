@@ -3,17 +3,23 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useFavorites } from '../stores/favoritesStore.js'
+import { useAuth } from '../stores/authStore.js'
 import { getFavorites } from '../services/api.js'
 import ProductCard from '../components/ProductCard.vue'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
 const { loadFavorites } = useFavorites()
+const { isLoggedIn } = useAuth()
 
 const favoriteProducts = ref([])
 const isLoading = ref(true)
 
 onMounted(async () => {
+  if (!isLoggedIn.value) {
+    isLoading.value = false
+    return
+  }
   await loadFavorites()
   try {
     favoriteProducts.value = await getFavorites()
@@ -45,7 +51,8 @@ onMounted(async () => {
         </div>
         <p class="text-lg font-black" style="color: var(--text-primary)">{{ t('favorites.empty_title') }}</p>
         <p class="text-sm font-semibold mt-1 text-center" style="color: var(--text-tertiary)">{{ t('favorites.empty_subtitle') }}</p>
-        <button @click="navigate('home')" class="mt-5 bg-primary text-white font-black px-8 py-3 rounded-2xl btn-press" style="box-shadow: 0 4px 16px var(--primary-glow)">{{ t('common.go_catalog') }}</button>
+        <button v-if="isLoggedIn" @click="navigate('home')" class="mt-5 bg-primary text-white font-black px-8 py-3 rounded-2xl btn-press" style="box-shadow: 0 4px 16px var(--primary-glow)">{{ t('common.go_catalog') }}</button>
+        <button v-else @click="navigate('login')" class="mt-5 bg-primary text-white font-black px-8 py-3 rounded-2xl btn-press" style="box-shadow: 0 4px 16px var(--primary-glow)">{{ t('login.button') }}</button>
       </div>
     </div>
   </div>
