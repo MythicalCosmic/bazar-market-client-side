@@ -228,6 +228,8 @@ export default {
   'coupons.have_code': 'Есть промокод?',
   'coupons.enter_code': 'Введите код',
   'coupons.apply': 'Применить',
+  'coupons.invalid': 'Купон недействителен',
+  'coupons.saves': 'Экономия:',
 
   // Referral
   'referral.title': 'Мой реферальный код',
@@ -244,4 +246,13 @@ export default {
   'common.yes': 'Да',
   'common.no': 'Нет',
   'common.loading': 'Загрузка...',
+
+  'checkout.note': 'Комментарий',
+  'checkout.note_placeholder': 'Дополнительные пожелания к заказу...',
+  'checkout.select_address': 'Выберите адрес',
+  'orders.cancel': 'Отменить',
+  'orders.status_label.pending': 'Ожидание',
+  'orders.status_label.confirmed': 'Подтверждён',
+  'orders.status_label.completed': 'Завершён',
+  'orders.status_label.cancelled': 'Отменён',
 }

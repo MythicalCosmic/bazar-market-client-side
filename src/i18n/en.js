@@ -228,6 +228,8 @@ export default {
   'coupons.have_code': 'Have a promo code?',
   'coupons.enter_code': 'Enter code',
   'coupons.apply': 'Apply',
+  'coupons.invalid': 'Invalid coupon',
+  'coupons.saves': 'You save:',
 
   // Referral
   'referral.title': 'My referral code',
@@ -244,4 +246,13 @@ export default {
   'common.yes': 'Yes',
   'common.no': 'No',
   'common.loading': 'Loading...',
+
+  'checkout.note': 'Note',
+  'checkout.note_placeholder': 'Additional instructions for your order...',
+  'checkout.select_address': 'Select an address',
+  'orders.cancel': 'Cancel',
+  'orders.status_label.pending': 'Pending',
+  'orders.status_label.confirmed': 'Confirmed',
+  'orders.status_label.completed': 'Completed',
+  'orders.status_label.cancelled': 'Cancelled',
 }

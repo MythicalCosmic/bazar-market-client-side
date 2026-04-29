@@ -1,78 +1,159 @@
 import { ref, computed } from 'vue'
+import { get, post, patch, publicPost, getToken, setToken, clearToken } from '../services/http.js'
 
-const user = ref(JSON.parse(localStorage.getItem('bazar-user') || 'null'))
+const user = ref(null)
+const token = ref(getToken())
 
 export function useAuth() {
-  const isAuthenticated = computed(() => !!user.value?.verified)
+  const isAuthenticated = computed(() => !!token.value && !!user.value?.verified)
 
-  function setUser(data) {
-    user.value = data
-    localStorage.setItem('bazar-user', JSON.stringify(data))
+  async function fetchProfile() {
+    try {
+      const data = await get('/auth/me')
+      user.value = {
+        id: data.id,
+        uuid: data.uuid,
+        firstName: data.first_name,
+        lastName: data.last_name || '',
+        phone: data.phone,
+        verified: data.is_phone_verified,
+        language: data.language,
+      }
+      return user.value
+    } catch (e) {
+      if (e.status === 401) {
+        token.value = null
+        user.value = null
+        clearToken()
+      }
+      throw e
+    }
+  }
+
+  async function login(phone, password, device) {
+    try {
+      const data = await publicPost('/auth/login', {
+        phone: phone.replace(/\s/g, ''),
+        password,
+        device: device || navigator.userAgent?.slice(0, 50),
+      })
+      setToken(data.session_key)
+      token.value = data.session_key
+      user.value = {
+        id: data.user.id,
+        uuid: data.user.uuid,
+        firstName: data.user.first_name,
+        lastName: data.user.last_name || '',
+        phone: data.user.phone,
+        verified: data.user.is_phone_verified,
+        language: data.user.language,
+      }
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  async function register(firstName, lastName, phone, password) {
+    try {
+      const data = await publicPost('/auth/register', {
+        phone: phone.replace(/\s/g, ''),
+        first_name: firstName,
+        last_name: lastName,
+        password,
+        language: localStorage.getItem('bazar-locale') || 'uz',
+      })
+      setToken(data.session_key)
+      token.value = data.session_key
+      user.value = {
+        id: data.user.id,
+        uuid: data.user.uuid,
+        firstName: data.user.first_name,
+        lastName: data.user.last_name || '',
+        phone: data.user.phone,
+        verified: data.user.is_phone_verified,
+        language: data.user.language,
+      }
+      return { success: true, verificationSent: data.verification_sent }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  async function verifyCode(code) {
+    try {
+      await post('/auth/verify', { code })
+      if (user.value) user.value.verified = true
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  async function sendCode() {
+    try {
+      const data = await post('/auth/resend-code')
+      return { success: true, expiresIn: data.expires_in }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  async function updateProfile(fields) {
+    try {
+      const body = {}
+      if (fields.firstName !== undefined) body.first_name = fields.firstName
+      if (fields.lastName !== undefined) body.last_name = fields.lastName
+      if (fields.language !== undefined) body.language = fields.language
+      const data = await patch('/auth/me/update', body)
+      user.value = {
+        ...user.value,
+        firstName: data.first_name,
+        lastName: data.last_name || '',
+        phone: data.phone,
+        language: data.language,
+      }
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  async function logout() {
+    try {
+      await post('/auth/logout')
+    } catch {}
+    token.value = null
+    user.value = null
+    clearToken()
   }
 
   function getUser() {
     return user.value
   }
 
-  function updateProfile(firstName, lastName) {
-    if (user.value) {
-      user.value.firstName = firstName
-      user.value.lastName = lastName
-      localStorage.setItem('bazar-user', JSON.stringify(user.value))
-    }
-  }
-
-  async function login(phone, password) {
-    // Fake API: accept any password with 4+ chars
-    await new Promise((r) => setTimeout(r, 500))
-    const saved = JSON.parse(localStorage.getItem('bazar-user') || 'null')
-    if (saved && saved.phone === phone) {
-      setUser(saved)
-      return { success: true }
-    }
-    // Simulate: in production, backend validates credentials
-    if (password.length >= 4) {
-      const data = { firstName: 'User', lastName: '', phone, verified: true }
-      setUser(data)
-      return { success: true }
-    }
-    return { success: false }
-  }
-
-  async function sendCode(phone) {
-    await new Promise((r) => setTimeout(r, 500))
-    return { success: true }
-  }
-
-  async function verifyCode(phone, code) {
-    await new Promise((r) => setTimeout(r, 500))
-    if (code.length === 6) {
-      return { success: true }
-    }
-    return { success: false, error: 'Invalid code' }
-  }
-
-  function register(firstName, lastName, phone, password) {
-    const data = { firstName, lastName, phone, password, verified: true }
-    setUser(data)
-    return data
-  }
-
-  function logout() {
-    user.value = null
-    localStorage.removeItem('bazar-user')
-  }
-
   return {
     user,
+    token,
     isAuthenticated,
     getUser,
-    setUser,
-    updateProfile,
+    fetchProfile,
     login,
-    sendCode,
-    verifyCode,
     register,
+    verifyCode,
+    sendCode,
+    updateProfile,
     logout,
+  }
+}
+
+export async function initAuth() {
+  const t = getToken()
+  if (!t) return
+  const { fetchProfile } = useAuth()
+  try {
+    await fetchProfile()
+  } catch {
+    clearToken()
   }
 }

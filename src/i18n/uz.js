@@ -228,6 +228,8 @@ export default {
   'coupons.have_code': 'Kupon kodingiz bormi?',
   'coupons.enter_code': 'Kodni kiriting',
   'coupons.apply': 'Qo\'llash',
+  'coupons.invalid': 'Kupon yaroqsiz',
+  'coupons.saves': 'Tejash:',
 
   // Referral
   'referral.title': 'Mening referal kodim',
@@ -244,4 +246,14 @@ export default {
   'common.yes': 'Ha',
   'common.no': 'Yo\'q',
   'common.loading': 'Yuklanmoqda...',
+
+  // Checkout extras
+  'checkout.note': 'Izoh',
+  'checkout.note_placeholder': 'Buyurtma uchun qo\'shimcha izoh...',
+  'checkout.select_address': 'Manzilni tanlang',
+  'orders.cancel': 'Bekor qilish',
+  'orders.status_label.pending': 'Kutilmoqda',
+  'orders.status_label.confirmed': 'Tasdiqlandi',
+  'orders.status_label.completed': 'Yakunlandi',
+  'orders.status_label.cancelled': 'Bekor qilindi',
 }

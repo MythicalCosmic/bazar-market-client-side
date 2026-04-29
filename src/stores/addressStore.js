@@ -1,34 +1,64 @@
 import { ref } from 'vue'
+import { getAddresses, addAddressAPI, deleteAddressAPI, setDefaultAddressAPI } from '../services/api.js'
+import { getToken } from '../services/http.js'
 
-const addresses = ref(JSON.parse(localStorage.getItem('bazar-addresses') || '[]'))
-
-function save() {
-  localStorage.setItem('bazar-addresses', JSON.stringify(addresses.value))
-}
-
-let nextId = addresses.value.length ? Math.max(...addresses.value.map(a => a.id)) + 1 : 1
+const addresses = ref([])
+let loaded = false
 
 export function useAddresses() {
-  function addAddress(label, address) {
-    addresses.value.push({ id: nextId++, label, address, isDefault: addresses.value.length === 0 })
-    save()
+  async function loadAddresses() {
+    if (!getToken() || loaded) return
+    try {
+      addresses.value = await getAddresses()
+      loaded = true
+    } catch {}
   }
 
-  function removeAddress(id) {
-    const idx = addresses.value.findIndex(a => a.id === id)
-    if (idx !== -1) {
-      addresses.value.splice(idx, 1)
-      if (addresses.value.length && !addresses.value.some(a => a.isDefault)) {
-        addresses.value[0].isDefault = true
-      }
-      save()
+  async function addAddress(data) {
+    try {
+      const result = await addAddressAPI({
+        latitude: data.lat,
+        longitude: data.lng,
+        address_text: data.address,
+        label: data.label || '',
+        entrance: data.entrance || '',
+        floor: data.floor || '',
+        apartment: data.apartment || '',
+        comment: data.comment || '',
+        is_default: data.isDefault || false,
+      })
+      loaded = false
+      await loadAddresses()
+      return result
+    } catch (e) {
+      throw e
     }
   }
 
-  function setDefault(id) {
-    addresses.value.forEach(a => { a.isDefault = a.id === id })
-    save()
+  async function removeAddress(id) {
+    addresses.value = addresses.value.filter(a => a.id !== id)
+    try {
+      await deleteAddressAPI(id)
+    } catch {
+      loaded = false
+      await loadAddresses()
+    }
   }
 
-  return { addresses, addAddress, removeAddress, setDefault }
+  async function setDefault(id) {
+    addresses.value.forEach(a => { a.isDefault = a.id === id })
+    try {
+      await setDefaultAddressAPI(id)
+    } catch {
+      loaded = false
+      await loadAddresses()
+    }
+  }
+
+  function resetAddresses() {
+    addresses.value = []
+    loaded = false
+  }
+
+  return { addresses, loadAddresses, addAddress, removeAddress, setDefault, resetAddresses }
 }

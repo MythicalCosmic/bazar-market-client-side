@@ -5,7 +5,7 @@ import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
 import { useTelegram } from '../composables/useTelegram.js'
 import { useFavorites } from '../stores/favoritesStore.js'
-import { getUserProfile } from '../services/api.js'
+import { getReferral } from '../services/api.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
@@ -14,11 +14,18 @@ const { user: tgUser, isAvailable: isTg, close: closeTg } = useTelegram()
 const { count: favCount } = useFavorites()
 
 const referralCode = ref('')
+const referralLink = ref('')
+const totalReferrals = ref(0)
 const referralCopied = ref(false)
 
 onMounted(async () => {
-  const profile = await getUserProfile()
-  referralCode.value = profile.referralCode || ''
+  if (!isAuthenticated.value) return
+  try {
+    const data = await getReferral()
+    referralCode.value = data.referral_code || ''
+    referralLink.value = data.referral_link || ''
+    totalReferrals.value = data.total_referrals || 0
+  } catch {}
 })
 
 function copyReferral() {
@@ -53,8 +60,8 @@ function startEdit() {
   isEditing.value = true
 }
 
-function saveEdit() {
-  updateProfile(editFirstName.value.trim(), editLastName.value.trim())
+async function saveEdit() {
+  await updateProfile({ firstName: editFirstName.value.trim(), lastName: editLastName.value.trim() })
   isEditing.value = false
 }
 

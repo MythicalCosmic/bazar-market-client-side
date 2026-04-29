@@ -5,23 +5,30 @@ import { useFormat } from '../composables/useFormat.js'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
+import { useAddresses } from '../stores/addressStore.js'
+import { placeOrder as placeOrderAPI, checkDelivery } from '../services/api.js'
 
-const { total, subtotal, deliveryCost, discount, clearCart } = useCartStore()
+const { total, subtotal, deliveryCost, discount, clearCart, setDeliveryCost } = useCartStore()
 const { formatNum } = useFormat()
 const { navigate } = useRouter()
 const { t } = useI18n()
-const { isAuthenticated } = useAuth()
+const { isAuthenticated, user } = useAuth()
+const { addresses } = useAddresses()
 
 const selectedPayment = ref('card')
 const locationStatus = ref('')
 const addressText = ref('')
+const selectedAddressId = ref(null)
+const couponCode = ref('')
+const userNote = ref('')
+const isPlacing = ref(false)
+const orderError = ref('')
 
 const paymentMethods = [
   { id: 'card', labelKey: 'checkout.card', emoji: '💳' },
   { id: 'cash', labelKey: 'checkout.cash', emoji: '💵' },
 ]
 
-// Marhamat, Andijan, Uzbekistan
 const DEFAULT_LAT = 40.5553
 const DEFAULT_LNG = 71.4742
 
@@ -34,23 +41,26 @@ async function getAddress(lat, lng) {
   if (abortController) abortController.abort()
   abortController = new AbortController()
   try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=uz`,
-      { signal: abortController.signal }
-    )
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=uz`, { signal: abortController.signal })
     if (!res.ok) throw new Error()
     const data = await res.json()
     if (data?.display_name) {
       const road = data.address?.road || data.address?.pedestrian || ''
       const house = data.address?.house_number || ''
       const city = data.address?.city || data.address?.town || ''
-      addressText.value = road
-        ? `${road}${house ? ' ' + house : ''}${city ? ', ' + city : ''}`
-        : data.display_name.split(',').slice(0, 2).join(',')
+      addressText.value = road ? `${road}${house ? ' ' + house : ''}${city ? ', ' + city : ''}` : data.display_name.split(',').slice(0, 2).join(',')
     }
   } catch (e) {
     if (e.name !== 'AbortError') addressText.value = t('checkout.address_unknown')
   }
+
+  // Check delivery availability
+  try {
+    const delivery = await checkDelivery(lat, lng)
+    if (delivery.available && delivery.zone) {
+      setDeliveryCost(parseFloat(delivery.zone.delivery_fee) || 0)
+    }
+  } catch {}
 }
 
 function debouncedGetAddress(lat, lng) {
@@ -61,46 +71,35 @@ function debouncedGetAddress(lat, lng) {
 
 function initMap(lat, lng) {
   map = L.map('leaflet-map', { zoomControl: true }).setView([lat, lng], 16)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '', maxZoom: 19,
-  }).addTo(map)
-
-  const greenIcon = L.divIcon({
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
+  const icon = L.divIcon({
     className: '',
     html: `<div style="width:36px;height:36px;background:#2DB84B;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(45,184,75,0.5);border:3px solid white"></div>`,
     iconSize: [36, 36], iconAnchor: [18, 36],
   })
-
-  marker = L.marker([lat, lng], { icon: greenIcon, draggable: true }).addTo(map)
-
-  map.on('click', (e) => {
-    marker.setLatLng(e.latlng)
-    debouncedGetAddress(e.latlng.lat, e.latlng.lng)
-  })
-  marker.on('dragend', () => {
-    const pos = marker.getLatLng()
-    debouncedGetAddress(pos.lat, pos.lng)
-  })
-
+  marker = L.marker([lat, lng], { icon, draggable: true }).addTo(map)
+  map.on('click', (e) => { marker.setLatLng(e.latlng); debouncedGetAddress(e.latlng.lat, e.latlng.lng) })
+  marker.on('dragend', () => { const pos = marker.getLatLng(); debouncedGetAddress(pos.lat, pos.lng) })
   getAddress(lat, lng)
 }
 
 onMounted(() => {
   if (!isAuthenticated.value) { navigate('login'); return }
 
+  // Use default address if available
+  const defaultAddr = addresses.value.find(a => a.isDefault)
+  if (defaultAddr) {
+    selectedAddressId.value = defaultAddr.id
+    addressText.value = defaultAddr.address
+  }
+
   locationStatus.value = t('checkout.detecting_location')
-  addressText.value = t('checkout.detecting_address')
+  if (!addressText.value) addressText.value = t('checkout.detecting_address')
 
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        locationStatus.value = '✅ ' + t('checkout.location_detected')
-        initMap(pos.coords.latitude, pos.coords.longitude)
-      },
-      () => {
-        locationStatus.value = '📍 ' + t('checkout.location_default')
-        initMap(DEFAULT_LAT, DEFAULT_LNG)
-      },
+      (pos) => { locationStatus.value = '✅ ' + t('checkout.location_detected'); initMap(pos.coords.latitude, pos.coords.longitude) },
+      () => { locationStatus.value = '📍 ' + t('checkout.location_default'); initMap(DEFAULT_LAT, DEFAULT_LNG) },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     )
   } else {
@@ -115,22 +114,36 @@ onUnmounted(() => {
   clearTimeout(debounceTimer)
 })
 
-function placeOrder() {
+async function handlePlaceOrder() {
   if (!isAuthenticated.value) { navigate('login'); return }
-  clearCart()
-  navigate('orders')
+
+  const addrId = selectedAddressId.value || addresses.value.find(a => a.isDefault)?.id
+  if (!addrId) { orderError.value = t('checkout.select_address'); return }
+
+  orderError.value = ''
+  isPlacing.value = true
+  try {
+    await placeOrderAPI({
+      address_id: addrId,
+      payment_method: selectedPayment.value,
+      coupon_code: couponCode.value || undefined,
+      user_note: userNote.value || undefined,
+    })
+    clearCart()
+    navigate('orders')
+  } catch (e) {
+    orderError.value = e.message || t('common.loading')
+  } finally {
+    isPlacing.value = false
+  }
 }
 </script>
 
 <template>
   <div class="min-h-screen" style="background: var(--bg-app)">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20"
-      style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
       <button @click="navigate('cart')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
-        <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <p class="text-base font-black" style="color: var(--text-primary)">{{ t('checkout.title') }}</p>
       <div class="w-9"></div>
@@ -140,10 +153,7 @@ function placeOrder() {
       <!-- Map -->
       <div class="rounded-2xl overflow-hidden relative" style="height: 200px; box-shadow: 0 2px 12px var(--shadow)">
         <div id="leaflet-map" style="width: 100%; height: 100%; z-index: 1;"></div>
-        <div class="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-1 rounded-lg"
-          style="z-index: 999; background: var(--surface); color: var(--text-secondary); box-shadow: 0 2px 6px var(--shadow-lg)">
-          {{ locationStatus }}
-        </div>
+        <div class="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-1 rounded-lg" style="z-index: 999; background: var(--surface); color: var(--text-secondary); box-shadow: 0 2px 6px var(--shadow-lg)">{{ locationStatus }}</div>
       </div>
 
       <!-- Delivery info -->
@@ -151,10 +161,7 @@ function placeOrder() {
         <div class="flex items-center justify-between px-4 py-3.5 border-b" style="border-color: var(--border)">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
-              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="2"/>
-                <polyline points="9 22 9 12 15 12 15 22" stroke-width="2"/>
-              </svg>
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="2"/><polyline points="9 22 9 12 15 12 15 22" stroke-width="2"/></svg>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('checkout.home') }}</p>
@@ -165,23 +172,18 @@ function placeOrder() {
         <div class="flex items-center justify-between px-4 py-3.5 border-b" style="border-color: var(--border)">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
-              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/>
-              </svg>
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/></svg>
             </div>
             <div>
               <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('checkout.phone') }}</p>
-              <p class="text-xs font-bold" style="color: var(--text-primary)">+998 959 45 11</p>
+              <p class="text-xs font-bold" style="color: var(--text-primary)">{{ user?.phone || '' }}</p>
             </div>
           </div>
         </div>
         <div class="flex items-center justify-between px-4 py-3.5">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
-              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke-width="2"/>
-                <polyline points="12 6 12 12 16 14" stroke-width="2" stroke-linecap="round"/>
-              </svg>
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2" stroke-linecap="round"/></svg>
             </div>
             <div>
               <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('checkout.delivery_time') }}</p>
@@ -191,11 +193,18 @@ function placeOrder() {
         </div>
       </div>
 
+      <!-- Note -->
+      <div class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <p class="text-xs font-black mb-2" style="color: var(--text-primary)">{{ t('checkout.note') }}</p>
+        <textarea v-model="userNote" :placeholder="t('checkout.note_placeholder')" rows="2"
+          class="w-full text-sm font-semibold px-3 py-2.5 rounded-xl outline-none resize-none"
+          style="background: var(--surface-secondary); color: var(--text-primary)"></textarea>
+      </div>
+
       <!-- Payment -->
       <div class="rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
         <p class="px-4 pt-3.5 pb-1 text-xs font-black" style="color: var(--text-primary)">{{ t('checkout.payment') }}</p>
-        <div v-for="(method, idx) in paymentMethods" :key="method.id"
-          @click="selectedPayment = method.id"
+        <div v-for="(method, idx) in paymentMethods" :key="method.id" @click="selectedPayment = method.id"
           :class="['flex items-center justify-between px-4 py-3.5 btn-press', idx < paymentMethods.length - 1 ? 'border-b' : '']"
           :style="{ borderColor: 'var(--border)' }">
           <div class="flex items-center gap-3">
@@ -231,13 +240,18 @@ function placeOrder() {
           </div>
         </div>
       </div>
+
+      <p v-if="orderError" class="text-xs font-bold text-red-500 text-center">{{ orderError }}</p>
     </div>
 
     <!-- Order button -->
-    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pb-6 pt-3 z-30 safe-bottom"
-      style="background: var(--surface); box-shadow: 0 -4px 20px var(--shadow)">
-      <button @click="placeOrder" class="w-full banner-bg text-white font-black text-base py-4 rounded-2xl btn-press"
-        style="box-shadow: 0 6px 24px var(--primary-glow)">{{ t('checkout.place_order') }}</button>
+    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pb-6 pt-3 z-30 safe-bottom" style="background: var(--surface); box-shadow: 0 -4px 20px var(--shadow)">
+      <button @click="handlePlaceOrder" :disabled="isPlacing"
+        class="w-full banner-bg text-white font-black text-base py-4 rounded-2xl btn-press transition-opacity"
+        :class="{ 'opacity-60': isPlacing }"
+        style="box-shadow: 0 6px 24px var(--primary-glow)">
+        {{ isPlacing ? t('common.loading') : t('checkout.place_order') }}
+      </button>
     </div>
   </div>
 </template>

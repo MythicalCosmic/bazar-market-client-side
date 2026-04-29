@@ -1,29 +1,51 @@
 import { ref, computed } from 'vue'
+import { getFavorites, toggleFavoriteAPI } from '../services/api.js'
+import { getToken } from '../services/http.js'
 
-const items = ref(JSON.parse(localStorage.getItem('bazar-favorites') || '[]'))
-
-function save() {
-  localStorage.setItem('bazar-favorites', JSON.stringify(items.value))
-}
+const favoriteIds = ref([])
+let loaded = false
 
 export function useFavorites() {
-  const favorites = computed(() => items.value)
+  const favorites = computed(() => favoriteIds.value)
+  const count = computed(() => favoriteIds.value.length)
 
   function isFavorite(productId) {
-    return items.value.includes(productId)
+    return favoriteIds.value.includes(productId)
   }
 
-  function toggleFavorite(productId) {
-    const idx = items.value.indexOf(productId)
+  async function toggleFavorite(productId) {
+    const idx = favoriteIds.value.indexOf(productId)
     if (idx !== -1) {
-      items.value.splice(idx, 1)
+      favoriteIds.value.splice(idx, 1)
     } else {
-      items.value.push(productId)
+      favoriteIds.value.push(productId)
     }
-    save()
+
+    if (getToken()) {
+      try {
+        await toggleFavoriteAPI(productId)
+      } catch {
+        // Rollback
+        const idx2 = favoriteIds.value.indexOf(productId)
+        if (idx2 !== -1) favoriteIds.value.splice(idx2, 1)
+        else favoriteIds.value.push(productId)
+      }
+    }
   }
 
-  const count = computed(() => items.value.length)
+  async function loadFavorites() {
+    if (!getToken() || loaded) return
+    try {
+      const items = await getFavorites()
+      favoriteIds.value = items.map(p => p.id)
+      loaded = true
+    } catch {}
+  }
 
-  return { favorites, isFavorite, toggleFavorite, count }
+  function resetFavorites() {
+    favoriteIds.value = []
+    loaded = false
+  }
+
+  return { favorites, count, isFavorite, toggleFavorite, loadFavorites, resetFavorites }
 }
