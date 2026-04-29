@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
-import { images } from '../assets/images.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
@@ -51,7 +50,11 @@ async function handleLogin() {
   <div class="min-h-screen flex flex-col" style="background: var(--bg-app)">
     <div class="relative pt-12 pb-8 flex flex-col items-center" style="background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 0 0 32px 32px;">
       <div class="w-20 h-20 rounded-3xl bg-white/20 flex items-center justify-center mb-4 backdrop-blur-sm" style="box-shadow: 0 8px 32px rgba(0,0,0,0.15)">
-        <img :src="images.logo" alt="Bazar Market" class="w-14 h-14 object-contain" />
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
+          <path d="M16 10a4 4 0 0 1-8 0" stroke-linecap="round"/>
+        </svg>
       </div>
       <h1 class="text-white text-2xl font-black tracking-wide">BAZAR MARKET</h1>
       <p class="text-white/70 text-xs font-semibold mt-1">{{ t('login.welcome') }}</p>

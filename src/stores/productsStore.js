@@ -26,7 +26,7 @@ export async function loadProducts(force = false) {
     banners.value = bans
     loadedAt = Date.now()
   } catch (e) {
-    console.error('Failed to load products:', e.message)
+    // Silent fail — products will show empty
   } finally {
     isLoading.value = false
   }
