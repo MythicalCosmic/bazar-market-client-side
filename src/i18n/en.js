@@ -37,7 +37,7 @@ export default {
   'cart.empty_subtitle': 'Add products from catalog',
   'cart.go_catalog': 'To catalog',
   'cart.add_more': 'Add to order?',
-  'cart.add': '+ Add',
+  'cart.add': 'Add',
   'cart.your_order': 'Your order',
   'cart.products': 'Products',
   'cart.discount': 'Discount',
@@ -215,6 +215,7 @@ export default {
   'addresses.label_other': 'Other',
   'addresses.custom_label': 'Label name',
   'addresses.save_address': 'Save address',
+  'addresses.set_default': 'Set as default',
   'addresses.comment': 'Comment',
   'addresses.comment_placeholder': 'Additional info (entrance, floor, door...)',
 

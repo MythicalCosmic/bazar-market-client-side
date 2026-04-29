@@ -6,8 +6,9 @@ const addresses = ref([])
 let loaded = false
 
 export function useAddresses() {
-  async function loadAddresses() {
-    if (!getToken() || loaded) return
+  async function loadAddresses(force = false) {
+    if (!getToken()) return
+    if (loaded && !force) return
     try {
       addresses.value = await getAddresses()
       loaded = true

@@ -37,7 +37,7 @@ export default {
   'cart.empty_subtitle': 'Katalogdan mahsulot qo\'shing',
   'cart.go_catalog': 'Katalogga',
   'cart.add_more': 'Buyurtmaga qo\'shish',
-  'cart.add': '+ Qo\'shish',
+  'cart.add': 'Qo\'shish',
   'cart.your_order': 'Sizning buyurtmangiz',
   'cart.products': 'Mahsulotlar',
   'cart.discount': 'Chegirma',
@@ -215,6 +215,7 @@ export default {
   'addresses.label_other': 'Boshqa',
   'addresses.custom_label': 'Yorliq nomi',
   'addresses.save_address': 'Manzilni saqlash',
+  'addresses.set_default': 'Asosiy qilish',
   'addresses.comment': 'Izoh',
   'addresses.comment_placeholder': 'Qo\'shimcha ma\'lumot (kirish, qavat, eshik...)',
 

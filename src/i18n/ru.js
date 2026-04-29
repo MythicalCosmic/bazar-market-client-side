@@ -37,7 +37,7 @@ export default {
   'cart.empty_subtitle': 'Добавьте товары из каталога',
   'cart.go_catalog': 'В каталог',
   'cart.add_more': 'Добавить к заказу?',
-  'cart.add': '+ Добавить',
+  'cart.add': 'Добавить',
   'cart.your_order': 'Ваш заказ',
   'cart.products': 'Товары',
   'cart.discount': 'Скидка',
@@ -215,6 +215,7 @@ export default {
   'addresses.label_other': 'Другое',
   'addresses.custom_label': 'Название метки',
   'addresses.save_address': 'Сохранить адрес',
+  'addresses.set_default': 'Сделать основным',
   'addresses.comment': 'Комментарий',
   'addresses.comment_placeholder': 'Доп. информация (подъезд, этаж, дверь...)',
 
