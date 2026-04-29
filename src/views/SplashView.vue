@@ -28,13 +28,7 @@ onUnmounted(() => {
 
     <!-- Logo -->
     <div class="splash-logo-wrap">
-      <div class="splash-logo flex items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm">
-        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/>
-          <path d="M16 10a4 4 0 0 1-8 0" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <img src="/logo.png" alt="Bazar Market" class="splash-logo" />
     </div>
 
     <!-- Text -->
@@ -74,8 +68,9 @@ onUnmounted(() => {
   will-change: transform, opacity;
 }
 .splash-logo {
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
   filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.2));
 }
 

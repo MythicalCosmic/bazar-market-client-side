@@ -5,29 +5,51 @@ import ProductCard from '../components/ProductCard.vue'
 import { useI18n } from '../i18n/index.js'
 import { useRouter } from '../router/index.js'
 import { products, categories, loadProducts, isLoading } from '../stores/productsStore.js'
+import { searchProducts } from '../services/api.js'
 
 const { t, getLocalizedName } = useI18n()
 const { routeParams } = useRouter()
 
 const selectedCat = ref(routeParams.value?.category || 'all')
+const searchQuery = ref('')
+const searchResultProducts = ref([])
+const isSearching = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   loadProducts()
   if (routeParams.value?.category) selectedCat.value = routeParams.value.category
+  if (routeParams.value?.search) {
+    searchQuery.value = routeParams.value.search
+    await doSearch(routeParams.value.search)
+  }
 })
 
-watch(routeParams, (params) => {
+watch(routeParams, async (params) => {
   if (params?.category) selectedCat.value = params.category
+  if (params?.search) {
+    searchQuery.value = params.search
+    await doSearch(params.search)
+  }
 })
+
+async function doSearch(q) {
+  if (!q.trim()) { searchResultProducts.value = []; return }
+  isSearching.value = true
+  try {
+    searchResultProducts.value = await searchProducts(q)
+  } catch { searchResultProducts.value = [] }
+  isSearching.value = false
+}
 
 const allCategories = computed(() => {
   const synthetic = [
-    { id: 'all', name: { uz: 'Hammasi', ru: 'Все' }, image: null, icon: 'sparkles' },
+    { id: 'all', name: { uz: 'Hammasi', ru: 'Все', en: 'All' }, image: null, icon: 'sparkles' },
   ]
   return [...synthetic, ...categories.value]
 })
 
 const filteredProducts = computed(() => {
+  if (searchQuery.value.trim()) return searchResultProducts.value
   if (selectedCat.value === 'all') return products.value
   return products.value.filter((p) => p.category === selectedCat.value)
 })
