@@ -1,16 +1,31 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
 import { useTelegram } from '../composables/useTelegram.js'
 import { useFavorites } from '../stores/favoritesStore.js'
+import { getUserProfile } from '../services/api.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
 const { user, isAuthenticated, updateProfile, logout } = useAuth()
 const { user: tgUser, isAvailable: isTg, close: closeTg } = useTelegram()
 const { count: favCount } = useFavorites()
+
+const referralCode = ref('')
+const referralCopied = ref(false)
+
+onMounted(async () => {
+  const profile = await getUserProfile()
+  referralCode.value = profile.referralCode || ''
+})
+
+function copyReferral() {
+  navigator.clipboard?.writeText(referralCode.value)
+  referralCopied.value = true
+  setTimeout(() => { referralCopied.value = false }, 2000)
+}
 
 const isEditing = ref(false)
 const editFirstName = ref('')
@@ -148,6 +163,32 @@ const menuGroups = [
           <p class="text-xl font-black text-primary">2</p>
           <p class="text-[10px] font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ t('profile.coupons_count') }}</p>
         </div>
+      </div>
+    </div>
+
+    <!-- Referral -->
+    <div v-if="isAuthenticated && referralCode" class="rounded-2xl p-4 mb-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+          <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="9" cy="7" r="4" stroke-width="2"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-black" style="color: var(--text-primary)">{{ t('referral.title') }}</p>
+          <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('referral.subtitle') }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex-1 flex items-center px-3 py-2.5 rounded-xl" style="background: var(--surface-secondary)">
+          <span class="text-sm font-black tracking-wider" style="color: var(--text-primary)">{{ referralCode }}</span>
+        </div>
+        <button @click="copyReferral" class="px-4 py-2.5 rounded-xl text-xs font-black btn-press transition-all"
+          :class="referralCopied ? 'bg-primary text-white' : 'bg-primary/10 text-primary'">
+          {{ referralCopied ? t('referral.copied') : t('referral.copy') }}
+        </button>
       </div>
     </div>
 

@@ -213,6 +213,12 @@ export default {
   'coupons.enter_code': 'Kodni kiriting',
   'coupons.apply': 'Qo\'llash',
 
+  // Referral
+  'referral.title': 'Mening referal kodim',
+  'referral.subtitle': 'Do\'stlaringizga ulashing va bonus oling',
+  'referral.copy': 'Nusxalash',
+  'referral.copied': 'Nusxalandi!',
+
   // Currency
   'currency': 'so\'m',
 

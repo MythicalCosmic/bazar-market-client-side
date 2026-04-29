@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import ProductCard from '../components/ProductCard.vue'
+import CategoryIcon from '../components/CategoryIcon.vue'
 import { useI18n } from '../i18n/index.js'
 import { useRouter } from '../router/index.js'
 import { products, categories, loadProducts, isLoading } from '../stores/productsStore.js'
@@ -59,7 +60,7 @@ const filteredProducts = computed(() => {
             boxShadow: selectedCat === cat.id ? '0 4px 12px var(--primary-glow)' : '0 1px 4px var(--shadow)',
           }"
         >
-          <span class="text-xl leading-none">{{ cat.emoji }}</span>
+          <CategoryIcon :icon="cat.icon" size="20" />
           <span
             :class="['text-[10px] font-bold whitespace-nowrap']"
             :style="{ color: selectedCat === cat.id ? 'white' : 'var(--text-secondary)' }"

@@ -213,6 +213,12 @@ export default {
   'coupons.enter_code': 'Enter code',
   'coupons.apply': 'Apply',
 
+  // Referral
+  'referral.title': 'My referral code',
+  'referral.subtitle': 'Share with friends and earn bonus',
+  'referral.copy': 'Copy',
+  'referral.copied': 'Copied!',
+
   // Currency
   'currency': 'sum',
 

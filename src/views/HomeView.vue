@@ -6,6 +6,7 @@ import AppHeader from '../components/AppHeader.vue'
 import BannerCarousel from '../components/BannerCarousel.vue'
 import FeaturedSection from '../components/FeaturedSection.vue'
 import ProductCard from '../components/ProductCard.vue'
+import CategoryIcon from '../components/CategoryIcon.vue'
 import { products, featuredProducts, banners, categories, loadProducts, isLoading } from '../stores/productsStore.js'
 
 const { navigate } = useRouter()
@@ -49,10 +50,10 @@ function goToCategory(catId) {
             class="flex-shrink-0 flex flex-col items-center gap-1.5 btn-press"
           >
             <div
-              class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-colors"
+              class="w-14 h-14 rounded-2xl flex items-center justify-center transition-colors text-primary"
               style="background: var(--primary-light)"
             >
-              {{ cat.emoji }}
+              <CategoryIcon :icon="cat.icon" size="24" />
             </div>
             <span class="text-[10px] font-bold whitespace-nowrap" style="color: var(--text-secondary)">
               {{ t(cat.labelKey) }}

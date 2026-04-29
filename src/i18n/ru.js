@@ -213,6 +213,12 @@ export default {
   'coupons.enter_code': 'Введите код',
   'coupons.apply': 'Применить',
 
+  // Referral
+  'referral.title': 'Мой реферальный код',
+  'referral.subtitle': 'Поделитесь с друзьями и получите бонус',
+  'referral.copy': 'Копировать',
+  'referral.copied': 'Скопировано!',
+
   // Currency
   'currency': 'сум',
 
