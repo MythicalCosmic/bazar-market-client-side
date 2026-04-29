@@ -247,6 +247,9 @@ export default {
   'common.no': 'No',
   'common.loading': 'Loading...',
 
+  'product.left_in_stock': 'Only {count} left',
+  'product.out_of_stock': 'Out of stock',
+
   'verify.title': 'Phone verification',
   'verify.subtitle': 'Verify your phone to place orders',
   'verify.banner_title': 'Phone not verified',

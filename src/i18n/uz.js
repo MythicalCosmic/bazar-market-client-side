@@ -248,6 +248,10 @@ export default {
   'common.loading': 'Yuklanmoqda...',
 
   // Checkout extras
+  // Product
+  'product.left_in_stock': 'Faqat {count} ta qoldi',
+  'product.out_of_stock': 'Tugagan',
+
   // Verify
   'verify.title': 'Telefon tasdiqlash',
   'verify.subtitle': 'Buyurtma berish uchun telefoningizni tasdiqlang',

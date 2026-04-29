@@ -247,6 +247,9 @@ export default {
   'common.no': 'Нет',
   'common.loading': 'Загрузка...',
 
+  'product.left_in_stock': 'Осталось {count} шт',
+  'product.out_of_stock': 'Нет в наличии',
+
   'verify.title': 'Подтверждение телефона',
   'verify.subtitle': 'Подтвердите телефон для оформления заказов',
   'verify.banner_title': 'Телефон не подтверждён',

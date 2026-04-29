@@ -4,7 +4,7 @@ import { get, post, patch, publicGet } from './http.js'
 
 function transformProduct(raw) {
   return {
-    id: raw.id,
+    id: raw.id || raw.product_id,
     name: { uz: raw.name_uz || '', ru: raw.name_ru || '' },
     description: { uz: raw.description_uz || '', ru: raw.description_ru || '' },
     price: parseFloat(raw.price) || 0,
@@ -16,6 +16,7 @@ function transformProduct(raw) {
     isFeatured: raw.is_featured || false,
     inStock: raw.in_stock !== false,
     unit: raw.unit || 'piece',
+    stockQty: raw.stock_qty ? parseFloat(raw.stock_qty) : null,
     step: raw.step ? parseFloat(raw.step) : 1,
     minQty: raw.min_qty ? parseFloat(raw.min_qty) : 1,
     maxQty: raw.max_qty ? parseFloat(raw.max_qty) : null,
