@@ -1,6 +1,7 @@
 import { reactive, computed, ref } from 'vue'
 import { getCart, addToCartAPI, updateCartAPI, removeFromCartAPI, clearCartAPI } from '../services/api.js'
 import { getToken } from '../services/http.js'
+import { useToast } from '../composables/useToast.js'
 
 const state = reactive({
   items: [],
@@ -36,12 +37,17 @@ export function useCartStore() {
     const existing = state.items.find((i) => i.id === product.id)
 
     if (existing) {
-      existing.quantity = round(parseFloat(existing.quantity) + step)
+      const oldQty = parseFloat(existing.quantity)
+      existing.quantity = round(oldQty + step)
       if (getToken()) {
-        updateCartAPI(product.id, existing.quantity).catch(() => loadCart())
+        updateCartAPI(product.id, existing.quantity).catch((e) => {
+          existing.quantity = oldQty
+          const { error } = useToast()
+          error(e.message || 'Failed to update cart')
+        })
       }
     } else {
-      state.items.push({
+      const newItem = {
         id: product.id,
         name: product.name,
         price: product.discountedPrice || product.price,
@@ -50,9 +56,15 @@ export function useCartStore() {
         step: step,
         minQty: minQty,
         quantity: minQty,
-      })
+      }
+      state.items.push(newItem)
       if (getToken()) {
-        addToCartAPI(product.id, minQty).catch(() => loadCart())
+        addToCartAPI(product.id, minQty).catch((e) => {
+          const idx = state.items.indexOf(newItem)
+          if (idx !== -1) state.items.splice(idx, 1)
+          const { error } = useToast()
+          error(e.message || 'Failed to add to cart')
+        })
       }
     }
   }
@@ -65,23 +77,37 @@ export function useCartStore() {
     const minQty = item.minQty || step
 
     if (round(qty - step) >= minQty) {
-      item.quantity = round(qty - step)
+      const newQty = round(qty - step)
+      item.quantity = newQty
       if (getToken()) {
-        updateCartAPI(productId, item.quantity).catch(() => loadCart())
+        updateCartAPI(productId, newQty).catch((e) => {
+          item.quantity = qty
+          const { error } = useToast()
+          error(e.message || 'Failed to update cart')
+        })
       }
     } else {
-      state.items.splice(state.items.indexOf(item), 1)
+      const idx = state.items.indexOf(item)
+      state.items.splice(idx, 1)
       if (getToken()) {
-        removeFromCartAPI(productId).catch(() => loadCart())
+        removeFromCartAPI(productId).catch((e) => {
+          state.items.splice(idx, 0, { ...item, quantity: qty })
+          const { error } = useToast()
+          error(e.message || 'Failed to remove from cart')
+        })
       }
     }
   }
 
   function deleteItem(productId) {
     const idx = state.items.findIndex((i) => i.id === productId)
-    if (idx !== -1) state.items.splice(idx, 1)
+    const removed = idx !== -1 ? state.items.splice(idx, 1)[0] : null
     if (getToken()) {
-      removeFromCartAPI(productId).catch(() => loadCart())
+      removeFromCartAPI(productId).catch((e) => {
+        if (removed) state.items.splice(idx, 0, removed)
+        const { error } = useToast()
+        error(e.message || 'Failed to remove item')
+      })
     }
   }
 
