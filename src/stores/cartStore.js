@@ -31,12 +31,15 @@ export function useCartStore() {
   }
 
   function addToCart(product) {
-    const step = product.step || 1
+    const step = product.step || (['kg', 'liter'].includes(product.unit) ? 0.1 : 1)
     const minQty = product.minQty || step
     const existing = state.items.find((i) => i.id === product.id)
 
     if (existing) {
       existing.quantity = round(parseFloat(existing.quantity) + step)
+      if (getToken()) {
+        updateCartAPI(product.id, existing.quantity).catch(() => loadCart())
+      }
     } else {
       state.items.push({
         id: product.id,
@@ -48,10 +51,9 @@ export function useCartStore() {
         minQty: minQty,
         quantity: minQty,
       })
-    }
-    if (getToken()) {
-      const qty = existing ? existing.quantity : minQty
-      addToCartAPI(product.id, qty).catch(() => loadCart())
+      if (getToken()) {
+        addToCartAPI(product.id, minQty).catch(() => loadCart())
+      }
     }
   }
 

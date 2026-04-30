@@ -28,8 +28,8 @@ function transformProduct(raw) {
     inStock: raw.in_stock !== false,
     unit: raw.unit || 'piece',
     stockQty: raw.stock_qty ? parseFloat(raw.stock_qty) : null,
-    step: raw.step ? parseFloat(raw.step) : 1,
-    minQty: raw.min_qty ? parseFloat(raw.min_qty) : 1,
+    step: raw.step ? parseFloat(raw.step) : (['kg', 'liter'].includes(raw.unit) ? 0.1 : 1),
+    minQty: raw.min_qty ? parseFloat(raw.min_qty) : (['kg', 'liter'].includes(raw.unit) ? 0.1 : 1),
     maxQty: raw.max_qty ? parseFloat(raw.max_qty) : null,
   }
 }
