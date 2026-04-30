@@ -92,17 +92,17 @@ function confirmLogout() {
 const menuGroups = [
   {
     items: [
-      { labelKey: 'profile.my_orders', icon: 'orders', route: 'orders', color: 'text-primary', bg: 'bg-primary/10' },
-      { labelKey: 'favorites.title', icon: 'heart', route: 'favorites', color: 'text-red-500', bg: 'bg-red-500/10' },
-      { labelKey: 'addresses.title', icon: 'location', route: 'addresses', color: 'text-orange-500', bg: 'bg-orange-500/10' },
-      { labelKey: 'coupons.title', icon: 'coupon', route: 'coupons', color: 'text-yellow-600', bg: 'bg-yellow-500/10' },
-      { labelKey: 'profile.payment_methods', icon: 'card', route: 'payment-methods', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+      { labelKey: 'profile.my_orders', icon: 'orders', route: 'orders', iconColor: '#2DB84B', iconBg: 'rgba(45,184,75,0.1)' },
+      { labelKey: 'favorites.title', icon: 'heart', route: 'favorites', iconColor: '#ef4444', iconBg: 'rgba(239,68,68,0.1)' },
+      { labelKey: 'addresses.title', icon: 'location', route: 'addresses', iconColor: '#f97316', iconBg: 'rgba(249,115,22,0.1)' },
+      { labelKey: 'coupons.title', icon: 'coupon', route: 'coupons', iconColor: '#ca8a04', iconBg: 'rgba(234,179,8,0.1)' },
+      { labelKey: 'profile.payment_methods', icon: 'card', route: 'payment-methods', iconColor: '#3b82f6', iconBg: 'rgba(59,130,246,0.1)' },
     ],
   },
   {
     items: [
-      { labelKey: 'profile.settings', icon: 'settings', route: 'settings', color: 'text-gray-500', bg: 'bg-gray-500/10' },
-      { labelKey: 'support.title', icon: 'help', route: 'support', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+      { labelKey: 'profile.settings', icon: 'settings', route: 'settings', iconColor: '#6b7280', iconBg: 'rgba(107,114,128,0.1)' },
+      { labelKey: 'support.title', icon: 'help', route: 'support', iconColor: '#a855f7', iconBg: 'rgba(168,85,247,0.1)' },
     ],
   },
 ]
@@ -238,14 +238,14 @@ const menuGroups = [
         :class="['flex items-center justify-between px-4 py-3.5 btn-press cursor-pointer', ii < group.items.length - 1 ? 'border-b' : '']"
         :style="{ borderColor: 'var(--border)' }">
         <div class="flex items-center gap-3">
-          <div :class="['w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0', item.bg]">
-            <svg v-if="item.icon === 'orders'" width="18" height="18" :class="[item.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" stroke-width="2" stroke-linecap="round"/><rect x="9" y="3" width="6" height="4" rx="1" stroke-width="2"/><path d="M9 12h6M9 16h4" stroke-width="2" stroke-linecap="round"/></svg>
-            <svg v-else-if="item.icon === 'heart'" width="18" height="18" :class="[item.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-width="2"/></svg>
-            <svg v-else-if="item.icon === 'location'" width="18" height="18" :class="[item.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
-            <svg v-else-if="item.icon === 'coupon'" width="18" height="18" :class="[item.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6" stroke-width="2" stroke-linecap="round"/><path d="M22 6H2v6h20V6z" stroke-width="2" stroke-linecap="round"/><path d="M12 6v12" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 2"/></svg>
-            <svg v-else-if="item.icon === 'card'" width="18" height="18" :class="[item.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" stroke-width="2"/><path d="M1 10h22" stroke-width="2"/></svg>
-            <svg v-else-if="item.icon === 'settings'" width="18" height="18" :class="[item.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="2"/></svg>
-            <svg v-else-if="item.icon === 'help'" width="18" height="18" :class="[item.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" :style="{ background: item.iconBg }">
+            <svg v-if="item.icon === 'orders'" width="18" height="18" :style="{ color: item.iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" stroke-width="2" stroke-linecap="round"/><rect x="9" y="3" width="6" height="4" rx="1" stroke-width="2"/><path d="M9 12h6M9 16h4" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg v-else-if="item.icon === 'heart'" width="18" height="18" :style="{ color: item.iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-width="2"/></svg>
+            <svg v-else-if="item.icon === 'location'" width="18" height="18" :style="{ color: item.iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
+            <svg v-else-if="item.icon === 'coupon'" width="18" height="18" :style="{ color: item.iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6" stroke-width="2" stroke-linecap="round"/><path d="M22 6H2v6h20V6z" stroke-width="2" stroke-linecap="round"/><path d="M12 6v12" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 2"/></svg>
+            <svg v-else-if="item.icon === 'card'" width="18" height="18" :style="{ color: item.iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" stroke-width="2"/><path d="M1 10h22" stroke-width="2"/></svg>
+            <svg v-else-if="item.icon === 'settings'" width="18" height="18" :style="{ color: item.iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="2"/></svg>
+            <svg v-else-if="item.icon === 'help'" width="18" height="18" :style="{ color: item.iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <span class="text-sm font-bold" style="color: var(--text-primary)">{{ t(item.labelKey) }}</span>
         </div>
