@@ -6,20 +6,53 @@ import { useFormat } from '../composables/useFormat.js'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { products } from '../stores/productsStore.js'
+import { validateCoupon } from '../services/api.js'
 
-const { cartItems, subtotal, total, deliveryCost, discount, addToCart, clearCart } = useCartStore()
+const { cartItems, subtotal, total, deliveryCost, discount, addToCart, clearCart, setDiscount } = useCartStore()
 const { formatPrice, formatNum } = useFormat()
 const { navigate } = useRouter()
 const { t, getLocalizedName } = useI18n()
 
 const showClearConfirm = ref(false)
 const promoCode = ref('')
-const promoApplied = ref(false)
+const promoStatus = ref('idle') // idle | loading | valid | invalid
+const promoError = ref('')
+const promoData = ref(null) // { type, value, discount_amount, code }
+const appliedCode = ref('')
 
-function applyPromo() {
-  if (promoCode.value.trim()) {
-    promoApplied.value = true
+async function applyPromo() {
+  const code = promoCode.value.trim()
+  if (!code) return
+
+  promoStatus.value = 'loading'
+  promoError.value = ''
+  promoData.value = null
+
+  try {
+    const data = await validateCoupon(code, subtotal.value)
+    if (data.valid) {
+      promoStatus.value = 'valid'
+      promoData.value = data
+      appliedCode.value = code
+      setDiscount(parseFloat(data.discount_amount) || 0)
+    } else {
+      promoStatus.value = 'invalid'
+      promoError.value = t('coupons.invalid')
+    }
+  } catch (e) {
+    promoStatus.value = 'invalid'
+    promoError.value = e.message || t('coupons.invalid')
+    setDiscount(0)
   }
+}
+
+function removePromo() {
+  promoCode.value = ''
+  promoStatus.value = 'idle'
+  promoData.value = null
+  promoError.value = ''
+  appliedCode.value = ''
+  setDiscount(0)
 }
 
 const suggestions = computed(() =>
@@ -100,17 +133,57 @@ function confirmClear() {
         </div>
 
         <!-- Promo code -->
-        <div class="rounded-2xl p-4 mt-1" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <div class="rounded-2xl p-4 mt-1 transition-all" :style="{
+          background: promoStatus === 'valid' ? 'var(--primary-light)' : 'var(--surface)',
+          boxShadow: promoStatus === 'valid' ? '0 0 0 2px var(--primary), 0 2px 12px var(--shadow)' : '0 2px 12px var(--shadow)',
+        }">
           <p class="text-xs font-black mb-2" style="color: var(--text-primary)">{{ t('cart.promo_code') }}</p>
-          <div class="flex gap-2">
-            <input v-model="promoCode" :placeholder="t('coupons.enter_code')"
-              class="flex-1 text-sm font-bold px-3 py-2.5 rounded-xl outline-none"
-              style="background: var(--surface-secondary); color: var(--text-primary)" />
-            <button @click="applyPromo" class="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-black btn-press">
-              {{ t('coupons.apply') }}
+
+          <!-- Applied state -->
+          <div v-if="promoStatus === 'valid' && promoData" class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                <svg width="16" height="16" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-black text-primary">{{ appliedCode }}</p>
+                <p class="text-[10px] font-semibold" style="color: var(--text-secondary)">
+                  {{ promoData.type === 'percent' ? promoData.value + '% ' + t('cart.discount').toLowerCase() : '' }}
+                  · -{{ formatNum(promoData.discount_amount) }} {{ t('currency') }}
+                </p>
+              </div>
+            </div>
+            <button @click="removePromo" class="w-8 h-8 rounded-lg flex items-center justify-center btn-press bg-red-500/10">
+              <svg width="14" height="14" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </button>
           </div>
-          <p v-if="promoApplied" class="text-[10px] font-bold text-primary mt-1.5">✅ {{ t('cart.promo_applied') }}</p>
+
+          <!-- Input state -->
+          <div v-else>
+            <div class="flex gap-2">
+              <input v-model="promoCode" :placeholder="t('coupons.enter_code')"
+                :disabled="promoStatus === 'loading'"
+                class="flex-1 text-sm font-bold px-3 py-2.5 rounded-xl outline-none transition-all"
+                :style="{
+                  background: promoStatus === 'invalid' ? 'rgba(239,68,68,0.05)' : 'var(--surface-secondary)',
+                  color: 'var(--text-primary)',
+                  border: promoStatus === 'invalid' ? '1px solid rgba(239,68,68,0.3)' : '1px solid transparent',
+                }"
+                @keyup.enter="applyPromo" />
+              <button @click="applyPromo" :disabled="promoStatus === 'loading' || !promoCode.trim()"
+                class="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-black btn-press transition-opacity"
+                :class="{ 'opacity-50': promoStatus === 'loading' || !promoCode.trim() }">
+                {{ promoStatus === 'loading' ? '...' : t('coupons.apply') }}
+              </button>
+            </div>
+            <p v-if="promoStatus === 'invalid' && promoError" class="text-[10px] font-bold text-red-500 mt-1.5">
+              {{ promoError }}
+            </p>
+          </div>
         </div>
 
         <!-- Summary -->
@@ -146,7 +219,7 @@ function confirmClear() {
       style="background: linear-gradient(to top, var(--bg-app) 65%, transparent)"
     >
       <button
-        @click="navigate('checkout')"
+        @click="navigate('checkout', { couponCode: appliedCode })"
         class="w-full banner-bg text-white font-black py-4 rounded-2xl flex items-center justify-between px-5 btn-press"
         style="box-shadow: 0 6px 24px var(--primary-glow)"
       >
