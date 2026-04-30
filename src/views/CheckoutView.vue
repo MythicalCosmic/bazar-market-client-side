@@ -80,13 +80,19 @@ function initMap(lat, lng) {
   getAddress(lat, lng)
 }
 
-function selectAddress(addr) {
+async function selectAddress(addr) {
   selectedAddressId.value = addr.id
   addressText.value = addr.address
   showAddressPicker.value = false
-  if (addr.lat && addr.lng && map && marker) {
-    map.setView([addr.lat, addr.lng], 16)
-    marker.setLatLng([addr.lat, addr.lng])
+  if (addr.lat && addr.lng) {
+    if (map && marker) {
+      map.setView([addr.lat, addr.lng], 16)
+      marker.setLatLng([addr.lat, addr.lng])
+    }
+    try {
+      const delivery = await checkDelivery(addr.lat, addr.lng)
+      if (delivery.available && delivery.zone) setDeliveryCost(parseFloat(delivery.zone.delivery_fee) || 0)
+    } catch {}
   }
 }
 
@@ -109,6 +115,10 @@ onMounted(async () => {
 
   if (defaultAddr?.lat && defaultAddr?.lng) {
     locationStatus.value = '✅ ' + t('checkout.location_detected')
+    try {
+      const delivery = await checkDelivery(defaultAddr.lat, defaultAddr.lng)
+      if (delivery.available && delivery.zone) setDeliveryCost(parseFloat(delivery.zone.delivery_fee) || 0)
+    } catch {}
     initMap(startLat, startLng)
   } else if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
