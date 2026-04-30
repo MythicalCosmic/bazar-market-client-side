@@ -164,6 +164,10 @@ export async function checkDelivery(lat, lng) {
   return publicGet(`/delivery/check?lat=${lat}&lng=${lng}`)
 }
 
+export async function getDeliveryInfo() {
+  return publicGet('/delivery/info')
+}
+
 // ── Cart ──
 
 export async function getCart() {

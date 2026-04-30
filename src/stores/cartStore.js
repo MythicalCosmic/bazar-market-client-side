@@ -1,13 +1,12 @@
 import { reactive, computed, ref } from 'vue'
-import { getCart, addToCartAPI, updateCartAPI, removeFromCartAPI, clearCartAPI } from '../services/api.js'
+import { getCart, addToCartAPI, updateCartAPI, removeFromCartAPI, clearCartAPI, getDeliveryInfo } from '../services/api.js'
 import { getToken } from '../services/http.js'
 import { useToast } from '../composables/useToast.js'
 
-const DEFAULT_DELIVERY_FEE = 10000
-
 const state = reactive({
   items: [],
-  deliveryCost: DEFAULT_DELIVERY_FEE,
+  deliveryCost: 10000,
+  minOrderTotal: 30000,
   discount: 0,
 })
 
@@ -30,6 +29,14 @@ export function useCartStore() {
     try {
       const data = await getCart()
       state.items = data.items || []
+    } catch {}
+  }
+
+  async function loadDeliveryInfo() {
+    try {
+      const data = await getDeliveryInfo()
+      state.deliveryCost = parseFloat(data.default_delivery_fee) || 10000
+      state.minOrderTotal = parseFloat(data.min_order_total) || 30000
     } catch {}
   }
 
@@ -133,10 +140,12 @@ export function useCartStore() {
     state.discount = d
   }
 
+  const minOrderTotal = computed(() => state.minOrderTotal)
+
   return {
     cartItems, totalCount, subtotal, total,
-    deliveryCost, discount, syncing,
+    deliveryCost, discount, minOrderTotal, syncing,
     addToCart, decrement, deleteItem, clearCart, getQty,
-    loadCart, setDeliveryCost, setDiscount,
+    loadCart, loadDeliveryInfo, setDeliveryCost, setDiscount,
   }
 }
