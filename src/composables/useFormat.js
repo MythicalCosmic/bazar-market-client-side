@@ -12,5 +12,19 @@ export function useFormat() {
     return new Intl.NumberFormat(locale.value === 'uz' ? 'uz-UZ' : locale.value === 'ru' ? 'ru-RU' : 'en-US').format(value)
   }
 
-  return { formatPrice, formatNum }
+  function formatQty(qty, unit) {
+    const q = parseFloat(qty) || 0
+    if (unit === 'kg') {
+      if (q < 1) return `${Math.round(q * 1000)} g`
+      if (q % 1 === 0) return `${q} kg`
+      return `${q} kg`
+    }
+    if (unit === 'liter') {
+      if (q < 1) return `${Math.round(q * 1000)} ml`
+      return `${q} l`
+    }
+    return q % 1 === 0 ? String(Math.round(q)) : String(q)
+  }
+
+  return { formatPrice, formatNum, formatQty }
 }

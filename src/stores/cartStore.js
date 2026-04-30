@@ -10,6 +10,10 @@ const state = reactive({
 
 const syncing = ref(false)
 
+function round(val, decimals = 3) {
+  return Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals)
+}
+
 export function useCartStore() {
   const cartItems    = computed(() => state.items)
   const totalCount   = computed(() => state.items.reduce((s, i) => s + (parseFloat(i.quantity) || 0), 0))
@@ -27,32 +31,41 @@ export function useCartStore() {
   }
 
   function addToCart(product) {
+    const step = product.step || 1
+    const minQty = product.minQty || step
     const existing = state.items.find((i) => i.id === product.id)
+
     if (existing) {
-      existing.quantity = (parseFloat(existing.quantity) || 0) + 1
+      existing.quantity = round(parseFloat(existing.quantity) + step)
     } else {
       state.items.push({
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: product.discountedPrice || product.price,
         image: product.image,
         unit: product.unit || 'piece',
-        quantity: 1,
+        step: step,
+        minQty: minQty,
+        quantity: minQty,
       })
     }
     if (getToken()) {
-      addToCartAPI(product.id, 1).catch(() => loadCart())
+      const qty = existing ? existing.quantity : minQty
+      addToCartAPI(product.id, qty).catch(() => loadCart())
     }
   }
 
   function decrement(productId) {
     const item = state.items.find((i) => i.id === productId)
     if (!item) return
-    const qty = (parseFloat(item.quantity) || 0)
-    if (qty > 1) {
-      item.quantity = qty - 1
+    const qty = parseFloat(item.quantity) || 0
+    const step = item.step || 1
+    const minQty = item.minQty || step
+
+    if (round(qty - step) >= minQty) {
+      item.quantity = round(qty - step)
       if (getToken()) {
-        updateCartAPI(productId, qty - 1).catch(() => loadCart())
+        updateCartAPI(productId, item.quantity).catch(() => loadCart())
       }
     } else {
       state.items.splice(state.items.indexOf(item), 1)

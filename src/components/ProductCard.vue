@@ -12,7 +12,7 @@ const props = defineProps({
 })
 
 const { addToCart, decrement, getQty } = useCartStore()
-const { formatPrice } = useFormat()
+const { formatPrice, formatQty } = useFormat()
 const { t, getLocalizedName } = useI18n()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { isLoggedIn } = useAuth()
@@ -133,7 +133,7 @@ async function handleFavorite() {
             <path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
         </button>
-        <span class="text-sm font-black" style="color: var(--text-primary)">{{ qty }}</span>
+        <span class="text-xs font-black" style="color: var(--text-primary)">{{ formatQty(qty, product.unit) }}</span>
         <button @click="addToCart(product)" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center btn-press">
           <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
