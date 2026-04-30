@@ -41,19 +41,18 @@ async function handleFavorite() {
     class="product-card rounded-2xl p-3 flex flex-col relative overflow-hidden"
     style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)"
   >
-    <!-- Badge -->
+    <!-- Discount badge (takes priority) -->
+    <span v-if="hasDiscount" class="absolute top-2 left-2 z-10 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg" style="background: linear-gradient(135deg, #ff6b35, #e84545)">
+      -{{ Math.round((1 - product.discountedPrice / product.price) * 100) }}%
+    </span>
+    <!-- HOT/NEW badge (only when no discount) -->
     <span
-      v-if="product.badge"
+      v-else-if="product.badge && product.badge !== 'SALE'"
       :class="[
         'absolute top-2 left-2 z-10 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg',
         product.badge === 'NEW' ? 'badge-new' : 'badge-hot',
       ]"
     >{{ product.badge === 'NEW' ? t('badge.new') : t('badge.hot') }}</span>
-
-    <!-- Discount badge -->
-    <span v-if="hasDiscount" class="absolute top-2 left-2 z-10 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg" style="background: linear-gradient(135deg, #ff6b35, #e84545)">
-      -{{ Math.round((1 - product.discountedPrice / product.price) * 100) }}%
-    </span>
 
     <!-- Favorite button -->
     <button

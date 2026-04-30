@@ -3,14 +3,25 @@ import { get, post, patch, publicGet } from './http.js'
 // ── Adapters ──
 
 function transformProduct(raw) {
+  const price = parseFloat(raw.price) || 0
+  const discountedPrice = raw.discounted_price ? parseFloat(raw.discounted_price) : null
+  const discount = raw.discount || null
+
   return {
     id: raw.id || raw.product_id,
     name: { uz: raw.name_uz || '', ru: raw.name_ru || '' },
     description: { uz: raw.description_uz || '', ru: raw.description_ru || '' },
-    price: parseFloat(raw.price) || 0,
-    discountedPrice: raw.discounted_price ? parseFloat(raw.discounted_price) : null,
+    price,
+    discountedPrice: discountedPrice && discountedPrice < price ? discountedPrice : null,
+    discount: discount ? {
+      id: discount.discount_id,
+      name: discount.discount_name,
+      type: discount.discount_type,
+      value: discount.discount_value,
+      amount: parseFloat(discount.discount_amount) || 0,
+    } : null,
     image: raw.image || null,
-    badge: raw.is_featured ? 'HOT' : null,
+    badge: raw.is_featured ? 'HOT' : (discountedPrice && discountedPrice < price ? 'SALE' : null),
     category: raw.category_id,
     categoryName: raw.category_name || '',
     isFeatured: raw.is_featured || false,
