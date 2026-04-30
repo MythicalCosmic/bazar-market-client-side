@@ -54,7 +54,6 @@ async function getAddress(lat, lng) {
   } catch (e) {
     if (e.name !== 'AbortError') addressText.value = t('checkout.address_unknown')
   }
-  } catch {}
 }
 
 function debouncedGetAddress(lat, lng) {
