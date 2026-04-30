@@ -3,9 +3,11 @@ import { getCart, addToCartAPI, updateCartAPI, removeFromCartAPI, clearCartAPI }
 import { getToken } from '../services/http.js'
 import { useToast } from '../composables/useToast.js'
 
+const DEFAULT_DELIVERY_FEE = 10000
+
 const state = reactive({
   items: [],
-  deliveryCost: 0,
+  deliveryCost: DEFAULT_DELIVERY_FEE,
   discount: 0,
 })
 

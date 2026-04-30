@@ -6,9 +6,9 @@ import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
 import { useAddresses } from '../stores/addressStore.js'
-import { placeOrder as placeOrderAPI, checkDelivery } from '../services/api.js'
+import { placeOrder as placeOrderAPI } from '../services/api.js'
 
-const { total, subtotal, deliveryCost, discount, clearCart, setDeliveryCost } = useCartStore()
+const { total, subtotal, deliveryCost, discount, clearCart } = useCartStore()
 const { formatNum } = useFormat()
 const { navigate, routeParams } = useRouter()
 const { t } = useI18n()
@@ -54,9 +54,6 @@ async function getAddress(lat, lng) {
   } catch (e) {
     if (e.name !== 'AbortError') addressText.value = t('checkout.address_unknown')
   }
-  try {
-    const delivery = await checkDelivery(lat, lng)
-    if (delivery.available && delivery.zone) setDeliveryCost(parseFloat(delivery.zone.delivery_fee) || 0)
   } catch {}
 }
 
@@ -89,10 +86,6 @@ async function selectAddress(addr) {
       map.setView([addr.lat, addr.lng], 16)
       marker.setLatLng([addr.lat, addr.lng])
     }
-    try {
-      const delivery = await checkDelivery(addr.lat, addr.lng)
-      if (delivery.available && delivery.zone) setDeliveryCost(parseFloat(delivery.zone.delivery_fee) || 0)
-    } catch {}
   }
 }
 
@@ -115,10 +108,6 @@ onMounted(async () => {
 
   if (defaultAddr?.lat && defaultAddr?.lng) {
     locationStatus.value = '✅ ' + t('checkout.location_detected')
-    try {
-      const delivery = await checkDelivery(defaultAddr.lat, defaultAddr.lng)
-      if (delivery.available && delivery.zone) setDeliveryCost(parseFloat(delivery.zone.delivery_fee) || 0)
-    } catch {}
     initMap(startLat, startLng)
   } else if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
