@@ -73,9 +73,9 @@ async function handleFavorite() {
           -{{ Math.round((1 - product.discountedPrice / product.price) * 100) }}%
         </span>
 
-        <div class="w-full flex items-center justify-center p-6" style="height: 280px;">
-          <img v-if="allImages.length" :src="allImages[activeImage]" :alt="getLocalizedName(product.name)" class="max-w-full max-h-full object-contain" />
-          <div v-else class="w-28 h-28 rounded-2xl flex items-center justify-center" style="background: var(--surface-secondary)">
+        <div class="w-full flex items-center justify-center p-6" style="height: 280px; background: white;">
+          <img v-if="allImages.length" :src="allImages[activeImage]" :alt="getLocalizedName(product.name)" class="max-w-full max-h-full object-contain" style="mix-blend-mode: multiply;" />
+          <div v-else class="w-28 h-28 rounded-2xl flex items-center justify-center" style="background: #f3f4f6">
             <svg width="48" height="48" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/><path d="M21 15l-5-5L5 21" stroke-width="2"/></svg>
           </div>
         </div>
