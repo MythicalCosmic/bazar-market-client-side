@@ -18,6 +18,7 @@ import RegisterView       from './views/RegisterView.vue'
 import VerifyView         from './views/VerifyView.vue'
 import AddressesView      from './views/AddressesView.vue'
 import CouponsView        from './views/CouponsView.vue'
+import RewardsView        from './views/RewardsView.vue'
 import BottomNav          from './components/BottomNav.vue'
 
 const showNav = ['home', 'categories', 'favorites', 'orders', 'profile']
@@ -44,6 +45,7 @@ const { toasts } = useToast()
         <VerifyView         v-else-if="currentRoute === 'verify'"         key="verify"   />
         <AddressesView      v-else-if="currentRoute === 'addresses'"      key="addresses"/>
         <CouponsView        v-else-if="currentRoute === 'coupons'"        key="coupons"  />
+        <RewardsView        v-else-if="currentRoute === 'rewards'"        key="rewards"  />
       </Transition>
     </main>
 

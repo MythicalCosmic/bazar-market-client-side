@@ -242,6 +242,25 @@ export default {
   'referral.copy': 'Копировать',
   'referral.copied': 'Скопировано!',
 
+  'referral.page_title': 'Рефералы и награды',
+  'referral.your_code': 'Ваш реферальный код',
+  'referral.friend_gets': 'Что получит друг',
+  'referral.invited': 'Приглашено',
+  'referral.earned': 'Заработано',
+  'referral.share': 'Поделиться ссылкой',
+  'referral.my_rewards': 'Мои награды',
+  'referral.reward_coupon': 'Купон на скидку',
+  'referral.reward_free_delivery': 'Бесплатная доставка',
+  'referral.reward_bonus': 'Бонусный товар',
+  'referral.deliveries_remaining': 'Осталось {count} бесплатных доставок',
+  'referral.invited_friends': 'Приглашённые друзья',
+  'referral.rewarded': 'Награждён',
+  'referral.pending': 'Ожидание',
+  'referral.apply_title': 'Ввести реферальный код',
+  'referral.apply_placeholder': 'Введите код',
+  'referral.apply_success': 'Реферальный код применён!',
+  'referral.apply_error': 'Неверный код',
+
   // Currency
   'currency': 'сум',
 

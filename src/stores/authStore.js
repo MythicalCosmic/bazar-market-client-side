@@ -50,6 +50,7 @@ export function useAuth() {
         verified: data.user.is_phone_verified,
         language: data.user.language,
       }
+      applyPendingReferral()
       return { success: true }
     } catch (e) {
       return { success: false, message: e.message }
@@ -86,6 +87,7 @@ export function useAuth() {
     try {
       await post('/auth/verify', { code })
       if (user.value) user.value.verified = true
+      applyPendingReferral()
       return { success: true }
     } catch (e) {
       return { success: false, message: e.message }
@@ -128,6 +130,15 @@ export function useAuth() {
     token.value = null
     user.value = null
     clearToken()
+  }
+
+  async function applyPendingReferral() {
+    const code = localStorage.getItem('bazar-pending-referral')
+    if (!code) return
+    try {
+      await post('/referral/apply', { referral_code: code })
+    } catch {}
+    localStorage.removeItem('bazar-pending-referral')
   }
 
   function getUser() {

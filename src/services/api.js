@@ -331,6 +331,11 @@ export async function applyReferral(code) {
   return post('/referral/apply', { referral_code: code })
 }
 
+export async function getRewards() {
+  const data = await get('/rewards')
+  return Array.isArray(data) ? data : []
+}
+
 // ── Reviews ──
 
 export async function submitReview(data) {

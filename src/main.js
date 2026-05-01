@@ -13,6 +13,13 @@ initTelegram()
 initTheme()
 initAuth()
 
+// Handle referral deep link ?ref=CODE
+const urlParams = new URLSearchParams(window.location.search)
+const refCode = urlParams.get('ref') || urlParams.get('start')?.replace('ref_', '')
+if (refCode) {
+  localStorage.setItem('bazar-pending-referral', refCode)
+}
+
 const { loadDeliveryInfo } = useCartStore()
 loadDeliveryInfo()
 

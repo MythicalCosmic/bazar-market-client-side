@@ -242,6 +242,26 @@ export default {
   'referral.copy': 'Nusxalash',
   'referral.copied': 'Nusxalandi!',
 
+  // Referral rewards
+  'referral.page_title': 'Referal va sovg\'alar',
+  'referral.your_code': 'Sizning referal kodingiz',
+  'referral.friend_gets': 'Do\'stingiz nima oladi',
+  'referral.invited': 'Taklif qilingan',
+  'referral.earned': 'Yutilgan',
+  'referral.share': 'Havolani ulashish',
+  'referral.my_rewards': 'Mening sovg\'alarim',
+  'referral.reward_coupon': 'Chegirma kuponi',
+  'referral.reward_free_delivery': 'Bepul yetkazib berish',
+  'referral.reward_bonus': 'Bonus mahsulot',
+  'referral.deliveries_remaining': '{count} ta bepul yetkazib berish qoldi',
+  'referral.invited_friends': 'Taklif qilingan do\'stlar',
+  'referral.rewarded': 'Mukofotlangan',
+  'referral.pending': 'Kutilmoqda',
+  'referral.apply_title': 'Referal kodini kiritish',
+  'referral.apply_placeholder': 'Kodni kiriting',
+  'referral.apply_success': 'Referal kod qo\'llanildi!',
+  'referral.apply_error': 'Kod noto\'g\'ri',
+
   // Currency
   'currency': 'so\'m',
 

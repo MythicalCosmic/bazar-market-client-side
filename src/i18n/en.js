@@ -242,6 +242,25 @@ export default {
   'referral.copy': 'Copy',
   'referral.copied': 'Copied!',
 
+  'referral.page_title': 'Referrals & Rewards',
+  'referral.your_code': 'Your referral code',
+  'referral.friend_gets': 'What your friend gets',
+  'referral.invited': 'Invited',
+  'referral.earned': 'Earned',
+  'referral.share': 'Share link',
+  'referral.my_rewards': 'My rewards',
+  'referral.reward_coupon': 'Discount coupon',
+  'referral.reward_free_delivery': 'Free delivery',
+  'referral.reward_bonus': 'Bonus product',
+  'referral.deliveries_remaining': '{count} free deliveries remaining',
+  'referral.invited_friends': 'Invited friends',
+  'referral.rewarded': 'Rewarded',
+  'referral.pending': 'Pending',
+  'referral.apply_title': 'Enter referral code',
+  'referral.apply_placeholder': 'Enter code',
+  'referral.apply_success': 'Referral code applied!',
+  'referral.apply_error': 'Invalid code',
+
   // Currency
   'currency': 'sum',
 
