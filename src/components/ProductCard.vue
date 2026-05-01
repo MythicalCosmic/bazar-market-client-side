@@ -118,7 +118,7 @@ async function handleFavorite() {
       </div>
       <button
         v-else-if="qty === 0"
-        @click="addToCart(product)"
+        @click.stop="addToCart(product)"
         class="w-full py-2 rounded-xl bg-primary flex items-center justify-center gap-1.5 btn-press"
         style="box-shadow: 0 3px 10px var(--primary-glow)"
       >
@@ -128,13 +128,13 @@ async function handleFavorite() {
         <span class="text-white text-[11px] font-black">{{ t('cart.add') }}</span>
       </button>
       <div v-else class="flex items-center justify-between">
-        <button @click="decrement(product.id)" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center btn-press">
+        <button @click.stop="decrement(product.id)" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center btn-press">
           <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
         </button>
         <span class="text-xs font-black" style="color: var(--text-primary)">{{ formatQty(qty, product.unit) }}</span>
-        <button @click="addToCart(product)" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center btn-press">
+        <button @click.stop="addToCart(product)" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center btn-press">
           <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
