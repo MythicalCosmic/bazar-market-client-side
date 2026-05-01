@@ -18,7 +18,7 @@ function round(val, decimals = 3) {
 
 export function useCartStore() {
   const cartItems    = computed(() => state.items)
-  const totalCount   = computed(() => state.items.reduce((s, i) => s + (parseFloat(i.quantity) || 0), 0))
+  const totalCount   = computed(() => state.items.length)
   const subtotal     = computed(() => state.items.reduce((s, i) => s + (i.price * (parseFloat(i.quantity) || 0)), 0))
   const total        = computed(() => subtotal.value - state.discount + state.deliveryCost)
   const deliveryCost = computed(() => state.deliveryCost)
