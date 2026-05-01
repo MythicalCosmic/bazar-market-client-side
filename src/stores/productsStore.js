@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { getProducts, getCategories, getFeaturedProducts, getPromoBanners } from '../services/api.js'
+import { getProducts, getCategoryTree, getFeaturedProducts, getPromoBanners } from '../services/api.js'
 
 export const products = ref([])
 export const categories = ref([])
@@ -15,7 +15,7 @@ export async function loadProducts(force = false) {
   isLoading.value = true
   try {
     const [cats, prodsResult, featured, bans] = await Promise.all([
-      getCategories(),
+      getCategoryTree(),
       getProducts({ per_page: 50 }),
       getFeaturedProducts(),
       getPromoBanners(),
