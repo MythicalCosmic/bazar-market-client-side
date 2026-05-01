@@ -4,8 +4,8 @@ import { get, post, patch, publicGet } from './http.js'
 
 function imageUrl(url) {
   if (!url) return null
-  // Rewrite files.bazarmarket.org URLs to same-origin proxy to avoid
-  // Telegram WebView blocking cross-origin images on some Android devices
+  // Proxy through same origin to fix Telegram WebView on some Android devices
+  // Requires host nginx: location /files/ { proxy_pass https://files.bazarmarket.org/files/; }
   if (url.includes('files.bazarmarket.org/files/')) {
     return url.replace('https://files.bazarmarket.org/files/', '/files/')
   }
