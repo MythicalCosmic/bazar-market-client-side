@@ -14,19 +14,14 @@ async function fetchImage(url) {
   try {
     const res = await fetch(url, {
       headers: { 'X-API-TOKEN': FILES_API_KEY },
-      mode: 'cors',
     })
-    if (!res.ok) throw new Error()
+    if (!res.ok) return url
     const blob = await res.blob()
     const blobUrl = URL.createObjectURL(blob)
     imageCache.set(url, blobUrl)
     return blobUrl
   } catch {
-    // Fallback: try query param auth
-    const sep = url.includes('?') ? '&' : '?'
-    const fallback = `${url}${sep}token=${FILES_API_KEY}`
-    imageCache.set(url, fallback)
-    return fallback
+    return url
   }
 }
 
