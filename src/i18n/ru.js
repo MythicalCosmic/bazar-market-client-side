@@ -25,6 +25,9 @@ export default {
   'cat.drinks': 'Напитки',
   'cat.snacks': 'Снеки',
   'cat.hygiene': 'Гигиена',
+  'categories.subcategories': 'подкатегорий',
+  'categories.all_in': 'Все в:',
+  'categories.no_products': 'Товары не найдены',
 
   // Product badges
   'badge.new': 'НОВОЕ',

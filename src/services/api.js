@@ -70,6 +70,7 @@ function transformCategory(raw) {
     icon: null,
     labelKey: null,
     productCount: raw.product_count || 0,
+    children: (raw.children || []).map(transformCategory),
   }
 }
 
@@ -140,6 +141,11 @@ function transformOrder(raw) {
 }
 
 // ── Catalog (Public) ──
+
+export async function getCategoryTree() {
+  const data = await publicGet('/categories/tree')
+  return (Array.isArray(data) ? data : []).map(transformCategory)
+}
 
 export async function getCategories() {
   const data = await publicGet('/categories')

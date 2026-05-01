@@ -25,6 +25,9 @@ export default {
   'cat.drinks': 'Drinks',
   'cat.snacks': 'Snacks',
   'cat.hygiene': 'Hygiene',
+  'categories.subcategories': 'subcategories',
+  'categories.all_in': 'All in',
+  'categories.no_products': 'No products found',
 
   // Product badges
   'badge.new': 'NEW',

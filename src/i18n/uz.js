@@ -25,6 +25,9 @@ export default {
   'cat.drinks': 'Ichimliklar',
   'cat.snacks': 'Gazaklar',
   'cat.hygiene': 'Gigiena',
+  'categories.subcategories': 'turkum',
+  'categories.all_in': 'Hammasi:',
+  'categories.no_products': 'Mahsulotlar topilmadi',
 
   // Product badges
   'badge.new': 'YANGI',
