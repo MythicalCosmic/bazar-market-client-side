@@ -28,6 +28,7 @@ export default {
   'categories.subcategories': 'turkum',
   'categories.all_in': 'Hammasi:',
   'categories.no_products': 'Mahsulotlar topilmadi',
+  'categories.search_placeholder': 'Kategoriya qidirish...',
 
   // Product badges
   'badge.new': 'YANGI',

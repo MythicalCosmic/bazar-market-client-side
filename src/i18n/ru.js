@@ -28,6 +28,7 @@ export default {
   'categories.subcategories': 'подкатегорий',
   'categories.all_in': 'Все в:',
   'categories.no_products': 'Товары не найдены',
+  'categories.search_placeholder': 'Поиск категории...',
 
   // Product badges
   'badge.new': 'НОВОЕ',

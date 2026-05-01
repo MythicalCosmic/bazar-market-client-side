@@ -5,7 +5,7 @@ import ProductCard from '../components/ProductCard.vue'
 import AuthImage from '../components/AuthImage.vue'
 import { useI18n } from '../i18n/index.js'
 import { useRouter } from '../router/index.js'
-import { getCategoryTree, getProducts, searchProducts } from '../services/api.js'
+import { getCategoryTree, getProducts } from '../services/api.js'
 
 const { t, getLocalizedName } = useI18n()
 const { routeParams } = useRouter()
@@ -16,6 +16,7 @@ const selectedChild = ref(null)
 const productsList = ref([])
 const isLoading = ref(true)
 const isLoadingProducts = ref(false)
+const searchQuery = ref('')
 
 onMounted(async () => {
   try {
@@ -23,12 +24,8 @@ onMounted(async () => {
   } catch {}
   isLoading.value = false
 
-  // Handle route params
   if (routeParams.value?.category) {
     selectParentById(routeParams.value.category)
-  }
-  if (routeParams.value?.search) {
-    await doSearch(routeParams.value.search)
   }
 })
 
@@ -44,12 +41,40 @@ function selectParentById(id) {
 async function selectParent(cat) {
   selectedParent.value = cat
   selectedChild.value = null
-  await loadProducts(cat.id)
+  searchQuery.value = ''
+  await loadAllProducts(cat)
 }
 
 async function selectChild(child) {
   selectedChild.value = child
   await loadProducts(child.id)
+}
+
+async function loadAllProducts(cat) {
+  isLoadingProducts.value = true
+  try {
+    const childIds = (cat.children || []).map(c => c.id)
+    const allIds = [cat.id, ...childIds]
+
+    // Fetch products for parent and all children in parallel
+    const results = await Promise.all(
+      allIds.map(id => getProducts({ category_id: id, per_page: 50 }).catch(() => ({ items: [] })))
+    )
+
+    // Merge and deduplicate by product id
+    const seen = new Set()
+    const merged = []
+    for (const result of results) {
+      for (const product of (result.items || [])) {
+        if (!seen.has(product.id)) {
+          seen.add(product.id)
+          merged.push(product)
+        }
+      }
+    }
+    productsList.value = merged
+  } catch { productsList.value = [] }
+  isLoadingProducts.value = false
 }
 
 async function loadProducts(categoryId) {
@@ -61,19 +86,11 @@ async function loadProducts(categoryId) {
   isLoadingProducts.value = false
 }
 
-async function doSearch(q) {
-  if (!q.trim()) return
-  isLoadingProducts.value = true
-  try {
-    productsList.value = await searchProducts(q)
-  } catch { productsList.value = [] }
-  isLoadingProducts.value = false
-}
-
 function goBack() {
+  searchQuery.value = ''
   if (selectedChild.value) {
     selectedChild.value = null
-    loadProducts(selectedParent.value.id)
+    loadAllProducts(selectedParent.value)
   } else if (selectedParent.value) {
     selectedParent.value = null
     productsList.value = []
@@ -83,6 +100,20 @@ function goBack() {
 const currentSubcategories = computed(() => {
   if (!selectedParent.value) return []
   return selectedParent.value.children || []
+})
+
+// Filter categories by search query
+const filteredCategories = computed(() => {
+  if (!searchQuery.value.trim()) return categoryTree.value
+  const q = searchQuery.value.trim().toLowerCase()
+  return categoryTree.value.filter(cat => {
+    const name = getLocalizedName(cat.name).toLowerCase()
+    if (name.includes(q)) return true
+    // Also check children
+    return (cat.children || []).some(ch =>
+      getLocalizedName(ch.name).toLowerCase().includes(q)
+    )
+  })
 })
 </script>
 
@@ -99,11 +130,27 @@ const currentSubcategories = computed(() => {
 
     <template v-else>
       <!-- No parent selected: show category grid -->
-      <div v-if="!selectedParent" class="mt-4 px-4">
-        <h2 class="text-base font-black mb-3" style="color: var(--text-primary)">{{ t('nav.categories') }}</h2>
+      <div v-if="!selectedParent" class="mt-3 px-4">
+        <!-- Search categories -->
+        <div class="flex items-center rounded-xl px-3 py-2.5 gap-2 mb-3" style="background: var(--surface-secondary)">
+          <svg width="16" height="16" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input
+            v-model="searchQuery"
+            :placeholder="t('categories.search_placeholder')"
+            type="text"
+            class="bg-transparent outline-none text-sm font-semibold flex-1"
+            style="color: var(--text-primary)"
+          />
+          <button v-if="searchQuery" @click="searchQuery = ''" class="btn-press p-0.5">
+            <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
         <div class="grid grid-cols-2 gap-3">
           <button
-            v-for="cat in categoryTree"
+            v-for="cat in filteredCategories"
             :key="cat.id"
             @click="selectParent(cat)"
             class="rounded-2xl p-4 flex flex-col items-center gap-2 btn-press transition-all"
@@ -124,11 +171,15 @@ const currentSubcategories = computed(() => {
             </p>
           </button>
         </div>
+
+        <div v-if="!filteredCategories.length && searchQuery" class="flex flex-col items-center py-16">
+          <div class="text-5xl mb-3">🔍</div>
+          <p class="text-sm font-bold" style="color: var(--text-tertiary)">{{ t('categories.no_products') }}</p>
+        </div>
       </div>
 
-      <!-- Parent selected: show breadcrumb + subcategories + products -->
+      <!-- Parent selected: subcategories + products -->
       <div v-else class="mt-3">
-        <!-- Back + title -->
         <div class="flex items-center gap-2 px-4 mb-3">
           <button @click="goBack" class="w-8 h-8 rounded-xl flex items-center justify-center btn-press flex-shrink-0" style="background: var(--surface-secondary)">
             <svg width="18" height="18" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,8 +192,8 @@ const currentSubcategories = computed(() => {
         <!-- Subcategory chips -->
         <div v-if="currentSubcategories.length" class="scroll-x flex gap-2 px-4 pb-2">
           <button
-            @click="selectedChild = null; loadProducts(selectedParent.id)"
-            :class="['flex items-center gap-1.5 flex-shrink-0 px-3 py-2 rounded-xl transition-all duration-200 btn-press']"
+            @click="selectedChild = null; loadAllProducts(selectedParent)"
+            class="flex items-center gap-1.5 flex-shrink-0 px-3 py-2 rounded-xl transition-all duration-200 btn-press"
             :style="{
               background: !selectedChild ? 'var(--primary)' : 'var(--surface)',
               boxShadow: !selectedChild ? '0 4px 12px var(--primary-glow)' : '0 1px 4px var(--shadow)',
@@ -155,7 +206,7 @@ const currentSubcategories = computed(() => {
             v-for="sub in currentSubcategories"
             :key="sub.id"
             @click="selectChild(sub)"
-            :class="['flex items-center gap-1.5 flex-shrink-0 px-3 py-2 rounded-xl transition-all duration-200 btn-press']"
+            class="flex items-center gap-1.5 flex-shrink-0 px-3 py-2 rounded-xl transition-all duration-200 btn-press"
             :style="{
               background: selectedChild?.id === sub.id ? 'var(--primary)' : 'var(--surface)',
               boxShadow: selectedChild?.id === sub.id ? '0 4px 12px var(--primary-glow)' : '0 1px 4px var(--shadow)',

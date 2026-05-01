@@ -28,6 +28,7 @@ export default {
   'categories.subcategories': 'subcategories',
   'categories.all_in': 'All in',
   'categories.no_products': 'No products found',
+  'categories.search_placeholder': 'Search categories...',
 
   // Product badges
   'badge.new': 'NEW',
