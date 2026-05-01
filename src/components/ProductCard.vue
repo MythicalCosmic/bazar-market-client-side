@@ -69,15 +69,13 @@ async function handleFavorite() {
     </button>
 
     <!-- Image -->
-    <div class="w-full aspect-square flex items-center justify-center p-1 mb-1">
-      <img v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)" class="w-full h-full object-contain" style="max-height:110px"/>
-      <div v-else class="w-full h-full flex items-center justify-center rounded-xl" style="background: var(--surface-secondary)">
-        <svg width="32" height="32" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
-          <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
+    <div class="w-full flex items-center justify-center p-2 mb-1 rounded-xl overflow-hidden" style="height: 130px; background: var(--surface-secondary)">
+      <img v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)" class="max-w-full max-h-full object-contain"/>
+      <svg v-else width="32" height="32" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
+        <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
 
     <!-- Name -->
