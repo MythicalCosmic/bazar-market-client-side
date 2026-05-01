@@ -51,14 +51,8 @@ function onSearchInput() {
 function goToProduct(product) {
   searchQuery.value = ''
   showSearchResults.value = false
-  // Navigate to categories with search
-  navigate('categories', { search: searchQuery.value })
-}
-
-function submitSearch() {
-  if (!searchQuery.value.trim()) return
-  showSearchResults.value = false
-  navigate('categories', { search: searchQuery.value.trim() })
+  searchResults.value = []
+  navigate('product', { productId: product.id })
 }
 </script>
 
@@ -119,7 +113,6 @@ function submitSearch() {
         <input
           v-model="searchQuery"
           @input="onSearchInput"
-          @keyup.enter="submitSearch"
           @focus="searchQuery.trim() && (showSearchResults = true)"
           type="text"
           :placeholder="t('header.search_placeholder')"
