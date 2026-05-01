@@ -1,9 +1,6 @@
 services:
   web:
-    build:
-      context: .
-      args:
-        VITE_FILES_API_KEY: ${VITE_FILES_API_KEY:-ba90007badf2b5403d81c89779a4fd308ae7a03dd881b94f5aabd3b10b876bca}
+    build: .
     container_name: bazar-market-client
     ports:
       - "3000:80"
