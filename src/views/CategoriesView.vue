@@ -153,9 +153,11 @@ const filteredCategories = computed(() => {
         </div>
 
         <!-- Category sections -->
-        <div v-for="(cat, catIdx) in filteredCategories" :key="cat.id" class="mb-6">
+        <div v-for="(cat, catIdx) in filteredCategories" :key="cat.id"
+          class="mb-4 rounded-2xl p-4 overflow-hidden"
+          style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
           <!-- Section title -->
-          <h2 class="text-lg font-black mb-3" style="color: var(--text-primary)">
+          <h2 class="text-base font-black mb-3" style="color: var(--text-primary)">
             {{ getLocalizedName(cat.name) }}
           </h2>
 
@@ -166,23 +168,20 @@ const filteredCategories = computed(() => {
               v-for="(sub, subIdx) in cat.children"
               :key="sub.id"
               @click="selectParent(cat); $nextTick(() => selectChild(sub))"
-              class="rounded-2xl p-3 flex flex-col justify-between text-left btn-press overflow-hidden relative transition-transform"
+              class="rounded-xl p-3 flex flex-col justify-between text-left btn-press overflow-hidden relative transition-transform"
               :style="{
                 background: getColor(catIdx * 10 + subIdx).bg,
-                minHeight: cat.children.length <= 2 ? '140px' : '120px',
+                minHeight: cat.children.length <= 2 ? '130px' : '110px',
               }"
             >
-              <!-- Name -->
-              <p class="text-xs font-black leading-tight pr-1 relative z-10" :style="{ color: getColor(catIdx * 10 + subIdx).text }">
+              <p class="text-[11px] font-black leading-tight pr-1 relative z-10" :style="{ color: getColor(catIdx * 10 + subIdx).text }">
                 {{ getLocalizedName(sub.name) }}
               </p>
-
-              <!-- Category image -->
               <div class="flex justify-end mt-1">
                 <img v-if="sub.image" :src="sub.image" :alt="getLocalizedName(sub.name)"
-                  class="w-16 h-16 object-contain drop-shadow-sm" />
-                <div v-else class="w-12 h-12 rounded-xl flex items-center justify-center" :style="{ background: getColor(catIdx * 10 + subIdx).text + '15' }">
-                  <svg width="20" height="20" :style="{ color: getColor(catIdx * 10 + subIdx).text }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  class="w-14 h-14 object-contain drop-shadow-sm" />
+                <div v-else class="w-10 h-10 rounded-lg flex items-center justify-center" :style="{ background: getColor(catIdx * 10 + subIdx).text + '15' }">
+                  <svg width="18" height="18" :style="{ color: getColor(catIdx * 10 + subIdx).text }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/>
                     <rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
                   </svg>
@@ -191,16 +190,16 @@ const filteredCategories = computed(() => {
             </button>
           </div>
 
-          <!-- No subcategories — show as single wide card -->
+          <!-- No subcategories — show browse button -->
           <button v-else
             @click="selectParent(cat)"
-            class="w-full rounded-2xl p-4 flex items-center justify-between btn-press overflow-hidden"
-            :style="{ background: getColor(catIdx).bg, minHeight: '80px' }"
+            class="w-full rounded-xl p-3 flex items-center justify-between btn-press"
+            :style="{ background: getColor(catIdx).bg }"
           >
-            <p class="text-sm font-black" :style="{ color: getColor(catIdx).text }">
-              {{ getLocalizedName(cat.name) }}
+            <p class="text-sm font-bold" :style="{ color: getColor(catIdx).text }">
+              {{ t('categories.all_in') }} {{ getLocalizedName(cat.name) }}
             </p>
-            <svg width="20" height="20" :style="{ color: getColor(catIdx).text }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg width="18" height="18" :style="{ color: getColor(catIdx).text }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
