@@ -170,7 +170,15 @@ export async function searchProducts(q) {
 
 export async function getProduct(id) {
   const data = await publicGet(`/product/${id}`)
-  return transformProduct(data)
+  const product = transformProduct(data)
+  // Detail endpoint has extra fields
+  product.images = (data.images || []).map(img => ({
+    id: img.id,
+    image: imageUrl(img.image),
+    isPrimary: img.is_primary,
+  }))
+  product.discounts = data.discounts || []
+  return product
 }
 
 export async function getPromoBanners() {

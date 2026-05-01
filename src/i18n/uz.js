@@ -276,6 +276,19 @@ export default {
   // Product
   'product.left_in_stock': 'Faqat {count} ta qoldi',
   'product.out_of_stock': 'Tugagan',
+  'product.in_stock': 'Mavjud',
+  'product.piece': 'dona',
+  'product.description': 'Tavsif',
+  'product.step': 'Qadam',
+  'product.min': 'Minimal',
+  'product.reviews': 'Sharhlar',
+  'product.write_review': 'Sharh yozish',
+  'product.review_placeholder': 'Fikringizni yozing...',
+  'product.submit_review': 'Yuborish',
+  'product.review_submitted': 'Sharh yuborildi!',
+  'product.no_reviews': 'Hali sharhlar yo\'q',
+  'product.login_to_review': 'Sharh yozish uchun kiring',
+  'cart.in_cart': 'savatchada',
 
   // Verify
   'verify.title': 'Telefon tasdiqlash',

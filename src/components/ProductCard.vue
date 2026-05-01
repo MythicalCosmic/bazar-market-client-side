@@ -39,7 +39,8 @@ async function handleFavorite() {
 
 <template>
   <div
-    class="product-card rounded-2xl p-3 flex flex-col relative overflow-hidden"
+    @click="navigate('product', { productId: product.id })"
+    class="product-card rounded-2xl p-3 flex flex-col relative overflow-hidden cursor-pointer"
     style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)"
   >
     <!-- Discount badge (takes priority) -->
