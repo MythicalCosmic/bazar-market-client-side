@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../i18n/index.js'
-import AuthImage from './AuthImage.vue'
+
 
 const props = defineProps({
   banners: { type: Array, default: () => [] },
@@ -50,7 +50,7 @@ const defaultGradient = 'linear-gradient(135deg, #2DB84B 0%, #1aac40 55%, #0d8c3
         :style="{ minHeight: '120px' }">
         <!-- Background: image or gradient -->
         <div class="absolute inset-0" :style="{ background: banner.gradient || defaultGradient }"></div>
-        <AuthImage v-if="banner.image" :src="banner.image" class="absolute inset-0 w-full h-full object-cover" />
+        <img v-if="banner.image" :src="banner.image" class="absolute inset-0 w-full h-full object-cover" />
         <div v-if="banner.image && !banner.gradient" class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 100%)"></div>
 
         <!-- Content -->

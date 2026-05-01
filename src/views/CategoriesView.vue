@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import ProductCard from '../components/ProductCard.vue'
-import AuthImage from '../components/AuthImage.vue'
+
 import { useI18n } from '../i18n/index.js'
 import { useRouter } from '../router/index.js'
 import { getCategoryTree, getProducts } from '../services/api.js'
@@ -157,7 +157,7 @@ const filteredCategories = computed(() => {
             style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)"
           >
             <div class="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden" style="background: var(--primary-light)">
-              <AuthImage v-if="cat.image" :src="cat.image" class="w-full h-full object-cover" />
+              <img v-if="cat.image" :src="cat.image" class="w-full h-full object-cover" />
               <svg v-else width="24" height="24" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="7" height="7" rx="2" stroke-width="2"/>
                 <rect x="14" y="3" width="7" height="7" rx="2" stroke-width="2"/>
@@ -213,7 +213,7 @@ const filteredCategories = computed(() => {
               color: selectedChild?.id === sub.id ? 'white' : 'var(--text-secondary)',
             }"
           >
-            <AuthImage v-if="sub.image" :src="sub.image" class="w-4 h-4 rounded object-cover" />
+            <img v-if="sub.image" :src="sub.image" class="w-4 h-4 rounded object-cover" />
             <span class="text-xs font-bold whitespace-nowrap">{{ getLocalizedName(sub.name) }}</span>
           </button>
         </div>
