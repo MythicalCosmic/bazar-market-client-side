@@ -7,6 +7,7 @@ import BannerCarousel from '../components/BannerCarousel.vue'
 import FeaturedSection from '../components/FeaturedSection.vue'
 import ProductCard from '../components/ProductCard.vue'
 import CategoryIcon from '../components/CategoryIcon.vue'
+import AuthImage from '../components/AuthImage.vue'
 import { products, featuredProducts, banners, categories, loadProducts, isLoading } from '../stores/productsStore.js'
 
 const { navigate } = useRouter()
@@ -48,7 +49,7 @@ function goToCategory(catId) {
             class="flex-shrink-0 flex flex-col items-center gap-1.5 btn-press"
           >
             <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-colors overflow-hidden" style="background: var(--primary-light)">
-              <img v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-cover" />
+              <AuthImage v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-cover" />
               <CategoryIcon v-else-if="cat.icon" :icon="cat.icon" size="24" class="text-primary" />
               <svg v-else width="24" height="24" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="7" height="7" rx="2" stroke-width="2"/>

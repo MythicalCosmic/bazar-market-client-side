@@ -6,6 +6,7 @@ import { useI18n } from '../i18n/index.js'
 import { useFavorites } from '../stores/favoritesStore.js'
 import { useAuth } from '../stores/authStore.js'
 import { useRouter } from '../router/index.js'
+import AuthImage from './AuthImage.vue'
 
 const props = defineProps({
   title: { type: String, default: '' },
@@ -46,7 +47,7 @@ async function handleFavorite(product) {
         <!-- Image area with gradient overlay -->
         <div class="relative" style="height: 120px;">
           <div class="absolute inset-0 flex items-center justify-center p-3" style="background: var(--surface-secondary)">
-            <img v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)" class="w-full h-full object-contain" />
+            <AuthImage v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)" class="w-full h-full object-contain" />
             <svg v-else width="40" height="40" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
               <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>

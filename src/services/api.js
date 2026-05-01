@@ -3,14 +3,28 @@ import { get, post, patch, publicGet } from './http.js'
 // ── Image URL helper ──
 
 const FILES_API_KEY = import.meta.env.VITE_FILES_API_KEY || ''
+const imageCache = new Map()
+
+async function fetchImage(url) {
+  if (!url) return null
+  if (!url.includes('files.bazarmarket.org')) return url
+  if (!FILES_API_KEY) return url
+  if (imageCache.has(url)) return imageCache.get(url)
+
+  try {
+    const res = await fetch(url, { headers: { 'X-API-TOKEN': FILES_API_KEY } })
+    if (!res.ok) return url
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    imageCache.set(url, blobUrl)
+    return blobUrl
+  } catch {
+    return url
+  }
+}
 
 function imageUrl(url) {
   if (!url) return null
-  if (!FILES_API_KEY) return url
-  if (url.includes('files.bazarmarket.org')) {
-    const sep = url.includes('?') ? '&' : '?'
-    return `${url}${sep}api_key=${FILES_API_KEY}`
-  }
   return url
 }
 
@@ -177,6 +191,8 @@ export async function getPromoBanners() {
 export async function checkDelivery(lat, lng) {
   return publicGet(`/delivery/check?lat=${lat}&lng=${lng}`)
 }
+
+export { fetchImage }
 
 export async function getDeliveryInfo() {
   return publicGet('/delivery/info')

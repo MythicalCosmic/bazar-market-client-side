@@ -6,6 +6,7 @@ import { useI18n } from '../i18n/index.js'
 import { useFavorites } from '../stores/favoritesStore.js'
 import { useAuth } from '../stores/authStore.js'
 import { useRouter } from '../router/index.js'
+import AuthImage from './AuthImage.vue'
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -68,7 +69,7 @@ async function handleFavorite() {
 
     <!-- Image -->
     <div class="w-full aspect-square flex items-center justify-center p-1 mb-1">
-      <img v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)" class="w-full h-full object-contain" style="max-height:110px"/>
+      <AuthImage v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)" class="w-full h-full object-contain" style="max-height:110px"/>
       <div v-else class="w-full h-full flex items-center justify-center rounded-xl" style="background: var(--surface-secondary)">
         <svg width="32" height="32" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
