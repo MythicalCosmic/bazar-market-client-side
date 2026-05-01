@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import ProductCard from '../components/ProductCard.vue'
+import AuthImage from '../components/AuthImage.vue'
 import { useI18n } from '../i18n/index.js'
 import { useRouter } from '../router/index.js'
 import { products, categories, loadProducts, isLoading } from '../stores/productsStore.js'
@@ -80,7 +81,7 @@ const filteredProducts = computed(() => {
             boxShadow: selectedCat === cat.id ? '0 4px 12px var(--primary-glow)' : '0 1px 4px var(--shadow)',
           }"
         >
-          <img v-if="cat.image" :src="cat.image" class="w-5 h-5 rounded object-cover" />
+          <AuthImage v-if="cat.image" :src="cat.image" class="w-5 h-5 rounded object-cover" />
           <span :class="['text-xs font-bold whitespace-nowrap']"
             :style="{ color: selectedCat === cat.id ? 'white' : 'var(--text-secondary)' }">
             {{ getLocalizedName(cat.name) }}
