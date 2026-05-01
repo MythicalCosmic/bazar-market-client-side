@@ -17,7 +17,7 @@ const { getLocalizedName } = useI18n()
   <div class="rounded-2xl p-3 flex items-center gap-3" style="background: var(--surface); box-shadow: 0 2px 10px var(--shadow)">
     <!-- Image -->
     <div class="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden" style="background: var(--img-bg);">
-      <img v-if="item.image" :src="item.image" :alt="getLocalizedName(item.name)" class="w-full h-full object-contain rounded-xl" style="mix-blend-mode: var(--img-blend);" />
+      <img v-if="item.image" :src="item.image" :alt="getLocalizedName(item.name)" class="w-full h-full object-contain rounded-xl" style="mix-blend-mode: multiply;" />
       <svg v-else width="24" height="24" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/><path d="M21 15l-5-5L5 21" stroke-width="2"/>
       </svg>
