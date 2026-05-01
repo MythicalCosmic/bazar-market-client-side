@@ -1,5 +1,19 @@
 import { get, post, patch, publicGet } from './http.js'
 
+// ── Image URL helper ──
+
+const FILES_API_KEY = import.meta.env.VITE_FILES_API_KEY || ''
+
+function imageUrl(url) {
+  if (!url) return null
+  if (!FILES_API_KEY) return url
+  if (url.includes('files.bazarmarket.org')) {
+    const sep = url.includes('?') ? '&' : '?'
+    return `${url}${sep}api_key=${FILES_API_KEY}`
+  }
+  return url
+}
+
 // ── Adapters ──
 
 function transformProduct(raw) {
@@ -20,7 +34,7 @@ function transformProduct(raw) {
       value: discount.discount_value,
       amount: parseFloat(discount.discount_amount) || 0,
     } : null,
-    image: raw.image || null,
+    image: imageUrl(raw.image),
     badge: raw.is_featured ? 'HOT' : (discountedPrice && discountedPrice < price ? 'SALE' : null),
     category: raw.category_id,
     categoryName: raw.category_name || '',
@@ -38,7 +52,7 @@ function transformCategory(raw) {
   return {
     id: raw.id,
     name: { uz: raw.name_uz || '', ru: raw.name_ru || '' },
-    image: raw.image || null,
+    image: imageUrl(raw.image),
     icon: null,
     labelKey: null,
     productCount: raw.product_count || 0,
@@ -50,7 +64,7 @@ function transformBanner(raw) {
     id: raw.id,
     title: raw.title || '',
     subtitle: null,
-    image: raw.image || null,
+    image: imageUrl(raw.image),
     gradient: null,
     linkType: raw.link_type || 'none',
     linkValue: raw.link_value || '',
@@ -64,7 +78,7 @@ function transformCartItem(raw) {
     price: parseFloat(raw.price) || 0,
     quantity: parseFloat(raw.quantity) || 1,
     total: parseFloat(raw.total) || 0,
-    image: raw.image || null,
+    image: imageUrl(raw.image),
     unit: raw.unit || 'piece',
     inStock: raw.in_stock !== false,
   }
