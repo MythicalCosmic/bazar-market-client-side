@@ -21,6 +21,7 @@ import CouponsView        from './views/CouponsView.vue'
 import RewardsView        from './views/RewardsView.vue'
 import ProductDetailView  from './views/ProductDetailView.vue'
 import BottomNav          from './components/BottomNav.vue'
+import ScrollToTop        from './components/ScrollToTop.vue'
 
 const showNav = ['home', 'categories', 'favorites', 'orders', 'profile']
 const { toasts } = useToast()
@@ -52,6 +53,7 @@ const { toasts } = useToast()
     </main>
 
     <BottomNav v-if="showNav.includes(currentRoute)" />
+    <ScrollToTop />
 
     <!-- Toast notifications -->
     <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 w-full max-w-[440px] px-4">
