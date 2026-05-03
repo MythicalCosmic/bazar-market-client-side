@@ -177,6 +177,11 @@ export async function getProduct(id) {
     image: imageUrl(img.image),
     isPrimary: img.is_primary,
   }))
+  // If no primary image, use first from images array
+  if (!product.image && product.images.length) {
+    const primary = product.images.find(i => i.isPrimary) || product.images[0]
+    product.image = primary.image
+  }
   product.discounts = data.discounts || []
   return product
 }
