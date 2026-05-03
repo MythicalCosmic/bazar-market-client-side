@@ -89,6 +89,21 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
     </template>
 
     <template v-else>
+      <!-- ═══ Motivation ═══ -->
+      <div class="mt-4 px-4">
+        <div class="greeting-card">
+          <div class="greeting-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="greeting-text">
+            <p class="greeting-main">Har daqiqa qadrli</p>
+            <p class="greeting-sub">Bozoringizni bizga ishoning</p>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ Banners ═══ -->
       <div v-if="banners.length" class="mt-4 px-4">
         <div ref="bannerRef" class="flex gap-3 scroll-x snap-x snap-mandatory pb-1"
@@ -276,6 +291,39 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
 </template>
 
 <style scoped>
+.greeting-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary-light) 0%, rgba(209,250,229,0.4) 100%);
+  border: 1px solid rgba(5, 150, 105, 0.1);
+}
+.greeting-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+.greeting-main {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  line-height: 1.2;
+}
+.greeting-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
 .banner-card {
   border-radius: 20px;
   min-height: 156px;
