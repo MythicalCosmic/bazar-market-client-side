@@ -4,10 +4,10 @@ import { get, post, patch, publicGet } from './http.js'
 
 function imageUrl(url) {
   if (!url) return null
-  // Proxy through same origin to fix Telegram WebView on some Android devices
-  // Requires host nginx: location /files/ { proxy_pass https://files.bazarmarket.org/files/; }
+  // Proxy through same origin to fix Telegram WebView on Android
+  // Handles both http:// and https:// URLs from the API
   if (url.includes('files.bazarmarket.org/files/')) {
-    return url.replace('https://files.bazarmarket.org/files/', '/files/')
+    return url.replace(/https?:\/\/files\.bazarmarket\.org\/files\//, '/files/')
   }
   return url
 }
