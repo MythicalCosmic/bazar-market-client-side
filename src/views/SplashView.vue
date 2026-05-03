@@ -48,35 +48,40 @@ onUnmounted(() => timers.forEach(t => clearTimeout(t)))
           '--sx': f.sx + 'px', '--sy': f.sy + 'px',
           '--ex': f.ex + 'px', '--ey': f.ey + 'px',
         }">
-        <!-- Apple -->
+        <!-- Apple (red) -->
         <svg v-if="f.name === 'apple'" viewBox="0 0 64 64" width="64" height="64" fill="none">
-          <path d="M33 10c1-4 5-6 7-4" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M32 16c-11 0-20 10-18 22 2 12 10 18 18 18s16-6 18-18c2-12-7-22-18-22z" fill="white" fill-opacity="0.85"/>
-          <path class="fd" d="M32 22v26M26 34q6-6 12 0" stroke="rgba(5,150,105,0.4)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+          <path d="M33 10c1-4 5-6 7-4" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M36 12c2-1 4 0 5 2" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M32 16c-11 0-20 10-18 22 2 12 10 18 18 18s16-6 18-18c2-12-7-22-18-22z" fill="#EF4444"/>
+          <path d="M32 16c-3 0-6 1-8 3 4-1 8 0 11 3 3-4 7-5 11-4-3-2-8-2-14-2z" fill="#F87171" opacity="0.6"/>
+          <path class="fd" d="M32 22v26M26 34q6-6 12 0" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
         </svg>
-        <!-- Pear -->
+        <!-- Pear (yellow-green) -->
         <svg v-else-if="f.name === 'pear'" viewBox="0 0 64 64" width="60" height="60" fill="none">
-          <path d="M33 9c0-3 3-5 4-3" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M32 14c-4 0-7 6-9 14s-6 16-2 22c4 6 16 6 20 0 4-6 0-14-2-22s-5-14-7-14z" fill="white" fill-opacity="0.8"/>
-          <path class="fd" d="M32 20v30" stroke="rgba(5,150,105,0.4)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+          <path d="M33 9c0-3 3-5 4-3" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M32 14c-4 0-7 6-9 14s-6 16-2 22c4 6 16 6 20 0 4-6 0-14-2-22s-5-14-7-14z" fill="#A3E635"/>
+          <path d="M32 14c-2 0-4 2-5 6 3-2 6-2 9 0-1-4-3-6-4-6z" fill="#BEF264" opacity="0.5"/>
+          <path class="fd" d="M32 20v30" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
         </svg>
-        <!-- Citrus cross-section -->
+        <!-- Orange (citrus cross-section) -->
         <svg v-else-if="f.name === 'citrus'" viewBox="0 0 64 64" width="60" height="60" fill="none">
-          <circle cx="32" cy="32" r="22" fill="white" fill-opacity="0.8"/>
-          <circle cx="32" cy="32" r="17" fill="white" fill-opacity="0.55"/>
+          <circle cx="32" cy="32" r="22" fill="#FB923C"/>
+          <circle cx="32" cy="32" r="19" fill="#FDBA74" opacity="0.5"/>
+          <circle cx="32" cy="32" r="17" fill="#FED7AA" opacity="0.3"/>
           <g class="fd" opacity="0">
-            <line x1="32" y1="13" x2="32" y2="51" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
-            <line x1="15" y1="32" x2="49" y2="32" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
-            <line x1="19" y1="19" x2="45" y2="45" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
-            <line x1="45" y1="19" x2="19" y2="45" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
+            <line x1="32" y1="13" x2="32" y2="51" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="15" y1="32" x2="49" y2="32" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="19" y1="19" x2="45" y2="45" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="45" y1="19" x2="19" y2="45" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
           </g>
         </svg>
-        <!-- Leaf -->
+        <!-- Leaf (green) -->
         <svg v-else-if="f.name === 'leaf'" viewBox="0 0 64 64" width="56" height="56" fill="none">
-          <path d="M32 8c-16 8-22 24-16 40 4 8 12 10 16 8s12-10 16-24c4-12 0-22-16-24z" fill="white" fill-opacity="0.75"/>
+          <path d="M32 8c-16 8-22 24-16 40 4 8 12 10 16 8s12-10 16-24c4-12 0-22-16-24z" fill="#22C55E"/>
+          <path d="M32 8c-8 4-14 12-16 22 6-6 14-10 22-10-1-5-3-9-6-12z" fill="#4ADE80" opacity="0.4"/>
           <g class="fd" opacity="0">
-            <path d="M32 14c-4 14-6 26-4 38" stroke="rgba(5,150,105,0.35)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-            <path d="M28 26l-6 5M35 34l5-3M29 42l-5 3" stroke="rgba(5,150,105,0.3)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M32 14c-4 14-6 26-4 38" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M28 26l-6 5M35 34l5-3M29 42l-5 3" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
           </g>
         </svg>
       </div>

@@ -97,24 +97,24 @@ function onNav(id) { haptic('selection'); navigate(id) }
 
 <style scoped>
 .nav-island {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(245, 250, 247, 0.9);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(5, 150, 105, 0.06);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.03),
-    0 8px 24px rgba(140, 120, 90, 0.08),
+    0 8px 24px rgba(5, 80, 50, 0.07),
     0 -1px 0 rgba(255, 255, 255, 0.8) inset;
 }
 
 :root.dark .nav-island, .dark .nav-island {
-  background: rgba(28, 25, 23, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(20, 30, 24, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.08);
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    0 -1px 0 rgba(255, 255, 255, 0.04) inset;
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 -1px 0 rgba(16, 185, 129, 0.04) inset;
 }
 
 .cart-fab {

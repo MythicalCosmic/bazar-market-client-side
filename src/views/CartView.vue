@@ -248,13 +248,13 @@ function confirmClear() {
 
 <style scoped>
 .cart-header {
-  background: rgba(250, 249, 246, 0.88);
+  background: rgba(245, 250, 247, 0.88);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid var(--border);
 }
 :root.dark .cart-header, .dark .cart-header {
-  background: rgba(12, 10, 9, 0.88);
+  background: rgba(10, 15, 12, 0.88);
 }
 
 .upsell-card {
