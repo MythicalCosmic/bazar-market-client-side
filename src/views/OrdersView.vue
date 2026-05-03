@@ -23,7 +23,7 @@ const statusConfig = {
   pending:    { color: '#f59e0b', icon: '⏳' },
   confirmed:  { color: '#3b82f6', icon: '✅' },
   preparing:  { color: '#f59e0b', icon: '👨‍🍳' },
-  delivering: { color: '#2DB84B', icon: '🛵' },
+  delivering: { color: '#059669', icon: '🛵' },
   delivered:  { color: '#6b7280', icon: '📦' },
   completed:  { color: '#6b7280', icon: '✅' },
   cancelled:  { color: '#ef4444', icon: '❌' },

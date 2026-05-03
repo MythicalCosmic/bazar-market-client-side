@@ -10,54 +10,65 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-      /* ── Theme Variables ── */
+      /* ══════════════════════════════════════════
+         Design System: "Verdant Luxe"
+         Warm organic tones + rich emerald accents
+         ══════════════════════════════════════════ */
+
       :root {
-        --bg-app: #f5f7f5;
-        --surface: #ffffff;
-        --surface-secondary: #f3f4f6;
-        --surface-tertiary: #e5e7eb;
-        --text-primary: #111827;
-        --text-secondary: #6b7280;
-        --text-tertiary: #9ca3af;
-        --border: #f0f0f0;
-        --shadow: rgba(0,0,0,0.07);
-        --shadow-lg: rgba(0,0,0,0.12);
-        --primary: #2DB84B;
-        --primary-dark: #229e3f;
-        --primary-light: #eaf8ee;
-        --primary-glow: rgba(45,184,75,0.4);
-        --img-bg: #f8f8f8;
+        --bg-app: #FAF9F6;
+        --surface: #FFFFFF;
+        --surface-secondary: #F3F1EC;
+        --surface-tertiary: #E8E5DE;
+        --text-primary: #1C1917;
+        --text-secondary: #78716C;
+        --text-tertiary: #A8A29E;
+        --border: rgba(0, 0, 0, 0.06);
+        --shadow: rgba(140, 120, 90, 0.07);
+        --shadow-lg: rgba(140, 120, 90, 0.12);
+        --primary: #059669;
+        --primary-dark: #047857;
+        --primary-light: #D1FAE5;
+        --primary-glow: rgba(5, 150, 105, 0.25);
+        --accent: #F97316;
+        --accent-light: #FFEDD5;
+        --img-bg: #F3F1EC;
       }
+
       .dark {
-        --bg-app: #0f0f0f;
-        --surface: #1a1a1a;
-        --surface-secondary: #252525;
-        --surface-tertiary: #333333;
-        --text-primary: #f3f4f6;
-        --text-secondary: #9ca3af;
-        --text-tertiary: #6b7280;
-        --border: #2a2a2a;
-        --shadow: rgba(0,0,0,0.3);
-        --shadow-lg: rgba(0,0,0,0.5);
-        --primary-light: #1a3322;
-        --primary-glow: rgba(45,184,75,0.25);
-        --img-bg: #f8f8f8;
+        --bg-app: #0C0A09;
+        --surface: #1C1917;
+        --surface-secondary: #292524;
+        --surface-tertiary: #3D3834;
+        --text-primary: #FAFAF9;
+        --text-secondary: #A8A29E;
+        --text-tertiary: #78716C;
+        --border: rgba(255, 255, 255, 0.07);
+        --shadow: rgba(0, 0, 0, 0.35);
+        --shadow-lg: rgba(0, 0, 0, 0.5);
+        --primary-light: #064E3B;
+        --primary-glow: rgba(16, 185, 129, 0.18);
+        --accent-light: #431407;
+        --img-bg: #F8F8F8;
       }
 
       /* ── Reset ── */
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
-        font-family: 'Nunito', sans-serif;
+        font-family: 'Outfit', sans-serif;
         background: var(--bg-app);
         min-height: 100vh;
         overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
       }
       #app {
         width: 100%;
@@ -75,71 +86,84 @@
       .scroll-x::-webkit-scrollbar { display: none; }
 
       /* ── Route Transitions ── */
-      .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+      .fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
       .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-      .slide-left-enter-active, .slide-left-leave-active { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-      .slide-left-enter-from { opacity: 0; transform: translateX(30px); }
-      .slide-left-leave-to { opacity: 0; transform: translateX(-30px); }
+      .slide-left-enter-active, .slide-left-leave-active { transition: all 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+      .slide-left-enter-from { opacity: 0; transform: translateX(40px); }
+      .slide-left-leave-to { opacity: 0; transform: translateX(-20px); }
 
-      .slide-right-enter-active, .slide-right-leave-active { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-      .slide-right-enter-from { opacity: 0; transform: translateX(-30px); }
-      .slide-right-leave-to { opacity: 0; transform: translateX(30px); }
+      .slide-right-enter-active, .slide-right-leave-active { transition: all 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+      .slide-right-enter-from { opacity: 0; transform: translateX(-40px); }
+      .slide-right-leave-to { opacity: 0; transform: translateX(20px); }
 
-      .slide-up-enter-active { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-      .slide-up-leave-active { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
+      .slide-up-enter-active { transition: all 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+      .slide-up-leave-active { transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
       .slide-up-enter-from { opacity: 0; transform: translateY(40px); }
       .slide-up-leave-to { opacity: 0; transform: translateY(40px); }
 
-      .list-enter-active { transition: all 0.3s ease; }
+      .list-enter-active { transition: all 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
       .list-leave-active { transition: all 0.2s ease; }
-      .list-enter-from { opacity: 0; transform: translateX(-16px); }
-      .list-leave-to { opacity: 0; transform: translateX(16px); }
+      .list-enter-from { opacity: 0; transform: translateY(12px); }
+      .list-leave-to { opacity: 0; transform: scale(0.96); opacity: 0; }
 
       /* ── Micro Interactions ── */
-      .btn-press { transition: transform 0.12s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-      .btn-press:active { transform: scale(0.92); }
-      .product-card { transition: transform 0.14s; -webkit-tap-highlight-color: transparent; }
-      .product-card:active { transform: scale(0.97); }
+      .btn-press {
+        transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .btn-press:active { transform: scale(0.96); }
+
+      .product-card {
+        transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        -webkit-tap-highlight-color: transparent;
+      }
+      .product-card:active { transform: scale(0.98); }
 
       /* ── Banner ── */
-      .banner-bg { background: linear-gradient(135deg, #2DB84B 0%, #1aac40 55%, #0d8c30 100%); }
+      .banner-bg { background: linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%); }
 
       /* ── Badges ── */
-      .badge-new { background: linear-gradient(135deg, #2DB84B, #1a9e38); }
-      .badge-hot { background: linear-gradient(135deg, #ff6b35, #e84545); }
+      .badge-new { background: linear-gradient(135deg, #10B981, #059669); }
+      .badge-hot { background: linear-gradient(135deg, #F97316, #EA580C); }
 
       /* ── Cart FAB ── */
       @keyframes pop {
         0%   { transform: scale(0.4); opacity: 0; }
-        70%  { transform: scale(1.15); }
+        60%  { transform: scale(1.08); }
+        85%  { transform: scale(0.97); }
         100% { transform: scale(1); opacity: 1; }
       }
-      .pop { animation: pop 0.3s cubic-bezier(0.36,0.07,0.19,0.97); }
+      .pop { animation: pop 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
 
       @keyframes pulse-ring {
-        0%   { box-shadow: 0 0 0 0 rgba(45,184,75,0.5); }
-        70%  { box-shadow: 0 0 0 10px rgba(45,184,75,0); }
-        100% { box-shadow: 0 0 0 0 rgba(45,184,75,0); }
+        0%   { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+        70%  { box-shadow: 0 0 0 12px rgba(5, 150, 105, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
       }
       .pulse-ring { animation: pulse-ring 1.5s ease-out 1; }
 
       /* ── Radio ── */
       .radio-outer {
-        width: 20px; height: 20px; border-radius: 50%;
+        width: 22px; height: 22px; border-radius: 50%;
         border: 2px solid var(--surface-tertiary);
         display: flex; align-items: center; justify-content: center;
-        transition: border-color 0.15s;
+        transition: border-color 0.2s ease;
       }
       .radio-outer.active { border-color: var(--primary); }
-      .radio-inner { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+      .radio-inner { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
 
       /* ── Splash Animations ── */
       @keyframes splash-logo-in {
-        0%   { transform: scale(0) rotate(-10deg); opacity: 0; }
-        60%  { transform: scale(1.1) rotate(2deg); opacity: 1; }
-        80%  { transform: scale(0.95) rotate(-1deg); }
-        100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        0%   { transform: scale(0); opacity: 0; }
+        50%  { transform: scale(1.06); opacity: 1; }
+        75%  { transform: scale(0.97); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes splash-text-in {
+        0%   { transform: translateY(24px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
       }
       @keyframes splash-text-left {
         0%   { transform: translateX(-60px); opacity: 0; }
@@ -156,12 +180,20 @@
         100% { transform: translateX(200%) rotate(25deg); }
       }
       @keyframes splash-ripple {
-        0%   { transform: scale(0); opacity: 0.3; }
-        100% { transform: scale(3); opacity: 0; }
+        0%   { transform: scale(0); opacity: 0.25; }
+        100% { transform: scale(4); opacity: 0; }
       }
       @keyframes splash-fadeout {
         0%   { opacity: 1; }
         100% { opacity: 0; }
+      }
+      @keyframes splash-glow {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50%      { opacity: 0.7; transform: scale(1.15); }
+      }
+      @keyframes splash-float {
+        0%, 100% { transform: translateY(0px); }
+        50%      { transform: translateY(-10px); }
       }
 
       /* ── Shimmer / Skeleton ── */
@@ -172,16 +204,26 @@
       .skeleton {
         background: linear-gradient(90deg, var(--surface-secondary) 25%, var(--surface-tertiary) 50%, var(--surface-secondary) 75%);
         background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 8px;
+        animation: shimmer 1.8s infinite ease-in-out;
+        border-radius: 14px;
       }
 
       /* ── Fade up for scroll reveals ── */
       @keyframes fade-up {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(16px); }
         to   { opacity: 1; transform: translateY(0); }
       }
-      .fade-up { animation: fade-up 0.4s ease-out both; }
+      .fade-up { animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+      /* ── Glass Effect Utility ── */
+      .glass-surface {
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+      }
+      .dark .glass-surface {
+        background: rgba(12, 10, 9, 0.82);
+      }
 
       /* ── Safe area helpers ── */
       .safe-top { padding-top: env(safe-area-inset-top, 0px); }

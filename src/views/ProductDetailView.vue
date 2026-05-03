@@ -69,7 +69,7 @@ async function handleFavorite() {
           </svg>
         </button>
 
-        <span v-if="hasDiscount" class="absolute top-3 left-14 z-10 text-white text-xs font-black px-2 py-1 rounded-xl" style="background: linear-gradient(135deg, #ff6b35, #e84545)">
+        <span v-if="hasDiscount" class="absolute top-3 left-14 z-10 text-white text-xs font-black px-2 py-1 rounded-xl" style="background: linear-gradient(135deg, #F97316, #EA580C)">
           -{{ Math.round((1 - product.discountedPrice / product.price) * 100) }}%
         </span>
 
@@ -113,7 +113,7 @@ async function handleFavorite() {
             <div class="w-full h-1.5 rounded-full" style="background: var(--surface-secondary)">
               <div class="h-full rounded-full transition-all" :style="{
                 width: Math.min(100, (product.stockQty / 100) * 100) + '%',
-                background: product.stockQty <= 10 ? '#ef4444' : '#2DB84B',
+                background: product.stockQty <= 10 ? '#ef4444' : '#059669',
               }"></div>
             </div>
           </div>

@@ -60,7 +60,7 @@ function setupMap(lat, lng) {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
   const icon = L.divIcon({
     className: '',
-    html: `<div style="width:36px;height:36px;background:#2DB84B;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(45,184,75,0.5);border:3px solid white"></div>`,
+    html: `<div style="width:36px;height:36px;background:#059669;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:3px solid white"></div>`,
     iconSize: [36, 36], iconAnchor: [18, 36],
   })
   marker = L.marker([lat, lng], { icon, draggable: true }).addTo(map)

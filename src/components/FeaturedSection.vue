@@ -71,7 +71,7 @@ async function handleFavorite(product) {
 
           <!-- Discount -->
           <span v-if="product.discountedPrice && product.discountedPrice < product.price"
-            class="absolute bottom-2 left-2 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg" style="background: linear-gradient(135deg, #ff6b35, #e84545)">
+            class="absolute bottom-2 left-2 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg" style="background: linear-gradient(135deg, #F97316, #EA580C)">
             -{{ Math.round((1 - product.discountedPrice / product.price) * 100) }}%
           </span>
         </div>

@@ -15,9 +15,9 @@ const { t, getLocalizedName } = useI18n()
 
 const showClearConfirm = ref(false)
 const promoCode = ref('')
-const promoStatus = ref('idle') // idle | loading | valid | invalid
+const promoStatus = ref('idle')
 const promoError = ref('')
-const promoData = ref(null) // { type, value, discount_amount, code }
+const promoData = ref(null)
 const appliedCode = ref('')
 
 async function applyPromo() {
@@ -73,89 +73,84 @@ function confirmClear() {
   <div class="relative">
     <div class="pb-44">
       <!-- Header -->
-      <div
-        class="flex items-center justify-between px-4 py-3 sticky top-0 z-20"
-        style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)"
-      >
+      <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20 cart-header">
         <button @click="navigate('home')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
           <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
         <div class="text-center">
-          <p class="text-base font-black" style="color: var(--text-primary)">{{ t('cart.title') }}</p>
-          <p class="text-xs font-semibold" style="color: var(--text-tertiary)">{{ cartItems.length }} {{ t('cart.items_count') }}</p>
+          <p class="text-base font-bold" style="color: var(--text-primary)">{{ t('cart.title') }}</p>
+          <p class="text-[11px] font-medium" style="color: var(--text-tertiary)">{{ cartItems.length }} {{ t('cart.items_count') }}</p>
         </div>
-        <button @click="handleClearCart" class="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center btn-press">
+        <button @click="handleClearCart" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: rgba(239,68,68,0.08)">
           <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
       </div>
 
-      <!-- Empty -->
+      <!-- Empty state -->
       <div v-if="cartItems.length === 0" class="flex flex-col items-center justify-center py-24 px-8">
-        <div class="text-7xl mb-5">🛒</div>
-        <p class="text-xl font-black" style="color: var(--text-primary)">{{ t('cart.empty_title') }}</p>
-        <p class="text-sm text-center mt-1.5" style="color: var(--text-tertiary)">{{ t('cart.empty_subtitle') }}</p>
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-5" style="background: var(--surface-secondary)">
+          <svg width="36" height="36" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="text-xl font-bold" style="color: var(--text-primary)">{{ t('cart.empty_title') }}</p>
+        <p class="text-sm text-center mt-1.5 font-medium" style="color: var(--text-tertiary)">{{ t('cart.empty_subtitle') }}</p>
         <button
           @click="navigate('home')"
-          class="mt-6 bg-primary text-white font-black px-8 py-3 rounded-2xl btn-press"
+          class="mt-6 bg-primary text-white font-bold px-8 py-3.5 rounded-2xl btn-press"
           style="box-shadow: 0 4px 16px var(--primary-glow)"
         >{{ t('cart.go_catalog') }}</button>
       </div>
 
       <div v-else class="px-4 mt-3 flex flex-col gap-3">
-        <!-- Items -->
+        <!-- Cart items -->
         <TransitionGroup name="list" tag="div" class="flex flex-col gap-3">
           <CartItemRow v-for="item in cartItems" :key="item.id" :item="item" />
         </TransitionGroup>
 
-        <!-- Upsell -->
-        <div v-if="suggestions.length" class="mt-1">
-          <p class="text-sm font-black mb-2.5" style="color: var(--text-primary)">{{ t('cart.add_more') }}</p>
+        <!-- Upsell suggestions -->
+        <div v-if="suggestions.length" class="mt-2">
+          <p class="text-sm font-bold mb-2.5" style="color: var(--text-primary)">{{ t('cart.add_more') }}</p>
           <div class="flex gap-2.5 scroll-x pb-1">
-            <div
-              v-for="p in suggestions" :key="p.id"
-              class="flex-shrink-0 w-[88px] rounded-2xl p-2.5 flex flex-col items-center gap-1"
-              style="background: var(--surface); box-shadow: 0 2px 10px var(--shadow)"
-            >
-              <img :src="p.image" :alt="getLocalizedName(p.name)" class="w-14 h-14 object-contain" />
-              <p class="text-[10px] font-bold text-center line-clamp-2 leading-tight" style="color: var(--text-primary)">
+            <div v-for="p in suggestions" :key="p.id" class="upsell-card">
+              <img :src="p.image" :alt="getLocalizedName(p.name)" class="w-12 h-12 object-contain" style="mix-blend-mode: multiply;" />
+              <p class="text-[10px] font-medium text-center line-clamp-2 leading-tight" style="color: var(--text-secondary)">
                 {{ getLocalizedName(p.name) }}
               </p>
-              <button
-                @click="addToCart(p)"
-                class="text-[10px] font-black text-primary border border-primary rounded-lg px-2 py-0.5 btn-press"
-              >{{ t('cart.add') }}</button>
+              <button @click="addToCart(p)"
+                class="text-[10px] font-bold text-primary border border-primary rounded-lg px-2 py-0.5 btn-press">
+                {{ t('cart.add') }}
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Promo code -->
-        <div class="rounded-2xl p-4 mt-1 transition-all" :style="{
-          background: promoStatus === 'valid' ? 'var(--primary-light)' : 'var(--surface)',
-          boxShadow: promoStatus === 'valid' ? '0 0 0 2px var(--primary), 0 2px 12px var(--shadow)' : '0 2px 12px var(--shadow)',
-        }">
-          <p class="text-xs font-black mb-2" style="color: var(--text-primary)">{{ t('cart.promo_code') }}</p>
+        <div class="promo-section mt-2" :class="{ 'promo-valid': promoStatus === 'valid' }">
+          <p class="text-xs font-bold mb-2.5" style="color: var(--text-primary)">{{ t('cart.promo_code') }}</p>
 
           <!-- Applied state -->
           <div v-if="promoStatus === 'valid' && promoData" class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
                 <svg width="16" height="16" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
               <div>
-                <p class="text-sm font-black text-primary">{{ appliedCode }}</p>
-                <p class="text-[10px] font-semibold" style="color: var(--text-secondary)">
+                <p class="text-sm font-bold text-primary">{{ appliedCode }}</p>
+                <p class="text-[10px] font-medium" style="color: var(--text-secondary)">
                   {{ promoData.type === 'percent' ? promoData.value + '% ' + t('cart.discount').toLowerCase() : '' }}
                   · -{{ formatNum(promoData.discount_amount) }} {{ t('currency') }}
                 </p>
               </div>
             </div>
-            <button @click="removePromo" class="w-8 h-8 rounded-lg flex items-center justify-center btn-press bg-red-500/10">
+            <button @click="removePromo" class="w-8 h-8 rounded-xl flex items-center justify-center btn-press" style="background: rgba(239,68,68,0.08)">
               <svg width="14" height="14" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
               </svg>
@@ -167,45 +162,41 @@ function confirmClear() {
             <div class="flex gap-2">
               <input v-model="promoCode" :placeholder="t('coupons.enter_code')"
                 :disabled="promoStatus === 'loading'"
-                class="flex-1 text-sm font-bold px-3 py-2.5 rounded-xl outline-none transition-all"
-                :style="{
-                  background: promoStatus === 'invalid' ? 'rgba(239,68,68,0.05)' : 'var(--surface-secondary)',
-                  color: 'var(--text-primary)',
-                  border: promoStatus === 'invalid' ? '1px solid rgba(239,68,68,0.3)' : '1px solid transparent',
-                }"
+                class="promo-input"
+                :class="{ 'promo-input-error': promoStatus === 'invalid' }"
                 @keyup.enter="applyPromo" />
               <button @click="applyPromo" :disabled="promoStatus === 'loading' || !promoCode.trim()"
-                class="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-black btn-press transition-opacity"
+                class="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold btn-press transition-opacity"
                 :class="{ 'opacity-50': promoStatus === 'loading' || !promoCode.trim() }">
                 {{ promoStatus === 'loading' ? '...' : t('coupons.apply') }}
               </button>
             </div>
-            <p v-if="promoStatus === 'invalid' && promoError" class="text-[10px] font-bold text-red-500 mt-1.5">
+            <p v-if="promoStatus === 'invalid' && promoError" class="text-[10px] font-semibold text-red-500 mt-2">
               {{ promoError }}
             </p>
           </div>
         </div>
 
-        <!-- Summary -->
-        <div class="rounded-2xl p-4 mt-1" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-          <p class="text-sm font-black mb-3" style="color: var(--text-primary)">{{ t('cart.your_order') }}</p>
+        <!-- Order Summary -->
+        <div class="summary-card mt-2">
+          <p class="text-sm font-bold mb-3" style="color: var(--text-primary)">{{ t('cart.your_order') }}</p>
           <div class="flex flex-col gap-2.5">
             <div class="flex justify-between">
-              <span class="text-xs font-semibold" style="color: var(--text-secondary)">{{ t('cart.products') }}({{ cartItems.length }})</span>
-              <span class="text-xs font-bold" style="color: var(--text-primary)">{{ formatNum(subtotal) }} {{ t('currency') }}</span>
+              <span class="text-xs font-medium" style="color: var(--text-secondary)">{{ t('cart.products') }}({{ cartItems.length }})</span>
+              <span class="text-xs font-semibold" style="color: var(--text-primary)">{{ formatNum(subtotal) }} {{ t('currency') }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-xs font-semibold" style="color: var(--text-secondary)">{{ t('cart.discount') }}</span>
-              <span class="text-xs font-bold text-red-500">-{{ formatNum(discount) }} {{ t('currency') }}</span>
+              <span class="text-xs font-medium" style="color: var(--text-secondary)">{{ t('cart.discount') }}</span>
+              <span class="text-xs font-semibold text-red-500">-{{ formatNum(discount) }} {{ t('currency') }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-xs font-semibold" style="color: var(--text-secondary)">{{ t('cart.delivery') }}</span>
-              <span class="text-xs font-bold" style="color: var(--text-primary)">{{ formatNum(deliveryCost) }} {{ t('currency') }}</span>
+              <span class="text-xs font-medium" style="color: var(--text-secondary)">{{ t('cart.delivery') }}</span>
+              <span class="text-xs font-semibold" style="color: var(--text-primary)">{{ formatNum(deliveryCost) }} {{ t('currency') }}</span>
             </div>
             <div class="h-px" style="background: var(--border)"></div>
             <div class="flex justify-between">
-              <span class="text-sm font-black" style="color: var(--text-primary)">{{ t('cart.total') }}</span>
-              <span class="text-sm font-black" style="color: var(--text-primary)">{{ formatNum(total) }} {{ t('currency') }}</span>
+              <span class="text-[15px] font-bold" style="color: var(--text-primary)">{{ t('cart.total') }}</span>
+              <span class="text-[15px] font-bold" style="color: var(--text-primary)">{{ formatNum(total) }} {{ t('currency') }}</span>
             </div>
           </div>
         </div>
@@ -213,40 +204,37 @@ function confirmClear() {
     </div>
 
     <!-- Checkout button -->
-    <div
-      v-if="cartItems.length > 0"
-      class="fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pb-3 z-30"
-      style="background: linear-gradient(to top, var(--bg-app) 65%, transparent)"
-    >
+    <div v-if="cartItems.length > 0"
+      class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pb-4 pt-3 z-30"
+      style="background: linear-gradient(to top, var(--bg-app) 70%, transparent)">
       <button
         @click="navigate('checkout', { couponCode: appliedCode })"
-        class="w-full banner-bg text-white font-black py-4 rounded-2xl flex items-center justify-between px-5 btn-press"
-        style="box-shadow: 0 6px 24px var(--primary-glow)"
-      >
-        <span class="bg-white bg-opacity-20 rounded-xl px-2.5 py-1 text-sm font-black">{{ cartItems.length }}</span>
-        <span class="text-base">{{ t('cart.checkout') }}</span>
-        <span class="text-sm font-bold opacity-90">{{ formatNum(total) }} {{ t('currency') }}</span>
+        class="checkout-btn btn-press">
+        <span class="checkout-count">{{ cartItems.length }}</span>
+        <span class="text-[15px] font-bold">{{ t('cart.checkout') }}</span>
+        <span class="text-sm font-semibold opacity-90">{{ formatNum(total) }} {{ t('currency') }}</span>
       </button>
     </div>
+
     <!-- Clear cart confirmation -->
     <Teleport to="#app">
       <Transition name="fade">
-        <div v-if="showClearConfirm" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(0,0,0,0.5)" @click.self="showClearConfirm = false">
-          <div class="w-full max-w-[480px] rounded-t-3xl p-6 safe-bottom" style="background: var(--surface);">
+        <div v-if="showClearConfirm" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(0,0,0,0.4)" @click.self="showClearConfirm = false">
+          <div class="w-full max-w-[480px] rounded-t-[28px] p-6 safe-bottom" style="background: var(--surface);">
             <div class="flex flex-col items-center mb-6">
-              <div class="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3" style="background: rgba(239,68,68,0.08)">
                 <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <h3 class="text-lg font-black" style="color: var(--text-primary)">{{ t('cart.clear_confirm') }}</h3>
-              <p class="text-sm font-semibold mt-1" style="color: var(--text-tertiary)">{{ t('cart.clear_subtitle') }}</p>
+              <h3 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('cart.clear_confirm') }}</h3>
+              <p class="text-sm font-medium mt-1" style="color: var(--text-tertiary)">{{ t('cart.clear_subtitle') }}</p>
             </div>
             <div class="flex flex-col gap-2">
-              <button @click="confirmClear" class="w-full bg-red-500 text-white font-black py-3.5 rounded-2xl btn-press">
+              <button @click="confirmClear" class="w-full bg-red-500 text-white font-bold py-3.5 rounded-2xl btn-press">
                 {{ t('cart.clear_yes') }}
               </button>
-              <button @click="showClearConfirm = false" class="w-full font-black py-3.5 rounded-2xl btn-press"
+              <button @click="showClearConfirm = false" class="w-full font-bold py-3.5 rounded-2xl btn-press"
                 style="background: var(--surface-secondary); color: var(--text-primary)">
                 {{ t('profile.cancel') }}
               </button>
@@ -257,3 +245,87 @@ function confirmClear() {
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+.cart-header {
+  background: rgba(250, 249, 246, 0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+:root.dark .cart-header, .dark .cart-header {
+  background: rgba(12, 10, 9, 0.88);
+}
+
+.upsell-card {
+  flex-shrink: 0;
+  width: 88px;
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
+}
+
+.promo-section {
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
+  transition: all 0.3s ease;
+}
+.promo-valid {
+  background: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary), 0 4px 12px var(--shadow);
+}
+
+.promo-input {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 12px;
+  outline: none;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease;
+}
+.promo-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
+}
+.promo-input-error {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.summary-card {
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
+}
+
+.checkout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%);
+  color: white;
+  box-shadow: 0 4px 16px var(--primary-glow), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.checkout-count {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+</style>

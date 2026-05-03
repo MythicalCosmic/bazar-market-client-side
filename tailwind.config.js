@@ -8,12 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#2DB84B',
-        'primary-dark': '#229e3f',
-        'primary-light': '#eaf8ee',
+        primary: '#059669',
+        'primary-dark': '#047857',
+        'primary-light': '#D1FAE5',
+        accent: '#F97316',
+        'accent-light': '#FFEDD5',
       },
       fontFamily: {
-        sans: ['Nunito', 'sans-serif'],
+        sans: ['Outfit', 'sans-serif'],
+      },
+      borderRadius: {
+        '2xl': '16px',
+        '3xl': '20px',
+        '4xl': '28px',
       },
     },
   },
