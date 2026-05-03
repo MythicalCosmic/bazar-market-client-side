@@ -130,23 +130,6 @@ const menuGroups = [
       </button>
     </div>
 
-    <!-- Logged in but not verified -->
-    <div v-else-if="isLoggedIn && !isVerified" class="rounded-2xl p-4 mb-4 flex items-center gap-3 border-2 border-blue-400/30"
-      style="background: rgba(59,130,246,0.08)">
-      <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-        <svg width="20" height="20" class="text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/>
-        </svg>
-      </div>
-      <div class="flex-1">
-        <p class="text-sm font-black text-blue-600">{{ t('verify.banner_title') }}</p>
-        <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('verify.banner_subtitle') }}</p>
-      </div>
-      <button @click="navigate('verify')" class="bg-blue-500 text-white text-xs font-black px-3 py-2 rounded-xl btn-press flex-shrink-0">
-        {{ t('verify.verify_now') }}
-      </button>
-    </div>
-
     <!-- Profile card -->
     <div class="rounded-2xl p-4 mb-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
       <div class="flex items-center gap-4">

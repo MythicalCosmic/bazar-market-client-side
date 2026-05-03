@@ -18,6 +18,8 @@ const code = ref('')
 const isLoading = ref(false)
 const error = ref('')
 const codeInputs = ref(['', '', '', '', '', ''])
+const countdown = ref(0)
+let countdownTimer = null
 
 function formatPhone(val) {
   let digits = val.replace(/\D/g, '')
@@ -33,6 +35,15 @@ function formatPhone(val) {
 
 function onPhoneInput(e) { phone.value = formatPhone(e.target.value) }
 
+function startCountdown(seconds) {
+  countdown.value = seconds
+  clearInterval(countdownTimer)
+  countdownTimer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) clearInterval(countdownTimer)
+  }, 1000)
+}
+
 async function handleRegister() {
   if (!firstName.value.trim() || !lastName.value.trim()) { error.value = t('register.fill_all'); return }
   if (phone.value.replace(/\D/g, '').length < 12) { error.value = t('register.invalid_phone'); return }
@@ -43,6 +54,7 @@ async function handleRegister() {
   isLoading.value = false
   if (result.success) {
     step.value = 2
+    startCountdown(result.expiresIn || 120)
   } else {
     error.value = result.message || t('register.fill_all')
   }
@@ -63,7 +75,7 @@ async function handleVerify() {
   if (code.value.length !== 6) { error.value = t('register.enter_code'); return }
   error.value = ''
   isLoading.value = true
-  const result = await auth.verifyCode(code.value)
+  const result = await auth.verifyRegistration(phone.value, code.value)
   isLoading.value = false
   if (result.success) {
     navigate('home')
@@ -73,9 +85,11 @@ async function handleVerify() {
 }
 
 async function resendCode() {
+  if (countdown.value > 0) return
   codeInputs.value = ['', '', '', '', '', '']
   code.value = ''
-  await auth.sendCode()
+  const result = await auth.resendRegistrationCode(phone.value)
+  if (result.success) startCountdown(result.expiresIn || 60)
 }
 </script>
 
@@ -89,7 +103,6 @@ async function resendCode() {
       </div>
       <h1 class="text-white text-2xl font-black">{{ step === 1 ? t('register.title') : t('register.verify_title') }}</h1>
       <p class="text-white/70 text-xs font-semibold mt-1 text-center max-w-[260px]">{{ step === 1 ? t('register.subtitle') : t('register.verify_subtitle') }}</p>
-      <div class="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/5"></div>
     </div>
 
     <div class="flex-1 px-4 -mt-4">
@@ -151,7 +164,11 @@ async function resendCode() {
           <div class="flex gap-2 justify-center mb-4">
             <input v-for="(d, i) in codeInputs" :key="i" :value="codeInputs[i]" @input="onCodeInput(i, $event)" @keydown="onCodeKeydown(i, $event)" type="text" inputmode="numeric" maxlength="1" class="w-12 h-14 text-center text-xl font-black rounded-xl outline-none transition-all border-2" :style="{ background: 'var(--surface-secondary)', color: 'var(--text-primary)', borderColor: codeInputs[i] ? 'var(--primary)' : 'var(--border)' }" />
           </div>
-          <button @click="resendCode" class="text-xs font-bold text-primary btn-press block mx-auto">{{ t('register.resend') }}</button>
+          <!-- Countdown / Resend -->
+          <div class="text-center">
+            <button v-if="countdown <= 0" @click="resendCode" class="text-xs font-bold text-primary btn-press">{{ t('register.resend') }}</button>
+            <p v-else class="text-xs font-semibold" style="color: var(--text-tertiary)">{{ t('register.resend_in', { sec: countdown }) }}</p>
+          </div>
         </div>
         <p v-if="error" class="text-xs font-bold text-red-500 text-center mt-3">{{ error }}</p>
         <button @click="handleVerify" :disabled="isLoading || code.length !== 6" class="w-full bg-primary text-white font-black py-4 rounded-2xl btn-press mt-4 transition-opacity" :class="{ 'opacity-60': isLoading || code.length !== 6 }" style="box-shadow: 0 6px 24px var(--primary-glow)">{{ isLoading ? t('common.loading') : t('register.verify') }}</button>

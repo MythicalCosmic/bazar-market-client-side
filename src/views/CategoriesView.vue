@@ -67,6 +67,13 @@ async function selectChild(child) {
   await loadProducts(child.id)
 }
 
+async function goToSubcategory(parent, child) {
+  selectedParent.value = parent
+  selectedChild.value = child
+  searchQuery.value = ''
+  await loadProducts(child.id)
+}
+
 async function loadAllProducts(cat) {
   isLoadingProducts.value = true
   try {
@@ -167,7 +174,7 @@ const filteredCategories = computed(() => {
             <button
               v-for="(sub, subIdx) in cat.children"
               :key="sub.id"
-              @click="selectParent(cat); $nextTick(() => selectChild(sub))"
+              @click="goToSubcategory(cat, sub)"
               class="rounded-xl p-3 flex flex-col justify-between text-left btn-press overflow-hidden relative transition-transform"
               :style="{
                 background: getColor(catIdx * 10 + subIdx).bg,

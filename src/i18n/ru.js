@@ -295,6 +295,16 @@ export default {
   'verify.will_receive_sms': 'На этот номер будет отправлен SMS-код',
   'verify.send_sms': 'Отправить SMS',
 
+  'forgot.title': 'Восстановление пароля',
+  'forgot.subtitle': 'Введите номер телефона',
+  'forgot.send_code': 'Отправить код',
+  'forgot.reset_title': 'Новый пароль',
+  'forgot.reset_subtitle': 'Введите код и создайте новый пароль',
+  'forgot.new_password': 'Новый пароль',
+  'forgot.new_password_placeholder': 'Введите новый пароль',
+  'forgot.reset_button': 'Сбросить пароль',
+  'register.resend_in': 'Повторно через {sec} сек',
+
   'checkout.note': 'Комментарий',
   'checkout.note_placeholder': 'Дополнительные пожелания к заказу...',
   'checkout.select_address': 'Выберите адрес',

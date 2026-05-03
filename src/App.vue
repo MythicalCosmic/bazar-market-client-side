@@ -15,7 +15,7 @@ import FavoritesView      from './views/FavoritesView.vue'
 import PaymentMethodsView from './views/PaymentMethodsView.vue'
 import LoginView          from './views/LoginView.vue'
 import RegisterView       from './views/RegisterView.vue'
-import VerifyView         from './views/VerifyView.vue'
+import ForgotPasswordView from './views/ForgotPasswordView.vue'
 import AddressesView      from './views/AddressesView.vue'
 import CouponsView        from './views/CouponsView.vue'
 import RewardsView        from './views/RewardsView.vue'
@@ -43,7 +43,7 @@ const { toasts } = useToast()
         <PaymentMethodsView v-else-if="currentRoute === 'payment-methods'" key="payments" />
         <LoginView          v-else-if="currentRoute === 'login'"           key="login"    />
         <RegisterView       v-else-if="currentRoute === 'register'"       key="register" />
-        <VerifyView         v-else-if="currentRoute === 'verify'"         key="verify"   />
+        <ForgotPasswordView v-else-if="currentRoute === 'forgot-password'" key="forgot"   />
         <AddressesView      v-else-if="currentRoute === 'addresses'"      key="addresses"/>
         <CouponsView        v-else-if="currentRoute === 'coupons'"        key="coupons"  />
         <RewardsView        v-else-if="currentRoute === 'rewards'"        key="rewards"  />

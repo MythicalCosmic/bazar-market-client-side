@@ -57,6 +57,7 @@ export function useAuth() {
     }
   }
 
+  // Step 1: Register — sends OTP, no user created yet
   async function register(firstName, lastName, phone, password) {
     try {
       const data = await publicPost('/auth/register', {
@@ -65,6 +66,20 @@ export function useAuth() {
         last_name: lastName,
         password,
         language: ['uz', 'ru'].includes(localStorage.getItem('bazar-locale')) ? localStorage.getItem('bazar-locale') : 'uz',
+      })
+      return { success: true, phone: data.phone, expiresIn: data.expires_in }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  // Step 2: Verify registration — creates user + returns session
+  async function verifyRegistration(phone, code, device) {
+    try {
+      const data = await publicPost('/auth/register/verify', {
+        phone: phone.replace(/\s/g, ''),
+        code,
+        device: device || navigator.userAgent?.slice(0, 50),
       })
       setToken(data.session_key)
       token.value = data.session_key
@@ -77,16 +92,6 @@ export function useAuth() {
         verified: data.user.is_phone_verified,
         language: data.user.language,
       }
-      return { success: true, verificationSent: data.verification_sent }
-    } catch (e) {
-      return { success: false, message: e.message }
-    }
-  }
-
-  async function verifyCode(code) {
-    try {
-      await post('/auth/verify', { code })
-      if (user.value) user.value.verified = true
       applyPendingReferral()
       return { success: true }
     } catch (e) {
@@ -94,10 +99,39 @@ export function useAuth() {
     }
   }
 
-  async function sendCode() {
+  // Resend OTP during registration
+  async function resendRegistrationCode(phone) {
     try {
-      const data = await post('/auth/resend-code')
+      const data = await publicPost('/auth/register/resend', {
+        phone: phone.replace(/\s/g, ''),
+      })
       return { success: true, expiresIn: data.expires_in }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  // Forgot password — send reset code
+  async function forgotPassword(phone) {
+    try {
+      const data = await publicPost('/auth/forgot-password', {
+        phone: phone.replace(/\s/g, ''),
+      })
+      return { success: true, expiresIn: data.expires_in }
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+  }
+
+  // Reset password with code
+  async function resetPassword(phone, code, newPassword) {
+    try {
+      await publicPost('/auth/reset-password', {
+        phone: phone.replace(/\s/g, ''),
+        code,
+        new_password: newPassword,
+      })
+      return { success: true }
     } catch (e) {
       return { success: false, message: e.message }
     }
@@ -123,15 +157,6 @@ export function useAuth() {
     }
   }
 
-  async function logout() {
-    try {
-      await post('/auth/logout')
-    } catch {}
-    token.value = null
-    user.value = null
-    clearToken()
-  }
-
   async function applyPendingReferral() {
     const code = localStorage.getItem('bazar-pending-referral')
     if (!code) return
@@ -139,6 +164,13 @@ export function useAuth() {
       await post('/referral/apply', { referral_code: code })
     } catch {}
     localStorage.removeItem('bazar-pending-referral')
+  }
+
+  async function logout() {
+    try { await post('/auth/logout') } catch {}
+    token.value = null
+    user.value = null
+    clearToken()
   }
 
   function getUser() {
@@ -155,8 +187,10 @@ export function useAuth() {
     fetchProfile,
     login,
     register,
-    verifyCode,
-    sendCode,
+    verifyRegistration,
+    resendRegistrationCode,
+    forgotPassword,
+    resetPassword,
     updateProfile,
     logout,
   }

@@ -295,6 +295,16 @@ export default {
   'verify.will_receive_sms': 'An SMS code will be sent to this number',
   'verify.send_sms': 'Send SMS',
 
+  'forgot.title': 'Reset password',
+  'forgot.subtitle': 'Enter your phone number',
+  'forgot.send_code': 'Send code',
+  'forgot.reset_title': 'New password',
+  'forgot.reset_subtitle': 'Enter the code and create a new password',
+  'forgot.new_password': 'New password',
+  'forgot.new_password_placeholder': 'Enter new password',
+  'forgot.reset_button': 'Reset password',
+  'register.resend_in': 'Resend in {sec}s',
+
   'checkout.note': 'Note',
   'checkout.note_placeholder': 'Additional instructions for your order...',
   'checkout.select_address': 'Select an address',

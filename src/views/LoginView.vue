@@ -89,6 +89,8 @@ async function handleLogin() {
           </div>
         </div>
 
+        <button @click="navigate('forgot-password')" class="text-xs font-bold text-primary mt-3 btn-press">{{ t('login.forgot_password') }}</button>
+
         <p v-if="error" class="text-xs font-bold text-red-500 text-center mt-3">{{ error }}</p>
 
         <button @click="handleLogin" :disabled="isLoading" class="w-full bg-primary text-white font-black py-4 rounded-2xl btn-press mt-5 transition-opacity" :class="{ 'opacity-60': isLoading }" style="box-shadow: 0 6px 24px var(--primary-glow)">

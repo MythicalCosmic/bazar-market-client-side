@@ -299,6 +299,19 @@ export default {
   'verify.will_receive_sms': 'Ushbu raqamga SMS kod yuboriladi',
   'verify.send_sms': 'SMS yuborish',
 
+  // Forgot password
+  'forgot.title': 'Parolni tiklash',
+  'forgot.subtitle': 'Telefon raqamingizni kiriting',
+  'forgot.send_code': 'Kod yuborish',
+  'forgot.reset_title': 'Yangi parol',
+  'forgot.reset_subtitle': 'Kodni kiriting va yangi parol yarating',
+  'forgot.new_password': 'Yangi parol',
+  'forgot.new_password_placeholder': 'Yangi parolni kiriting',
+  'forgot.reset_button': 'Parolni tiklash',
+
+  // Register extras
+  'register.resend_in': '{sec} soniyadan keyin qayta yuborish',
+
   'checkout.note': 'Izoh',
   'checkout.note_placeholder': 'Buyurtma uchun qo\'shimcha izoh...',
   'checkout.select_address': 'Manzilni tanlang',
