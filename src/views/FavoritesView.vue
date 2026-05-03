@@ -4,7 +4,7 @@ import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useFavorites } from '../stores/favoritesStore.js'
 import { useAuth } from '../stores/authStore.js'
-import { getFavorites } from '../services/api.js'
+import { getFavorites, getProduct } from '../services/api.js'
 import ProductCard from '../components/ProductCard.vue'
 
 const { navigate } = useRouter()
@@ -22,7 +22,12 @@ onMounted(async () => {
   }
   await loadFavorites()
   try {
-    favoriteProducts.value = await getFavorites()
+    const favItems = await getFavorites()
+    // Favorites API may not return images — fetch full product details
+    const detailed = await Promise.all(
+      favItems.map(item => getProduct(item.id).catch(() => item))
+    )
+    favoriteProducts.value = detailed
   } catch {}
   isLoading.value = false
 })
