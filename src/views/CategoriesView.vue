@@ -42,12 +42,24 @@ onMounted(async () => {
   isLoading.value = false
 
   if (routeParams.value?.category) {
+    const parent = categoryTree.value.find(c => c.id === routeParams.value.category)
+    if (parent && routeParams.value.subcategory) {
+      const child = (parent.children || []).find(c => c.id === routeParams.value.subcategory)
+      if (child) { await goToSubcategory(parent, child); return }
+    }
     selectParentById(routeParams.value.category)
   }
 })
 
-watch(routeParams, (params) => {
-  if (params?.category) selectParentById(params.category)
+watch(routeParams, async (params) => {
+  if (params?.category) {
+    const parent = categoryTree.value.find(c => c.id === params.category)
+    if (parent && params.subcategory) {
+      const child = (parent.children || []).find(c => c.id === params.subcategory)
+      if (child) { await goToSubcategory(parent, child); return }
+    }
+    selectParentById(params.category)
+  }
 })
 
 function selectParentById(id) {
