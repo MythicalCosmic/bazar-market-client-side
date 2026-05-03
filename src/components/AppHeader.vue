@@ -45,7 +45,7 @@ function onSearchInput() {
       searchResults.value = await searchProducts(q)
       showSearchResults.value = true
     } catch { searchResults.value = [] }
-  }, 400)
+  }, 250)
 }
 
 function goToProduct(product) {

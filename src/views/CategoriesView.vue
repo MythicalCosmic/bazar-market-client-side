@@ -177,27 +177,32 @@ const filteredCategories = computed(() => {
           </h2>
 
           <!-- Subcategory cards grid -->
-          <div v-if="cat.children && cat.children.length" class="grid gap-2"
-            :class="cat.children.length <= 2 ? 'grid-cols-2' : 'grid-cols-3'">
+          <div v-if="cat.children && cat.children.length" class="grid gap-2.5"
+            :class="cat.children.length <= 2 ? 'grid-cols-2' : 'grid-cols-2'">
             <button
               v-for="(sub, subIdx) in cat.children"
               :key="sub.id"
               @click="goToSubcategory(cat, sub)"
               class="subcat-card btn-press"
-              :style="{
-                background: getColor(catIdx * 10 + subIdx).bg,
-                minHeight: cat.children.length <= 2 ? '120px' : '100px',
-              }">
-              <p class="text-[11px] font-semibold leading-tight pr-1 relative z-10" :style="{ color: getColor(catIdx * 10 + subIdx).text }">
-                {{ getLocalizedName(sub.name) }}
-              </p>
-              <div class="flex justify-end mt-auto">
+              :style="{ '--card-bg': getColor(catIdx * 10 + subIdx).bg, '--card-c': getColor(catIdx * 10 + subIdx).text }">
+              <!-- Decorative orb -->
+              <div class="subcat-orb" :style="{ background: getColor(catIdx * 10 + subIdx).text + '10' }"></div>
+              <!-- Name + arrow -->
+              <div class="flex items-start justify-between relative z-10">
+                <p class="text-[12px] font-semibold leading-tight flex-1 pr-2" :style="{ color: getColor(catIdx * 10 + subIdx).text }">
+                  {{ getLocalizedName(sub.name) }}
+                </p>
+                <svg width="14" height="14" class="flex-shrink-0 mt-0.5" :style="{ color: getColor(catIdx * 10 + subIdx).text, opacity: 0.4 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <!-- Image or icon -->
+              <div class="flex justify-end mt-auto relative z-10">
                 <img v-if="sub.image" :src="sub.image" :alt="getLocalizedName(sub.name)"
-                  class="w-12 h-12 object-contain opacity-90" />
-                <div v-else class="w-9 h-9 rounded-xl flex items-center justify-center" :style="{ background: getColor(catIdx * 10 + subIdx).text + '12' }">
-                  <svg width="16" height="16" :style="{ color: getColor(catIdx * 10 + subIdx).text }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/>
-                    <rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
+                  class="w-14 h-14 object-contain drop-shadow-sm" />
+                <div v-else class="subcat-icon" :style="{ background: getColor(catIdx * 10 + subIdx).text + '10', color: getColor(catIdx * 10 + subIdx).text }">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                   </svg>
                 </div>
               </div>
@@ -299,17 +304,40 @@ const filteredCategories = computed(() => {
 }
 
 .subcat-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   text-align: left;
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 16px;
+  padding: 14px;
+  min-height: 110px;
   overflow: hidden;
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  background: var(--card-bg);
+  border: 1px solid rgba(0,0,0,0.03);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.04);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
 }
 .subcat-card:active {
   transform: scale(0.96);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.subcat-orb {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  bottom: -20px;
+  right: -20px;
+  filter: blur(2px);
+}
+.subcat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chip-btn {

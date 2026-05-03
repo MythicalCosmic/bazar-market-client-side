@@ -121,19 +121,23 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
       </div>
 
       <!-- ═══ Quick Categories ═══ -->
-      <div v-if="categories.length" class="mt-5 px-4">
-        <div class="scroll-x flex gap-3 pb-1">
+      <div v-if="categories.length" class="mt-5">
+        <div class="scroll-x flex gap-2.5 px-4 pb-2">
           <button v-for="(cat, i) in categories" :key="cat.id" @click="goToCategory(cat.id)"
-            class="flex-shrink-0 flex flex-col items-center gap-1.5 btn-press category-pill">
-            <div class="w-[52px] h-[52px] rounded-2xl flex items-center justify-center"
-              :style="{ background: getAccent(i).bg }">
-              <img v-if="cat.image" :src="cat.image" class="w-7 h-7 object-contain" />
-              <svg v-else width="22" height="22" :style="{ color: getAccent(i).color }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+            class="flex-shrink-0 btn-press cat-chip"
+            :style="{ background: getAccent(i).bg }">
+            <!-- Category image or icon -->
+            <div class="cat-chip-icon" :style="{ background: getAccent(i).color + '14' }">
+              <img v-if="cat.image" :src="cat.image" class="w-8 h-8 object-contain" />
+              <svg v-else width="20" height="20" :style="{ color: getAccent(i).color }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/>
                 <rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
               </svg>
             </div>
-            <span class="text-[10px] font-medium whitespace-nowrap max-w-[56px] truncate" style="color: var(--text-secondary)">{{ getLocalizedName(cat.name) }}</span>
+            <!-- Name -->
+            <span class="text-[12px] font-semibold whitespace-nowrap pr-1" :style="{ color: getAccent(i).color }">
+              {{ getLocalizedName(cat.name) }}
+            </span>
           </button>
         </div>
       </div>
@@ -307,11 +311,26 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
   background: var(--surface-tertiary);
 }
 
-.category-pill {
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+.cat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 16px;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04);
 }
-.category-pill:active {
-  transform: scale(0.92);
+.cat-chip:active {
+  transform: scale(0.94);
+}
+.cat-chip-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .featured-card {

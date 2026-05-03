@@ -4,341 +4,337 @@ import { useRouter } from '../router/index.js'
 
 const { navigate } = useRouter()
 const stage = ref(0)
-let tid = null
+const timers = []
 
 const fruits = [
-  { emoji: '🍎', x: 22, d: 0.15, color: '#ef4444', rot: 200  },
-  { emoji: '🍊', x: 76, d: 0.50, color: '#fb923c', rot: -180 },
-  { emoji: '🍉', x: 44, d: 0.85, color: '#4ade80', rot: 260  },
-  { emoji: '🍋', x: 83, d: 1.15, color: '#facc15', rot: -220 },
-  { emoji: '🍓', x: 14, d: 1.40, color: '#f87171', rot: 200  },
-  { emoji: '🥝', x: 58, d: 1.65, color: '#86efac', rot: -240 },
-  { emoji: '🍇', x: 30, d: 1.90, color: '#c084fc', rot: 180  },
-  { emoji: '🍌', x: 68, d: 2.10, color: '#fde047', rot: -200 },
+  { name: 'apple',  color: '#10B981', delay: 0,    sx: -120, sy: -80,  ex: -58, ey: -52 },
+  { name: 'pear',   color: '#34D399', delay: 0.35,  sx: 120,  sy: -80,  ex: 58,  ey: -48 },
+  { name: 'citrus', color: '#6EE7B7', delay: 0.70,  sx: -120, sy: 80,   ex: -54, ey: 52  },
+  { name: 'leaf',   color: '#059669', delay: 1.05,  sx: 120,  sy: 80,   ex: 54,  ey: 48  },
 ]
 
-// slice happens 0.5s after each fruit starts falling
-const FALL = 0.5
+function sched(fn, ms) { timers.push(setTimeout(fn, ms)) }
 
 onMounted(() => {
-  setTimeout(() => stage.value = 1, 50)    // fruits begin
-  setTimeout(() => stage.value = 2, 3300)  // flash + logo
-  setTimeout(() => stage.value = 3, 3900)  // text
-  setTimeout(() => stage.value = 4, 4400)  // tagline
-  tid = setTimeout(() => {
-    stage.value = 5
-    setTimeout(() => navigate('home'), 650)
-  }, 5500)
+  sched(() => stage.value = 1, 100)
+  sched(() => stage.value = 2, 2500)
+  sched(() => stage.value = 3, 3100)
+  sched(() => stage.value = 4, 3900)
+  sched(() => stage.value = 5, 4700)
+  sched(() => { stage.value = 6; sched(() => navigate('home'), 650) }, 5600)
 })
 
-onUnmounted(() => { if (tid) clearTimeout(tid) })
+onUnmounted(() => timers.forEach(t => clearTimeout(t)))
 </script>
 
 <template>
-  <div class="splash" :class="{ exit: stage >= 5 }">
+  <div class="splash" :class="{ exit: stage >= 6 }">
 
-    <!-- ── gradient mesh bg ── -->
+    <!-- ── Ambient background ── -->
     <div class="bg">
-      <div class="bg-o b1"></div>
-      <div class="bg-o b2"></div>
-      <div class="bg-o b3"></div>
+      <div class="bg-o o1"></div>
+      <div class="bg-o o2"></div>
+      <div class="bg-o o3"></div>
     </div>
 
-    <!-- ── fruit arena ── -->
-    <div v-if="stage >= 1" class="arena">
-      <div v-for="f in fruits" :key="f.emoji" class="fp" :style="{ left: f.x + '%' }">
-
-        <!-- fall container -->
-        <div class="fall" :style="{
-          animationDelay: f.d + 's',
-          '--rot': f.rot + 'deg',
+    <!-- ── Fruit stage ── -->
+    <div class="fstage">
+      <div v-for="f in fruits" :key="f.name"
+        class="fi"
+        :class="{ enter: stage >= 1, detail: stage >= 2, converge: stage >= 3 }"
+        :style="{
+          '--d': f.delay + 's',
+          '--c': f.color,
+          '--sx': f.sx + 'px', '--sy': f.sy + 'px',
+          '--ex': f.ex + 'px', '--ey': f.ey + 'px',
         }">
-
-          <!-- whole fruit (pops at slice) -->
-          <div class="whole" :style="{ animationDelay: (f.d + FALL) + 's' }">
-            <span class="em">{{ f.emoji }}</span>
-          </div>
-
-          <!-- left half -->
-          <div class="half hl" :style="{ animationDelay: (f.d + FALL) + 's' }">
-            <span class="em">{{ f.emoji }}</span>
-          </div>
-
-          <!-- right half -->
-          <div class="half hr" :style="{ animationDelay: (f.d + FALL) + 's' }">
-            <span class="em">{{ f.emoji }}</span>
-          </div>
-
-          <!-- slash blade -->
-          <div class="blade" :style="{
-            animationDelay: (f.d + FALL - 0.04) + 's',
-            '--sa': (f.rot > 0 ? 28 : -28) + 'deg',
-          }"></div>
-
-          <!-- juice burst -->
-          <div v-for="j in 6" :key="j" class="jw"
-            :style="{ transform: 'rotate(' + (j * 60 + 10) + 'deg)' }">
-            <div class="jd" :style="{
-              background: f.color,
-              animationDelay: (f.d + FALL) + 's',
-              width:  (3 + Math.random() * 5) + 'px',
-              height: (3 + Math.random() * 5) + 'px',
-            }"></div>
-          </div>
-        </div>
+        <!-- Apple -->
+        <svg v-if="f.name === 'apple'" viewBox="0 0 64 64" width="64" height="64" fill="none">
+          <path d="M33 10c1-4 5-6 7-4" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M32 16c-11 0-20 10-18 22 2 12 10 18 18 18s16-6 18-18c2-12-7-22-18-22z" fill="white" fill-opacity="0.85"/>
+          <path class="fd" d="M32 22v26M26 34q6-6 12 0" stroke="rgba(5,150,105,0.4)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+        </svg>
+        <!-- Pear -->
+        <svg v-else-if="f.name === 'pear'" viewBox="0 0 64 64" width="60" height="60" fill="none">
+          <path d="M33 9c0-3 3-5 4-3" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M32 14c-4 0-7 6-9 14s-6 16-2 22c4 6 16 6 20 0 4-6 0-14-2-22s-5-14-7-14z" fill="white" fill-opacity="0.8"/>
+          <path class="fd" d="M32 20v30" stroke="rgba(5,150,105,0.4)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+        </svg>
+        <!-- Citrus cross-section -->
+        <svg v-else-if="f.name === 'citrus'" viewBox="0 0 64 64" width="60" height="60" fill="none">
+          <circle cx="32" cy="32" r="22" fill="white" fill-opacity="0.8"/>
+          <circle cx="32" cy="32" r="17" fill="white" fill-opacity="0.55"/>
+          <g class="fd" opacity="0">
+            <line x1="32" y1="13" x2="32" y2="51" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
+            <line x1="15" y1="32" x2="49" y2="32" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
+            <line x1="19" y1="19" x2="45" y2="45" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
+            <line x1="45" y1="19" x2="19" y2="45" stroke="rgba(5,150,105,0.3)" stroke-width="1.5"/>
+          </g>
+        </svg>
+        <!-- Leaf -->
+        <svg v-else-if="f.name === 'leaf'" viewBox="0 0 64 64" width="56" height="56" fill="none">
+          <path d="M32 8c-16 8-22 24-16 40 4 8 12 10 16 8s12-10 16-24c4-12 0-22-16-24z" fill="white" fill-opacity="0.75"/>
+          <g class="fd" opacity="0">
+            <path d="M32 14c-4 14-6 26-4 38" stroke="rgba(5,150,105,0.35)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M28 26l-6 5M35 34l5-3M29 42l-5 3" stroke="rgba(5,150,105,0.3)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          </g>
+        </svg>
       </div>
     </div>
 
-    <!-- ── center flash (after last fruit) ── -->
-    <div v-if="stage >= 2" class="flash"></div>
+    <!-- ── Light sweep ── -->
+    <div v-if="stage >= 2" class="sweep"></div>
 
-    <!-- ── logo ── -->
-    <div :class="['lw', { show: stage >= 2 }]">
-      <div class="lg"></div>
-      <div class="lp lp1"></div>
-      <div class="lp lp2"></div>
-      <div class="lb">
-        <img src="/logo.png" alt="Bazar Market" class="li" />
+    <!-- ── Convergence pulse ── -->
+    <div v-if="stage >= 3" class="cpulse"></div>
+
+    <!-- ── Logo ── -->
+    <div class="lw" :class="{ show: stage >= 4 }">
+      <div class="lglow"></div>
+      <div class="lbox">
+        <img src="/logo.png" alt="Bazar Market" class="limg" />
       </div>
     </div>
 
-    <!-- ── brand ── -->
-    <div class="br">
-      <span :class="['bb', { show: stage >= 3 }]">BAZAR</span>
-      <span :class="['bd', { show: stage >= 3 }]"></span>
-      <span :class="['bm', { show: stage >= 3 }]">MARKET</span>
+    <!-- ── Brand text ── -->
+    <div class="brow">
+      <span class="bb" :class="{ show: stage >= 5 }">BAZAR</span>
+      <span class="bdot" :class="{ show: stage >= 5 }"></span>
+      <span class="bm" :class="{ show: stage >= 5 }">MARKET</span>
     </div>
 
-    <!-- ── tagline ── -->
-    <p :class="['tg', { show: stage >= 4 }]">Fresh · Fast · Delivered</p>
+    <!-- ── Tagline (Uzbek) ── -->
+    <p class="tl" :class="{ show: stage >= 5 }">Sifat · Tezlik · Qulay narx.</p>
 
-    <!-- ── shimmer ── -->
-    <div v-if="stage >= 4" class="shm"></div>
+    <!-- ── Final shimmer ── -->
+    <div v-if="stage >= 5" class="shm"></div>
   </div>
 </template>
 
 <style scoped>
-/* ═════════════════════════════════
-   Fruit-Slash Splash
-   ═════════════════════════════════ */
+/* ════════════════════════════════════
+   Premium Splash — Fruit Silhouettes
+   ════════════════════════════════════ */
+
 .splash {
   width: 100%; min-height: 100vh;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   position: relative; overflow: hidden;
-  gap: 24px;
+  gap: 22px;
   background: linear-gradient(155deg, #6EE7B7 0%, #34D399 25%, #10B981 55%, #059669 100%);
 }
-.exit { animation: ex .65s cubic-bezier(.4,0,.2,1) forwards; }
-@keyframes ex {
-  to { opacity: 0; transform: scale(1.06); filter: blur(8px); }
+
+.exit { animation: _exit .65s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes _exit {
+  to { opacity: 0; transform: scale(1.05); filter: blur(8px); }
 }
 
-/* ── BG MESH ── */
-.bg { position: absolute; inset: 0; }
-.bg-o { position: absolute; border-radius: 50%; }
-.b1 { width: 360px; height: 360px; background: radial-gradient(circle,rgba(167,243,208,.4),transparent 65%); top: -18%; left: -22%; animation: bf 6s ease-in-out infinite alternate; }
-.b2 { width: 300px; height: 300px; background: radial-gradient(circle,rgba(52,211,153,.35),transparent 65%); bottom: -12%; right: -18%; animation: bf 7s ease-in-out infinite alternate-reverse; }
-.b3 { width: 220px; height: 220px; background: radial-gradient(circle,rgba(110,231,183,.3),transparent 65%); top: 38%; left: 55%; animation: bf 5s ease-in-out infinite alternate 1s; }
-@keyframes bf { to { transform: translate(25px,-18px) scale(1.12); } }
+/* ── AMBIENT BG ── */
+.bg { position: absolute; inset: 0; pointer-events: none; }
+.bg-o { position: absolute; border-radius: 50%; will-change: transform; }
+.o1 { width: 320px; height: 320px; background: radial-gradient(circle,rgba(167,243,208,.22),transparent 65%); top: -16%; left: -22%; animation: _bd 9s ease-in-out infinite alternate; }
+.o2 { width: 270px; height: 270px; background: radial-gradient(circle,rgba(52,211,153,.18),transparent 65%); bottom: -12%; right: -16%; animation: _bd 10s ease-in-out infinite alternate-reverse; }
+.o3 { width: 200px; height: 200px; background: radial-gradient(circle,rgba(110,231,183,.15),transparent 65%); top: 42%; left: 55%; animation: _bd 8s ease-in-out infinite alternate 2s; }
+@keyframes _bd { to { transform: translate(18px,-14px) scale(1.08); } }
 
-/* ═══ FRUIT ARENA ═══ */
-.arena { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
-.fp { position: absolute; top: 0; transform: translateX(-50%); }
-
-/* ── FALL (gravity) ── */
-.fall {
-  position: relative; width: 56px; height: 56px;
-  animation: fd .55s cubic-bezier(.45,0,1,.45) both;
-}
-@keyframes fd {
-  0%   { transform: translateY(-90px) rotate(0deg); }
-  100% { transform: translateY(38vh) rotate(var(--rot,200deg)); }
-}
-
-/* ── WHOLE FRUIT → POP ── */
-.whole {
+/* ══ FRUITS ══ */
+.fstage {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  animation: fp .22s ease-out both;
-}
-@keyframes fp {
-  0%   { transform: scale(1);   opacity: 1; }
-  35%  { transform: scale(1.35); opacity: .85; }
-  100% { transform: scale(2);   opacity: 0; }
+  z-index: 10; pointer-events: none;
 }
 
-.em { font-size: 46px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.15)); }
+.fi {
+  position: absolute;
+  opacity: 0;
+  transform: translate(var(--sx), var(--sy)) scale(.5);
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,.12)) drop-shadow(0 2px 6px rgba(0,0,0,.08));
+  will-change: transform, opacity;
+}
 
-/* ── HALVES ── */
-.half {
+/* Stage 1 — enter & settle */
+.fi.enter {
+  animation: _fe .85s cubic-bezier(.22,1,.36,1) var(--d) forwards;
+}
+@keyframes _fe {
+  0%   { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(.5) rotate(-8deg); }
+  55%  { opacity: 1; transform: translate(var(--ex), var(--ey)) scale(1.06) rotate(2deg); }
+  100% { opacity: 1; transform: translate(var(--ex), var(--ey)) scale(1) rotate(0deg); }
+}
+
+/* Stage 2 — inner detail reveal */
+.fi.detail :deep(.fd) {
+  animation: _dr .7s ease .35s forwards;
+}
+@keyframes _dr { to { opacity: 1; } }
+
+/* Stage 3 — converge to center */
+.fi.converge {
+  animation:
+    _fe .85s cubic-bezier(.22,1,.36,1) var(--d) forwards,
+    _fc .75s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes _fc {
+  0%   { opacity: 1; transform: translate(var(--ex), var(--ey)) scale(1); }
+  100% { opacity: 0; transform: translate(0,0) scale(.25) rotate(12deg); }
+}
+
+/* ── LIGHT SWEEP ── */
+.sweep {
   position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0;
+  z-index: 12; pointer-events: none; overflow: hidden;
 }
-.hl { clip-path: polygon(0 0, 52% 0, 48% 100%, 0 100%); animation: fl .55s ease-out both; }
-.hr { clip-path: polygon(48% 0, 100% 0, 100% 100%, 52% 100%); animation: fr .55s ease-out both; }
+.sweep::after {
+  content: '';
+  position: absolute; top: -60%; left: -140%;
+  width: 90px; height: 280%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.02) 15%,
+    rgba(255,255,255,.12) 42%,
+    rgba(255,255,255,.22) 50%,
+    rgba(255,255,255,.12) 58%,
+    rgba(255,255,255,.02) 85%,
+    transparent
+  );
+  transform: rotate(28deg);
+  animation: _sw .9s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes _sw {
+  0%   { translate: 0 0; }
+  100% { translate: calc(100vw + 240px) 0; }
+}
 
-@keyframes fl {
-  0%   { opacity: 0; transform: translate(0,0) rotate(0); }
-  6%   { opacity: 1; }
-  100% { opacity: 0; transform: translate(-85px,110px) rotate(-50deg); }
-}
-@keyframes fr {
-  0%   { opacity: 0; transform: translate(0,0) rotate(0); }
-  6%   { opacity: 1; }
-  100% { opacity: 0; transform: translate(85px,100px) rotate(50deg); }
-}
-
-/* ── BLADE SLASH ── */
-.blade {
+/* ── CONVERGENCE PULSE ── */
+.cpulse {
   position: absolute; top: 50%; left: 50%;
-  width: 150px; height: 3px;
-  margin: -1.5px 0 0 -75px;
-  background: linear-gradient(90deg, transparent 5%, rgba(255,255,255,.85) 25%, #fff 50%, rgba(255,255,255,.85) 75%, transparent 95%);
-  border-radius: 3px;
-  box-shadow: 0 0 14px rgba(255,255,255,.7), 0 0 36px rgba(255,255,255,.25);
-  opacity: 0;
-  rotate: var(--sa, 25deg);
-  animation: sl .28s ease-out both;
-}
-@keyframes sl {
-  0%   { opacity: 0; scale: 0 1; }
-  25%  { opacity: 1; }
-  55%  { opacity: 1; scale: 1.05 1; }
-  100% { opacity: 0; scale: 1.3 1; }
-}
-
-/* ── JUICE PARTICLES ── */
-.jw {
-  position: absolute; top: 50%; left: 50%;
-  width: 0; height: 0;
-}
-.jd {
-  border-radius: 50%; opacity: 0;
-  box-shadow: 0 0 4px currentColor;
-  animation: jf .52s ease-out both;
-}
-@keyframes jf {
-  0%   { opacity: 0; transform: translateY(0) scale(1); }
-  12%  { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-80px) scale(.15); }
-}
-
-/* ═══ CENTER FLASH ═══ */
-.flash {
-  position: absolute; top: 50%; left: 50%;
-  width: 280px; height: 280px;
-  margin: -140px 0 0 -140px;
+  width: 140px; height: 140px;
+  margin: -70px 0 0 -70px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.5), transparent 60%);
-  z-index: 15;
-  animation: cf .6s ease-out both;
+  background: radial-gradient(circle, rgba(255,255,255,.28), transparent 65%);
+  z-index: 14;
+  animation: _cp .85s ease-out forwards;
 }
-@keyframes cf {
+@keyframes _cp {
   0%   { transform: scale(0); opacity: 1; }
   100% { transform: scale(3.5); opacity: 0; }
 }
 
-/* ═══ LOGO ═══ */
+/* ══ LOGO ══ */
 .lw {
   position: relative; z-index: 20;
   opacity: 0; transform: scale(0);
 }
-.lw.show { animation: li .85s cubic-bezier(.34,1.56,.64,1) forwards; }
-@keyframes li {
-  0%   { opacity: 0; transform: scale(0) rotate(-18deg); }
-  45%  { opacity: 1; transform: scale(1.12) rotate(3deg); }
-  70%  { transform: scale(.95) rotate(-1.5deg); }
-  85%  { transform: scale(1.03) rotate(.5deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); }
+.lw.show {
+  animation: _li .8s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes _li {
+  0%   { opacity: 0; transform: scale(0); }
+  48%  { opacity: 1; transform: scale(1.1); }
+  72%  { transform: scale(.96); }
+  88%  { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-.lg {
-  position: absolute; inset: -45px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(167,243,208,.5), transparent 60%);
-  animation: gp 2.5s ease-in-out infinite; z-index: -1;
+.lglow {
+  position: absolute; inset: -44px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(167,243,208,.38), transparent 60%);
+  animation: _gp 3s ease-in-out infinite; z-index: -1;
 }
-@keyframes gp {
-  0%,100% { transform: scale(.85); opacity: .35; }
-  50%     { transform: scale(1.25); opacity: .7; }
-}
-
-.lp {
-  position: absolute; inset: -10px; border-radius: 34px;
-  border: 1.5px solid rgba(255,255,255,.18); z-index: -1;
-}
-.lp1 { animation: pe 2s ease-out .6s infinite; }
-.lp2 { animation: pe 2s ease-out 1.2s infinite; }
-@keyframes pe {
-  0%   { transform: scale(1); opacity: .45; }
-  100% { transform: scale(1.9); opacity: 0; }
+@keyframes _gp {
+  0%,100% { transform: scale(.88); opacity: .3; }
+  50%     { transform: scale(1.18); opacity: .55; }
 }
 
-.lb {
-  width: 120px; height: 120px; border-radius: 32px;
-  background: rgba(255,255,255,.15);
+.lbox {
+  width: 112px; height: 112px; border-radius: 30px;
+  background: rgba(255,255,255,.14);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1.5px solid rgba(255,255,255,.2);
+  border: 1.5px solid rgba(255,255,255,.18);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,.12), inset 0 -1px 0 rgba(255,255,255,.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,.1), inset 0 -1px 0 rgba(255,255,255,.08);
 }
-.li { width: 76px; height: 76px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,.12)); }
-
-/* ═══ BRAND TEXT ═══ */
-.br { display: flex; align-items: center; gap: 14px; z-index: 20; overflow: hidden; }
-
-.bb, .bm {
-  letter-spacing: 6px;
-  transform: translateY(110%); opacity: 0;
-}
-.bb { font-size: 30px; font-weight: 800; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,.12); }
-.bm { font-size: 30px; font-weight: 300; color: rgba(255,255,255,.78); }
-
-.bb.show { animation: tu .65s cubic-bezier(.22,1,.36,1) forwards; }
-.bm.show { animation: tu .65s cubic-bezier(.22,1,.36,1) .12s forwards; }
-@keyframes tu {
-  0%   { transform: translateY(110%); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+.limg {
+  width: 72px; height: 72px; object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,.1));
 }
 
-.bd {
-  width: 6px; height: 6px; border-radius: 50%;
+/* ══ BRAND TEXT ══ */
+.brow {
+  display: flex; align-items: center; gap: 12px;
+  z-index: 20; overflow: hidden;
+}
+
+.bb, .bm { letter-spacing: 5px; opacity: 0; }
+.bb {
+  font-size: 28px; font-weight: 800; color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,.1);
+  transform: translateX(-28px);
+}
+.bm {
+  font-size: 28px; font-weight: 300;
+  color: rgba(255,255,255,.75);
+  transform: translateX(28px);
+}
+
+.bb.show { animation: _sl .6s cubic-bezier(.22,1,.36,1) forwards; }
+.bm.show { animation: _sr .6s cubic-bezier(.22,1,.36,1) .1s forwards; }
+
+@keyframes _sl {
+  0%   { opacity: 0; transform: translateX(-28px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes _sr {
+  0%   { opacity: 0; transform: translateX(28px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.bdot {
+  width: 5px; height: 5px; border-radius: 50%;
   background: rgba(255,255,255,.4);
   transform: scale(0); opacity: 0;
 }
-.bd.show { animation: dp .35s cubic-bezier(.34,1.56,.64,1) .18s forwards; }
-@keyframes dp {
+.bdot.show {
+  animation: _dp .35s cubic-bezier(.34,1.56,.64,1) .14s forwards;
+}
+@keyframes _dp {
   0%   { transform: scale(0); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* ═══ TAGLINE ═══ */
-.tg {
+/* ══ TAGLINE ══ */
+.tl {
   font-size: 11px; font-weight: 500;
-  color: rgba(255,255,255,0); letter-spacing: 5px;
-  text-transform: uppercase; z-index: 20;
-  transform: translateY(8px);
+  color: rgba(255,255,255,0);
+  letter-spacing: 4px; text-transform: uppercase;
+  z-index: 20; transform: translateY(8px);
 }
-.tg.show { animation: tf .8s ease forwards; }
-@keyframes tf {
-  to { color: rgba(255,255,255,.45); transform: translateY(0); }
+.tl.show { animation: _tl .75s ease .18s forwards; }
+@keyframes _tl {
+  to { color: rgba(255,255,255,.48); transform: translateY(0); }
 }
 
-/* ═══ SHIMMER ═══ */
+/* ══ SHIMMER ══ */
 .shm {
   position: absolute; inset: 0; z-index: 25;
   pointer-events: none; overflow: hidden;
 }
 .shm::after {
   content: ''; position: absolute;
-  top: -50%; left: -80%; width: 60%; height: 200%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.04) 35%, rgba(255,255,255,.12) 50%, rgba(255,255,255,.04) 65%, transparent);
+  top: -50%; left: -80%; width: 50%; height: 200%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.03) 35%,
+    rgba(255,255,255,.1) 50%,
+    rgba(255,255,255,.03) 65%,
+    transparent
+  );
   transform: rotate(25deg);
-  animation: ss 1s ease-in-out .15s both;
+  animation: _sh .9s ease-in-out .12s both;
 }
-@keyframes ss {
+@keyframes _sh {
   0%   { translate: -50% 0; }
   100% { translate: 250% 0; }
 }
