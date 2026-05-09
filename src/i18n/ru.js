@@ -29,6 +29,7 @@ export default {
   'categories.all_in': 'Все в:',
   'categories.no_products': 'Товары не найдены',
   'categories.search_placeholder': 'Поиск категории...',
+  'categories.show_all': 'Смотреть все',
 
   // Product badges
   'badge.new': 'НОВОЕ',
@@ -72,6 +73,7 @@ export default {
   'checkout.location_unavailable': 'Геолокация недоступна',
   'checkout.change': 'Изменить',
   'checkout.you_are_here': 'Вы здесь',
+  'checkout.map_unavailable': 'Карта недоступна',
 
   // Orders
   'orders.title': 'Мои заказы',
@@ -122,13 +124,10 @@ export default {
   'login.welcome': 'Добро пожаловать!',
   'login.title': 'Вход',
   'login.subtitle': 'Войдите в свой аккаунт',
-  'login.password': 'Пароль',
-  'login.password_placeholder': 'Введите пароль',
-  'login.create_password': 'Создайте пароль',
-  'login.password_hint': 'Минимум 4 символа',
-  'login.password_short': 'Пароль слишком короткий (минимум 4 символа)',
-  'login.invalid_credentials': 'Неверный телефон или пароль',
-  'login.forgot_password': 'Забыли пароль?',
+  'login.phone_subtitle': 'Введите номер телефона — мы отправим SMS-код',
+  'login.send_code': 'Отправить код',
+  'login.use_different_phone': 'Использовать другой номер',
+  'login.rate_limited': 'Попробуйте через {sec} секунд',
   'login.button': 'Войти',
   'login.or': 'или',
   'login.no_account': 'Нет аккаунта? Зарегистрируйтесь',
@@ -153,12 +152,25 @@ export default {
   'register.invalid_phone': 'Неверный номер телефона',
   'register.enter_code': 'Введите 6-значный код',
   'register.wrong_code': 'Неверный код',
+  'register.optional': '(необязательно)',
 
   // Settings
   'settings.language_desc': 'Выберите язык приложения',
   'settings.theme_desc': 'Светлая или тёмная тема',
   'settings.notifications': 'Уведомления',
   'settings.notifications_desc': 'Обновления заказов',
+  'settings.logout_all': 'Выйти со всех устройств',
+  'settings.logout_all_desc': 'Завершить сеансы на других устройствах',
+  'settings.logout_all_confirm_title': 'Выйти со всех устройств?',
+  'settings.logout_all_confirm_subtitle': 'Вы будете отключены от аккаунта на всех устройствах',
+  'settings.logout_all_yes': 'Да, выйти',
+  'settings.logout_all_done': 'Все сеансы завершены',
+  'settings.delete_account': 'Удалить аккаунт',
+  'settings.delete_account_desc': 'Это действие необратимо',
+  'settings.delete_confirm_title': 'Удалить аккаунт навсегда?',
+  'settings.delete_confirm_subtitle': 'Все ваши данные будут удалены и не подлежат восстановлению.',
+  'settings.delete_yes': 'Да, удалить',
+  'settings.account_deleted': 'Аккаунт удалён',
 
   // Support
   'support.title': 'Центр помощи',
@@ -222,6 +234,10 @@ export default {
   'addresses.set_default': 'Сделать основным',
   'addresses.comment': 'Комментарий',
   'addresses.comment_placeholder': 'Доп. информация (подъезд, этаж, дверь...)',
+  'addresses.delete': 'Удалить',
+  'addresses.delete_confirm_title': 'Удалить адрес?',
+  'addresses.delete_yes': 'Да, удалить',
+  'addresses.map_unavailable': 'Карта не загрузилась. Проверьте интернет и попробуйте ещё раз.',
 
   // Coupons
   'coupons.title': 'Купоны',
@@ -270,6 +286,9 @@ export default {
   'common.yes': 'Да',
   'common.no': 'Нет',
   'common.loading': 'Загрузка...',
+  'common.session_expired': 'Сессия истекла. Войдите снова.',
+  'common.error_generic': 'Что-то пошло не так. Попробуйте позже.',
+  'common.clear': 'Очистить',
 
   'product.left_in_stock': 'Осталось {count} шт',
   'product.out_of_stock': 'Нет в наличии',
@@ -295,14 +314,6 @@ export default {
   'verify.will_receive_sms': 'На этот номер будет отправлен SMS-код',
   'verify.send_sms': 'Отправить SMS',
 
-  'forgot.title': 'Восстановление пароля',
-  'forgot.subtitle': 'Введите номер телефона',
-  'forgot.send_code': 'Отправить код',
-  'forgot.reset_title': 'Новый пароль',
-  'forgot.reset_subtitle': 'Введите код и создайте новый пароль',
-  'forgot.new_password': 'Новый пароль',
-  'forgot.new_password_placeholder': 'Введите новый пароль',
-  'forgot.reset_button': 'Сбросить пароль',
   'register.resend_in': 'Повторно через {sec} сек',
 
   'checkout.note': 'Комментарий',

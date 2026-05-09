@@ -1,6 +1,8 @@
 <script setup>
-import { currentRoute, transitionName } from './router/index.js'
+import { onMounted, onUnmounted } from 'vue'
+import { currentRoute, transitionName, useRouter } from './router/index.js'
 import { useToast } from './composables/useToast.js'
+import { useI18n } from './i18n/index.js'
 
 import SplashView         from './views/SplashView.vue'
 import HomeView           from './views/HomeView.vue'
@@ -15,7 +17,6 @@ import FavoritesView      from './views/FavoritesView.vue'
 import PaymentMethodsView from './views/PaymentMethodsView.vue'
 import LoginView          from './views/LoginView.vue'
 import RegisterView       from './views/RegisterView.vue'
-import ForgotPasswordView from './views/ForgotPasswordView.vue'
 import AddressesView      from './views/AddressesView.vue'
 import CouponsView        from './views/CouponsView.vue'
 import RewardsView        from './views/RewardsView.vue'
@@ -24,7 +25,19 @@ import BottomNav          from './components/BottomNav.vue'
 import ScrollToTop        from './components/ScrollToTop.vue'
 
 const showNav = ['home', 'categories', 'favorites', 'orders', 'profile']
-const { toasts } = useToast()
+const { toasts, info } = useToast()
+const { navigate } = useRouter()
+const { t } = useI18n()
+
+function onAuthExpired() {
+  if (currentRoute.value !== 'login') {
+    info(t('common.session_expired'))
+    navigate('login')
+  }
+}
+
+onMounted(() => window.addEventListener('bazar:auth-expired', onAuthExpired))
+onUnmounted(() => window.removeEventListener('bazar:auth-expired', onAuthExpired))
 </script>
 
 <template>
@@ -44,7 +57,6 @@ const { toasts } = useToast()
         <PaymentMethodsView v-else-if="currentRoute === 'payment-methods'" key="payments" />
         <LoginView          v-else-if="currentRoute === 'login'"           key="login"    />
         <RegisterView       v-else-if="currentRoute === 'register'"       key="register" />
-        <ForgotPasswordView v-else-if="currentRoute === 'forgot-password'" key="forgot"   />
         <AddressesView      v-else-if="currentRoute === 'addresses'"      key="addresses"/>
         <CouponsView        v-else-if="currentRoute === 'coupons'"        key="coupons"  />
         <RewardsView        v-else-if="currentRoute === 'rewards'"        key="rewards"  />

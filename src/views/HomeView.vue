@@ -75,7 +75,7 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
 </script>
 
 <template>
-  <div class="pb-28">
+  <div class="pb-28 page-container">
     <AppHeader />
 
     <!-- Loading skeleton -->
@@ -145,7 +145,10 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
       <!-- ═══ Featured ═══ -->
       <div v-if="featuredProducts.length" class="mt-6">
         <div class="flex items-center justify-between px-4 mb-3">
-          <h2 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('home.featured') }}</h2>
+          <div class="flex items-center gap-2.5">
+            <span class="section-accent" style="background: var(--primary)"></span>
+            <h2 class="text-base font-bold tracking-tight" style="color: var(--text-primary)">{{ t('home.featured') }}</h2>
+          </div>
           <button @click="navigate('categories')" class="text-xs font-semibold text-primary btn-press flex items-center gap-0.5">
             {{ t('home.see_all') }}
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -201,17 +204,10 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
           <div class="px-4 mb-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center"
-                  :style="{ background: getAccent(catIdx).bg }">
-                  <img v-if="cat.image" :src="cat.image" class="w-5 h-5 object-contain" />
-                  <svg v-else width="16" height="16" :style="{ color: getAccent(catIdx).color }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/>
-                    <rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
-                  </svg>
-                </div>
-                <h2 class="text-base font-bold" style="color: var(--text-primary)">{{ getLocalizedName(cat.name) }}</h2>
+                <span class="section-accent" :style="{ background: getAccent(catIdx).color }"></span>
+                <h2 class="text-base font-bold tracking-tight" style="color: var(--text-primary)">{{ getLocalizedName(cat.name) }}</h2>
               </div>
-              <button @click="goToCategory(cat.id)" class="text-xs font-semibold text-primary btn-press flex items-center gap-0.5">
+              <button @click="goToCategory(cat.id)" class="text-xs font-semibold btn-press flex items-center gap-0.5" :style="{ color: getAccent(catIdx).color }">
                 {{ t('home.see_all') }}
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
@@ -276,12 +272,29 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
 </template>
 
 <style scoped>
+/* Constrain to a phone-shaped column on desktop so the home doesn't sprawl. */
+.page-container {
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+}
+
+/* Vertical accent bar at the start of every section header — a tiny rhythm
+   element that ties the page together without adding visual noise. */
+.section-accent {
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
 .banner-card {
-  border-radius: 20px;
+  border-radius: 22px;
   min-height: 156px;
   box-shadow:
     0 2px 6px rgba(0, 0, 0, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.08);
+    0 10px 28px rgba(0, 0, 0, 0.08);
 }
 .banner-gradient {
   background: linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%);
@@ -300,7 +313,7 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .banner-dot-active {
-  width: 20px;
+  width: 22px;
   height: 6px;
   border-radius: 3px;
   background: var(--primary);
@@ -315,18 +328,22 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px 6px 6px;
-  border-radius: 16px;
+  padding: 5px 14px 5px 5px;
+  border-radius: 14px;
   transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.02);
 }
 .cat-chip:active {
   transform: scale(0.94);
 }
+.cat-chip:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 0 4px 14px rgba(0, 0, 0, 0.06);
+}
 .cat-chip-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -337,9 +354,13 @@ onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
   border-radius: 18px;
   background: var(--surface);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px var(--shadow);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+  border: 1px solid var(--border);
 }
 .featured-card:active {
   transform: scale(0.97);
+}
+.featured-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 20px var(--shadow-lg);
 }
 </style>

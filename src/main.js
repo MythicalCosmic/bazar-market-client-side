@@ -13,12 +13,16 @@ initTelegram()
 initTheme()
 initAuth()
 
-// Handle referral deep link ?ref=CODE
-const urlParams = new URLSearchParams(window.location.search)
-const refCode = urlParams.get('ref') || urlParams.get('start')?.replace('ref_', '')
-if (refCode) {
-  localStorage.setItem('bazar-pending-referral', refCode)
-}
+// ?ref=CODE / Telegram start_param ref_CODE — capture for first-order reward.
+// Cap length and charset to avoid storing arbitrary attacker-supplied content.
+const REFERRAL_RE = /^[A-Za-z0-9_-]{1,32}$/
+try {
+  const urlParams = new URLSearchParams(window.location.search)
+  let refCode = urlParams.get('ref') || urlParams.get('start')?.replace(/^ref_/, '')
+  if (refCode && REFERRAL_RE.test(refCode)) {
+    localStorage.setItem('bazar-pending-referral', refCode)
+  }
+} catch {}
 
 const { loadDeliveryInfo } = useCartStore()
 loadDeliveryInfo()

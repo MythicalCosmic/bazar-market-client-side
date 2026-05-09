@@ -4,10 +4,13 @@ import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useAddresses } from '../stores/addressStore.js'
 import { updateAddressAPI } from '../services/api.js'
+import { useToast } from '../composables/useToast.js'
+import { ensureLeaflet } from '../composables/useLeaflet.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
 const { addresses, addAddress, removeAddress, setDefault, loadAddresses } = useAddresses()
+const { error: toastError } = useToast()
 
 const DEFAULT_LAT = 40.5553
 const DEFAULT_LNG = 71.4742
@@ -19,6 +22,11 @@ const selectedLabel = ref('home')
 const customLabel = ref('')
 const comment = ref('')
 const editingId = ref(null) // null = adding new, number = editing existing
+const isSaving = ref(false)
+const mapError = ref('')
+
+const deleteTarget = ref(null) // address pending deletion confirmation
+const isDeleting = ref(false)
 
 const labels = [
   { id: 'home', emoji: '🏠', nameKey: 'addresses.label_home' },
@@ -55,7 +63,15 @@ async function reverseGeocode(lat, lng) {
 
 function debouncedGeo(lat, lng) { clearTimeout(debounce); debounce = setTimeout(() => reverseGeocode(lat, lng), 300) }
 
-function setupMap(lat, lng) {
+async function setupMap(lat, lng) {
+  let L
+  try {
+    L = await ensureLeaflet()
+  } catch {
+    mapError.value = t('addresses.map_unavailable')
+    return
+  }
+  mapError.value = ''
   map = L.map('address-map', { zoomControl: true }).setView([lat, lng], 14)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
   const icon = L.divIcon({
@@ -87,10 +103,11 @@ function openMapPicker(addr = null) {
 
   showMapPicker.value = true
 
-  nextTick(() => {
+  nextTick(async () => {
     const startLat = addr?.lat || DEFAULT_LAT
     const startLng = addr?.lng || DEFAULT_LNG
-    setupMap(startLat, startLng)
+    await setupMap(startLat, startLng)
+    if (!map) return // Leaflet failed to load
 
     if (addr?.lat && addr?.lng) {
       map.setView([startLat, startLng], 16)
@@ -115,25 +132,49 @@ function closeMapPicker() {
 }
 
 async function saveAddress() {
+  if (isSaving.value) return
   if (!pickedAddress.value || pickingStatus.value || !marker) return
   const labelObj = labels.find(l => l.id === selectedLabel.value)
-  const label = selectedLabel.value === 'other' && customLabel.value.trim() ? customLabel.value.trim() : t(labelObj.nameKey)
+  if (!labelObj) return
+  const label = selectedLabel.value === 'other' && customLabel.value.trim()
+    ? customLabel.value.trim()
+    : t(labelObj.nameKey)
   const pos = marker.getLatLng()
-
-  if (editingId.value) {
-    try {
+  isSaving.value = true
+  try {
+    if (editingId.value) {
       await updateAddressAPI(editingId.value, {
         label, address_text: pickedAddress.value,
         latitude: pos.lat, longitude: pos.lng,
         comment: comment.value.trim(),
       })
-      // Reload
-      await loadAddresses()
-    } catch {}
-  } else {
-    await addAddress({ label, address: pickedAddress.value, lat: pos.lat, lng: pos.lng, comment: comment.value.trim() })
+      await loadAddresses(true)
+    } else {
+      await addAddress({ label, address: pickedAddress.value, lat: pos.lat, lng: pos.lng, comment: comment.value.trim() })
+    }
+    closeMapPicker()
+  } catch (e) {
+    toastError(e.message || t('common.error_generic'))
+  } finally {
+    isSaving.value = false
   }
-  closeMapPicker()
+}
+
+function askDelete(addr) {
+  deleteTarget.value = addr
+}
+
+async function confirmDelete() {
+  if (isDeleting.value || !deleteTarget.value) return
+  isDeleting.value = true
+  try {
+    await removeAddress(deleteTarget.value.id)
+  } catch (e) {
+    toastError(e.message || t('common.error_generic'))
+  } finally {
+    isDeleting.value = false
+    deleteTarget.value = null
+  }
 }
 
 onUnmounted(() => {
@@ -182,7 +223,7 @@ onUnmounted(() => {
             <svg width="14" height="14" style="color: var(--text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" stroke-width="2"/></svg>
             <span class="text-[10px] font-bold" style="color: var(--text-secondary)">{{ t('profile.edit') }}</span>
           </button>
-          <button @click="removeAddress(addr.id)" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl btn-press bg-red-500/10">
+          <button @click="askDelete(addr)" :aria-label="t('addresses.delete')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl btn-press bg-red-500/10">
             <svg width="14" height="14" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </div>
@@ -198,6 +239,29 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <!-- Delete confirmation -->
+    <Teleport to="#app">
+      <Transition name="fade">
+        <div v-if="deleteTarget" class="fixed inset-0 z-[120] flex items-end justify-center" style="background: rgba(0,0,0,0.4)" @click.self="deleteTarget = null">
+          <div class="w-full max-w-[480px] rounded-t-[28px] p-6 safe-bottom" style="background: var(--surface)">
+            <div class="flex flex-col items-center mb-5">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3" style="background: rgba(239,68,68,0.08)">
+                <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('addresses.delete_confirm_title') }}</h3>
+              <p class="text-sm font-medium mt-1 text-center" style="color: var(--text-tertiary)">{{ deleteTarget?.label }} — {{ deleteTarget?.address }}</p>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button @click="confirmDelete" :disabled="isDeleting" class="w-full bg-red-500 text-white font-bold py-3.5 rounded-2xl btn-press transition-opacity" :class="{ 'opacity-60': isDeleting }">{{ isDeleting ? t('common.loading') : t('addresses.delete_yes') }}</button>
+              <button @click="deleteTarget = null" :disabled="isDeleting" class="w-full font-bold py-3.5 rounded-2xl btn-press" style="background: var(--surface-secondary); color: var(--text-primary)">{{ t('profile.cancel') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- Map picker -->
     <Teleport to="#app">
       <Transition name="fade">
@@ -212,6 +276,9 @@ onUnmounted(() => {
 
           <div class="flex-1 relative" style="min-height: 200px">
             <div id="address-map" style="width: 100%; height: 100%;"></div>
+            <div v-if="mapError" class="absolute inset-0 flex items-center justify-center px-6 text-center text-xs font-semibold" style="background: var(--surface); color: var(--text-secondary)">
+              {{ mapError }}
+            </div>
           </div>
 
           <div class="px-4 pt-4 pb-6 safe-bottom overflow-y-auto" style="background: var(--surface); box-shadow: 0 -4px 20px var(--shadow); max-height: 55vh;">
@@ -242,11 +309,11 @@ onUnmounted(() => {
               class="w-full text-sm font-semibold px-4 py-2.5 rounded-xl outline-none resize-none mb-3"
               style="background: var(--surface-secondary); color: var(--text-primary)"></textarea>
 
-            <button @click="saveAddress" :disabled="!pickedAddress || !!pickingStatus"
+            <button @click="saveAddress" :disabled="!pickedAddress || !!pickingStatus || isSaving"
               class="w-full bg-primary text-white font-black py-4 rounded-2xl btn-press transition-opacity"
-              :class="{ 'opacity-50': !pickedAddress || !!pickingStatus }"
+              :class="{ 'opacity-50': !pickedAddress || !!pickingStatus || isSaving }"
               style="box-shadow: 0 6px 24px var(--primary-glow)">
-              {{ editingId ? t('profile.save') : t('addresses.save_address') }}
+              {{ isSaving ? t('common.loading') : (editingId ? t('profile.save') : t('addresses.save_address')) }}
             </button>
           </div>
         </div>

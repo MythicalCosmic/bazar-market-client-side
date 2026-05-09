@@ -12,12 +12,17 @@ export const LOCALES = [
   { code: 'en', label: 'Eng' },
 ]
 
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 export function useI18n() {
   function t(key, params) {
-    let str = messages[locale.value]?.[key] || messages['uz']?.[key] || key
+    let str = messages[locale.value]?.[key] ?? messages['en']?.[key] ?? messages['uz']?.[key] ?? key
     if (params) {
       Object.keys(params).forEach((k) => {
-        str = str.replace(`{${k}}`, params[k])
+        const re = new RegExp(`\\{${escapeRegex(k)}\\}`, 'g')
+        str = str.replace(re, params[k])
       })
     }
     return str

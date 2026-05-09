@@ -29,6 +29,7 @@ export default {
   'categories.all_in': 'Hammasi:',
   'categories.no_products': 'Mahsulotlar topilmadi',
   'categories.search_placeholder': 'Kategoriya qidirish...',
+  'categories.show_all': 'Hammasini ko\'rish',
 
   // Product badges
   'badge.new': 'YANGI',
@@ -72,6 +73,7 @@ export default {
   'checkout.location_unavailable': 'Geolokatsiya mavjud emas',
   'checkout.change': 'O\'zgartirish',
   'checkout.you_are_here': 'Siz shu yerdasiz',
+  'checkout.map_unavailable': 'Xarita yuklanmadi',
 
   // Orders
   'orders.title': 'Mening buyurtmalarim',
@@ -122,13 +124,10 @@ export default {
   'login.welcome': 'Xush kelibsiz!',
   'login.title': 'Kirish',
   'login.subtitle': 'Hisobingizga kiring',
-  'login.password': 'Parol',
-  'login.password_placeholder': 'Parolni kiriting',
-  'login.create_password': 'Parol yarating',
-  'login.password_hint': 'Kamida 4 ta belgi',
-  'login.password_short': 'Parol juda qisqa (kamida 4 ta belgi)',
-  'login.invalid_credentials': 'Telefon yoki parol noto\'g\'ri',
-  'login.forgot_password': 'Parolni unutdingizmi?',
+  'login.phone_subtitle': 'Telefon raqamingizni kiriting — sizga SMS-kod yuboramiz',
+  'login.send_code': 'Kod yuborish',
+  'login.use_different_phone': 'Boshqa raqam ishlatish',
+  'login.rate_limited': '{sec} soniyadan keyin urinib ko\'ring',
   'login.button': 'Kirish',
   'login.or': 'yoki',
   'login.no_account': 'Hisobingiz yo\'qmi? Ro\'yxatdan o\'ting',
@@ -153,12 +152,25 @@ export default {
   'register.invalid_phone': 'Telefon raqam noto\'g\'ri',
   'register.enter_code': '6 xonali kodni kiriting',
   'register.wrong_code': 'Kod noto\'g\'ri',
+  'register.optional': '(ixtiyoriy)',
 
   // Settings
   'settings.language_desc': 'Ilova tilini tanlang',
   'settings.theme_desc': 'Yorug\' yoki qorong\'u rejim',
   'settings.notifications': 'Bildirishnomalar',
   'settings.notifications_desc': 'Buyurtma yangilanishlari',
+  'settings.logout_all': 'Barcha qurilmalardan chiqish',
+  'settings.logout_all_desc': 'Boshqa qurilmalardagi sessiyalarni yakunlash',
+  'settings.logout_all_confirm_title': 'Barcha qurilmalardan chiqish?',
+  'settings.logout_all_confirm_subtitle': 'Siz barcha qurilmalardan chiqib ketasiz',
+  'settings.logout_all_yes': 'Ha, chiqish',
+  'settings.logout_all_done': 'Barcha sessiyalar yakunlandi',
+  'settings.delete_account': 'Hisobni o\'chirish',
+  'settings.delete_account_desc': 'Bu amalni qaytarib bo\'lmaydi',
+  'settings.delete_confirm_title': 'Hisobni butunlay o\'chirasizmi?',
+  'settings.delete_confirm_subtitle': 'Barcha ma\'lumotlaringiz yo\'qoladi va tiklab bo\'lmaydi.',
+  'settings.delete_yes': 'Ha, o\'chirish',
+  'settings.account_deleted': 'Hisob o\'chirildi',
 
   // Support
   'support.title': 'Yordam markazi',
@@ -222,6 +234,10 @@ export default {
   'addresses.set_default': 'Asosiy qilish',
   'addresses.comment': 'Izoh',
   'addresses.comment_placeholder': 'Qo\'shimcha ma\'lumot (kirish, qavat, eshik...)',
+  'addresses.delete': 'O\'chirish',
+  'addresses.delete_confirm_title': 'Manzilni o\'chirasizmi?',
+  'addresses.delete_yes': 'Ha, o\'chirish',
+  'addresses.map_unavailable': 'Xarita yuklanmadi. Internetni tekshiring va qayta urinib ko\'ring.',
 
   // Coupons
   'coupons.title': 'Kuponlar',
@@ -271,6 +287,9 @@ export default {
   'common.yes': 'Ha',
   'common.no': 'Yo\'q',
   'common.loading': 'Yuklanmoqda...',
+  'common.session_expired': 'Sessiya muddati tugadi. Qaytadan kiring.',
+  'common.error_generic': 'Xatolik yuz berdi. Keyinroq urinib ko\'ring.',
+  'common.clear': 'Tozalash',
 
   // Checkout extras
   // Product
@@ -298,16 +317,6 @@ export default {
   'verify.verify_now': 'Tasdiqlash',
   'verify.will_receive_sms': 'Ushbu raqamga SMS kod yuboriladi',
   'verify.send_sms': 'SMS yuborish',
-
-  // Forgot password
-  'forgot.title': 'Parolni tiklash',
-  'forgot.subtitle': 'Telefon raqamingizni kiriting',
-  'forgot.send_code': 'Kod yuborish',
-  'forgot.reset_title': 'Yangi parol',
-  'forgot.reset_subtitle': 'Kodni kiriting va yangi parol yarating',
-  'forgot.new_password': 'Yangi parol',
-  'forgot.new_password_placeholder': 'Yangi parolni kiriting',
-  'forgot.reset_button': 'Parolni tiklash',
 
   // Register extras
   'register.resend_in': '{sec} soniyadan keyin qayta yuborish',

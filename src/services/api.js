@@ -71,14 +71,21 @@ function transformBanner(raw) {
 }
 
 function transformCartItem(raw) {
+  const unit = raw.unit || 'piece'
+  const fractional = ['kg', 'liter'].includes(unit)
   return {
     id: raw.product_id,
     name: { uz: raw.name_uz || '', ru: raw.name_ru || '' },
     price: parseFloat(raw.price) || 0,
+    discountedPrice: raw.discounted_price ? parseFloat(raw.discounted_price) : null,
     quantity: parseFloat(raw.quantity) || 1,
     total: parseFloat(raw.total) || 0,
     image: imageUrl(raw.image),
-    unit: raw.unit || 'piece',
+    unit,
+    step: raw.step ? parseFloat(raw.step) : (fractional ? 0.1 : 1),
+    minQty: raw.min_qty ? parseFloat(raw.min_qty) : (fractional ? 0.1 : 1),
+    maxQty: raw.max_qty ? parseFloat(raw.max_qty) : null,
+    stockQty: raw.stock_qty != null ? parseFloat(raw.stock_qty) : null,
     inStock: raw.in_stock !== false,
   }
 }
@@ -163,7 +170,7 @@ export async function getPopularProducts() {
 }
 
 export async function searchProducts(q) {
-  const data = await publicGet(`/products/search?q=${encodeURIComponent(q)}`)
+  const data = await publicGet(`/products/search?query=${encodeURIComponent(q)}`)
   const items = data.items || data || []
   return items.map(transformProduct)
 }
@@ -192,7 +199,7 @@ export async function getPromoBanners() {
 }
 
 export async function checkDelivery(lat, lng) {
-  return publicGet(`/delivery/check?lat=${lat}&lng=${lng}`)
+  return post('/delivery/check', { lat, lng })
 }
 
 export async function getDeliveryInfo() {
@@ -323,7 +330,7 @@ export async function getReferralList(params = {}) {
 }
 
 export async function applyReferral(code) {
-  return post('/referral/apply', { referral_code: code })
+  return post('/referral/apply', { code })
 }
 
 export async function getRewards() {

@@ -1,9 +1,17 @@
 import { ref, computed } from 'vue'
 import { getFavorites, toggleFavoriteAPI } from '../services/api.js'
 import { getToken } from '../services/http.js'
+import { onLogout } from './authStore.js'
 
 const favoriteIds = ref([])
 let loaded = false
+
+function resetFavoritesInternal() {
+  favoriteIds.value = []
+  loaded = false
+}
+
+onLogout(resetFavoritesInternal)
 
 export function useFavorites() {
   const favorites = computed(() => favoriteIds.value)
@@ -44,10 +52,5 @@ export function useFavorites() {
     } catch {}
   }
 
-  function resetFavorites() {
-    favoriteIds.value = []
-    loaded = false
-  }
-
-  return { favorites, count, isFavorite, toggleFavorite, loadFavorites, resetFavorites }
+  return { favorites, count, isFavorite, toggleFavorite, loadFavorites, resetFavorites: resetFavoritesInternal }
 }

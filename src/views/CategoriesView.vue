@@ -147,80 +147,79 @@ const filteredCategories = computed(() => {
 
     <!-- Loading -->
     <template v-if="isLoading">
-      <div class="mt-4 px-4 flex flex-col gap-4">
-        <div class="skeleton h-8 w-40 rounded-xl"></div>
-        <div class="grid grid-cols-3 gap-2.5">
-          <div v-for="i in 6" :key="i" class="skeleton h-[110px] rounded-2xl"></div>
+      <div class="page-container mt-4 flex flex-col gap-4">
+        <div class="skeleton h-12 w-full rounded-2xl"></div>
+        <div class="skeleton h-5 w-32 rounded-md mt-2"></div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div v-for="i in 8" :key="i" class="skeleton h-[68px] rounded-2xl"></div>
         </div>
       </div>
     </template>
 
     <template v-else>
       <!-- ═══ Category Browse ═══ -->
-      <div v-if="!selectedParent" class="mt-3 px-4">
+      <div v-if="!selectedParent" class="page-container mt-3">
         <!-- Search -->
-        <div class="flex items-center rounded-2xl px-4 py-3 gap-2.5 mb-4 search-field">
+        <div class="flex items-center rounded-2xl px-4 py-3 gap-2.5 mb-5 search-field">
           <svg width="16" height="16" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <input v-model="searchQuery" :placeholder="t('categories.search_placeholder')" type="text"
             class="bg-transparent outline-none text-sm font-medium flex-1" style="color: var(--text-primary)" />
-          <button v-if="searchQuery" @click="searchQuery = ''" class="btn-press p-0.5">
+          <button v-if="searchQuery" @click="searchQuery = ''" :aria-label="t('common.clear')" class="btn-press p-0.5">
             <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </div>
 
         <!-- Category sections -->
-        <div v-for="(cat, catIdx) in filteredCategories" :key="cat.id" class="mb-4 cat-section">
-          <h2 class="text-[15px] font-bold mb-3 px-1" style="color: var(--text-primary)">
-            {{ getLocalizedName(cat.name) }}
-          </h2>
-
-          <!-- Subcategory cards grid -->
-          <div v-if="cat.children && cat.children.length" class="grid gap-2.5"
-            :class="cat.children.length <= 2 ? 'grid-cols-2' : 'grid-cols-2'">
+        <div v-for="(cat, catIdx) in filteredCategories" :key="cat.id" class="cat-section">
+          <div class="flex items-baseline justify-between mb-2.5 px-0.5">
+            <h2 class="text-[15px] font-bold tracking-tight" style="color: var(--text-primary)">
+              {{ getLocalizedName(cat.name) }}
+            </h2>
             <button
-              v-for="(sub, subIdx) in cat.children"
-              :key="sub.id"
-              @click="goToSubcategory(cat, sub)"
-              class="subcat-card btn-press"
-              :style="{ '--card-bg': getColor(catIdx * 10 + subIdx).bg, '--card-c': getColor(catIdx * 10 + subIdx).text }">
-              <!-- Decorative orb -->
-              <div class="subcat-orb" :style="{ background: getColor(catIdx * 10 + subIdx).text + '10' }"></div>
-              <!-- Name + arrow -->
-              <div class="flex items-start justify-between relative z-10">
-                <p class="text-[12px] font-semibold leading-tight flex-1 pr-2" :style="{ color: getColor(catIdx * 10 + subIdx).text }">
-                  {{ getLocalizedName(sub.name) }}
-                </p>
-                <svg width="14" height="14" class="flex-shrink-0 mt-0.5" :style="{ color: getColor(catIdx * 10 + subIdx).text, opacity: 0.4 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <!-- Image or icon -->
-              <div class="flex justify-end mt-auto relative z-10">
-                <img v-if="sub.image" :src="sub.image" :alt="getLocalizedName(sub.name)"
-                  class="w-14 h-14 object-contain drop-shadow-sm" />
-                <div v-else class="subcat-icon" :style="{ background: getColor(catIdx * 10 + subIdx).text + '10', color: getColor(catIdx * 10 + subIdx).text }">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                  </svg>
-                </div>
-              </div>
+              v-if="cat.children && cat.children.length"
+              @click="selectParent(cat)"
+              class="text-[11px] font-semibold btn-press"
+              :style="{ color: getColor(catIdx).text }">
+              {{ t('home.see_all') }} →
             </button>
           </div>
 
-          <!-- No subcategories -->
-          <button v-else
-            @click="selectParent(cat)"
-            class="w-full subcat-card flex-row items-center justify-between btn-press"
-            :style="{ background: getColor(catIdx).bg, minHeight: 'auto', padding: '14px 16px' }">
-            <p class="text-sm font-semibold" :style="{ color: getColor(catIdx).text }">
-              {{ t('categories.all_in') }} {{ getLocalizedName(cat.name) }}
-            </p>
-            <svg width="18" height="18" :style="{ color: getColor(catIdx).text }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+          <!-- Subcategory tiles. Categories with no children show a single tile that drills straight into the parent. -->
+          <div class="grid gap-2 grid-cols-2">
+            <template v-if="cat.children && cat.children.length">
+              <button
+                v-for="(sub, subIdx) in cat.children"
+                :key="sub.id"
+                @click="goToSubcategory(cat, sub)"
+                class="subcat-tile btn-press"
+                :style="{ '--c-bg': getColor(catIdx * 7 + subIdx).bg, '--c-fg': getColor(catIdx * 7 + subIdx).text }">
+                <div class="subcat-thumb">
+                  <img v-if="sub.image" :src="sub.image" :alt="getLocalizedName(sub.name)" class="w-full h-full object-cover" />
+                  <span v-else class="subcat-initial">{{ getLocalizedName(sub.name).charAt(0) }}</span>
+                </div>
+                <span class="subcat-name">{{ getLocalizedName(sub.name) }}</span>
+                <svg class="subcat-chev" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </template>
+            <button
+              v-else
+              @click="selectParent(cat)"
+              class="subcat-tile btn-press"
+              :style="{ '--c-bg': getColor(catIdx).bg, '--c-fg': getColor(catIdx).text }">
+              <div class="subcat-thumb">
+                <img v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-cover" />
+                <span v-else class="subcat-initial">{{ getLocalizedName(cat.name).charAt(0) }}</span>
+              </div>
+              <span class="subcat-name">{{ t('categories.show_all') }}</span>
+              <svg class="subcat-chev" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- No results -->
@@ -235,9 +234,9 @@ const filteredCategories = computed(() => {
       </div>
 
       <!-- ═══ Products View ═══ -->
-      <div v-else class="mt-3">
+      <div v-else class="page-container mt-3">
         <!-- Back + title -->
-        <div class="flex items-center gap-2.5 px-4 mb-3">
+        <div class="flex items-center gap-2.5 mb-3">
           <button @click="goBack" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press flex-shrink-0" style="background: var(--surface-secondary)">
             <svg width="18" height="18" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -247,7 +246,7 @@ const filteredCategories = computed(() => {
         </div>
 
         <!-- Subcategory chips -->
-        <div v-if="currentSubcategories.length" class="scroll-x flex gap-2 px-4 pb-3">
+        <div v-if="currentSubcategories.length" class="scroll-x flex gap-2 pb-3">
           <button
             @click="selectedChild = null; loadAllProducts(selectedParent)"
             class="chip-btn btn-press"
@@ -266,10 +265,10 @@ const filteredCategories = computed(() => {
         </div>
 
         <!-- Products grid -->
-        <div v-if="isLoadingProducts" class="px-4 mt-1 grid grid-cols-2 gap-3">
+        <div v-if="isLoadingProducts" class="mt-1 grid grid-cols-2 gap-3">
           <div v-for="i in 4" :key="i" class="skeleton h-[220px] rounded-[18px]"></div>
         </div>
-        <div v-else-if="productsList.length" class="px-4 mt-1 grid grid-cols-2 gap-3">
+        <div v-else-if="productsList.length" class="mt-1 grid grid-cols-2 gap-3">
           <ProductCard v-for="p in productsList" :key="p.id" :product="p" />
         </div>
         <div v-else class="flex flex-col items-center py-20">
@@ -286,6 +285,14 @@ const filteredCategories = computed(() => {
 </template>
 
 <style scoped>
+/* Mobile-first viewport that doesn't stretch absurdly on desktop. */
+.page-container {
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
 .search-field {
   background: var(--surface-secondary);
   border: 1.5px solid transparent;
@@ -296,48 +303,69 @@ const filteredCategories = computed(() => {
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
 }
 
+/* No card wrapper around each section — section spacing is enough. */
 .cat-section {
-  background: var(--surface);
-  border-radius: 20px;
-  padding: 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px var(--shadow);
+  margin-bottom: 22px;
 }
 
-.subcat-card {
-  position: relative;
+.subcat-tile {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   text-align: left;
-  border-radius: 16px;
-  padding: 14px;
-  min-height: 110px;
+  padding: 10px 12px 10px 10px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 2px 8px var(--shadow);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
+  min-height: 64px;
+  position: relative;
   overflow: hidden;
-  background: var(--card-bg);
-  border: 1px solid rgba(0,0,0,0.03);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.04);
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
 }
-.subcat-card:active {
-  transform: scale(0.96);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+.subcat-tile:active {
+  transform: scale(0.97);
 }
-.subcat-orb {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  bottom: -20px;
-  right: -20px;
-  filter: blur(2px);
+.subcat-tile:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 0 6px 16px var(--shadow-lg);
 }
-.subcat-icon {
+
+.subcat-thumb {
+  flex-shrink: 0;
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: 10px;
+  background: var(--c-bg);
+  color: var(--c-fg);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+.subcat-initial {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+.subcat-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.subcat-chev {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  opacity: 0.6;
 }
 
 .chip-btn {

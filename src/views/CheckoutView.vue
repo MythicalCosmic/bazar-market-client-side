@@ -7,6 +7,8 @@ import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
 import { useAddresses } from '../stores/addressStore.js'
 import { placeOrder as placeOrderAPI } from '../services/api.js'
+import { ensureLeaflet } from '../composables/useLeaflet.js'
+import { useToast } from '../composables/useToast.js'
 
 const { total, subtotal, deliveryCost, discount, clearCart } = useCartStore()
 const { formatNum } = useFormat()
@@ -14,6 +16,7 @@ const { navigate, routeParams } = useRouter()
 const { t } = useI18n()
 const { isAuthenticated, user } = useAuth()
 const { addresses, loadAddresses } = useAddresses()
+const { error: toastError } = useToast()
 
 const selectedPayment = ref('card')
 const locationStatus = ref('')
@@ -62,7 +65,14 @@ function debouncedGetAddress(lat, lng) {
   debounceTimer = setTimeout(() => getAddress(lat, lng), 300)
 }
 
-function initMap(lat, lng) {
+async function initMap(lat, lng) {
+  let L
+  try {
+    L = await ensureLeaflet()
+  } catch {
+    locationStatus.value = '⚠️ ' + t('checkout.map_unavailable')
+    return
+  }
   map = L.map('leaflet-map', { zoomControl: true }).setView([lat, lng], 16)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
   const icon = L.divIcon({
@@ -127,17 +137,29 @@ onUnmounted(() => {
 })
 
 async function handlePlaceOrder() {
+  // Re-entrancy guard at function entry — :disabled alone races with rapid taps.
+  if (isPlacing.value) return
   if (!isAuthenticated.value) { navigate('login'); return }
   const addrId = selectedAddressId.value || addresses.value.find(a => a.isDefault)?.id
   if (!addrId) { orderError.value = t('checkout.select_address'); return }
   orderError.value = ''
   isPlacing.value = true
   try {
-    await placeOrderAPI({ address_id: addrId, payment_method: selectedPayment.value, coupon_code: couponCode.value || undefined, user_note: userNote.value || undefined })
+    const body = {
+      address_id: addrId,
+      payment_method: selectedPayment.value,
+    }
+    if (couponCode.value) body.coupon_code = couponCode.value
+    if (userNote.value) body.user_note = userNote.value
+    const data = await placeOrderAPI(body)
     clearCart()
-    navigate('orders')
+    const newOrderId = data?.order_id || data?.id
+    if (newOrderId) navigate('orders', { highlightOrderId: newOrderId, placed: true })
+    else navigate('orders')
   } catch (e) {
-    orderError.value = e.message || 'Error'
+    orderError.value = e.message || t('common.error_generic')
+    toastError(orderError.value)
+    if (e.status === 400 && /cart is empty/i.test(e.message || '')) navigate('cart')
   } finally {
     isPlacing.value = false
   }

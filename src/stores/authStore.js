@@ -1,8 +1,76 @@
 import { ref, computed } from 'vue'
-import { get, post, patch, publicPost, getToken, setToken, clearToken } from '../services/http.js'
+import {
+  get, post, patch, publicPost,
+  getToken, setToken, clearToken,
+  getTokenExpiry, setTokenExpiry,
+} from '../services/http.js'
 
 const user = ref(null)
 const token = ref(getToken())
+
+// Cross-store reset hooks. Other stores subscribe via onLogout(...) so the
+// auth layer doesn't need to know about them directly (avoids import cycles).
+const logoutListeners = new Set()
+export function onLogout(fn) {
+  logoutListeners.add(fn)
+  return () => logoutListeners.delete(fn)
+}
+function fireLogout() {
+  for (const fn of logoutListeners) {
+    try { fn() } catch {}
+  }
+}
+
+function normalizePhone(phone) {
+  return (phone || '').replace(/\s/g, '')
+}
+
+function defaultDevice() {
+  return navigator.userAgent?.slice(0, 50) || 'web'
+}
+
+function setUserFromData(data) {
+  if (!data) { user.value = null; return }
+  user.value = {
+    id: data.id,
+    uuid: data.uuid,
+    firstName: data.first_name,
+    lastName: data.last_name || '',
+    phone: data.phone,
+    verified: data.is_phone_verified,
+    language: data.language,
+  }
+}
+
+function applySession(data) {
+  if (data?.session_key) {
+    setToken(data.session_key)
+    token.value = data.session_key
+  }
+  if (data?.expires_at) setTokenExpiry(data.expires_at)
+  if (data?.user) setUserFromData(data.user)
+}
+
+function doLogoutLocal() {
+  token.value = null
+  user.value = null
+  clearToken()
+  fireLogout()
+}
+
+async function applyPendingReferral() {
+  const code = localStorage.getItem('bazar-pending-referral')
+  if (!code) return
+  try {
+    await post('/referral/apply', { code })
+    localStorage.removeItem('bazar-pending-referral')
+  } catch (e) {
+    // Drop on 4xx (invalid/already-applied), keep on 5xx/network so we can retry.
+    if (e.status >= 400 && e.status < 500) {
+      localStorage.removeItem('bazar-pending-referral')
+    }
+  }
+}
 
 export function useAuth() {
   const isLoggedIn = computed(() => !!token.value && !!user.value)
@@ -10,133 +78,88 @@ export function useAuth() {
   const isAuthenticated = computed(() => isLoggedIn.value && isVerified.value)
 
   async function fetchProfile() {
+    const data = await get('/auth/me')
+    setUserFromData(data)
+    return user.value
+  }
+
+  // ── Login (phone → OTP) ──
+  async function requestLoginCode(phone) {
     try {
-      const data = await get('/auth/me')
-      user.value = {
-        id: data.id,
-        uuid: data.uuid,
-        firstName: data.first_name,
-        lastName: data.last_name || '',
-        phone: data.phone,
-        verified: data.is_phone_verified,
-        language: data.language,
-      }
-      return user.value
+      const data = await publicPost('/auth/login', { phone: normalizePhone(phone) })
+      return { success: true, expiresIn: data?.expires_in || 120 }
     } catch (e) {
-      if (e.status === 401) {
-        token.value = null
-        user.value = null
-        clearToken()
-      }
-      throw e
+      return { success: false, message: e.message, status: e.status, retryAfter: e.data?.retryAfter }
     }
   }
 
-  async function login(phone, password, device) {
+  async function verifyLogin(phone, code, device) {
     try {
-      const data = await publicPost('/auth/login', {
-        phone: phone.replace(/\s/g, ''),
-        password,
-        device: device || navigator.userAgent?.slice(0, 50),
+      const data = await publicPost('/auth/login/verify', {
+        phone: normalizePhone(phone),
+        code,
+        device: device || defaultDevice(),
       })
-      setToken(data.session_key)
-      token.value = data.session_key
-      user.value = {
-        id: data.user.id,
-        uuid: data.user.uuid,
-        firstName: data.user.first_name,
-        lastName: data.user.last_name || '',
-        phone: data.user.phone,
-        verified: data.user.is_phone_verified,
-        language: data.user.language,
-      }
+      applySession(data)
       applyPendingReferral()
       return { success: true }
     } catch (e) {
-      return { success: false, message: e.message }
+      return { success: false, message: e.message, status: e.status }
     }
   }
 
-  // Step 1: Register — sends OTP, no user created yet
-  async function register(firstName, lastName, phone, password) {
+  async function resendLoginCode(phone) {
     try {
-      const data = await publicPost('/auth/register', {
-        phone: phone.replace(/\s/g, ''),
-        first_name: firstName,
-        last_name: lastName,
-        password,
-        language: ['uz', 'ru'].includes(localStorage.getItem('bazar-locale')) ? localStorage.getItem('bazar-locale') : 'uz',
-      })
-      return { success: true, phone: data.phone, expiresIn: data.expires_in }
+      const data = await publicPost('/auth/login/resend', { phone: normalizePhone(phone) })
+      return { success: true, expiresIn: data?.expires_in || 60 }
     } catch (e) {
-      return { success: false, message: e.message }
+      return { success: false, message: e.message, status: e.status, retryAfter: e.data?.retryAfter }
     }
   }
 
-  // Step 2: Verify registration — creates user + returns session
+  // ── Register (phone + name → OTP) ──
+  async function register(firstName, lastName, phone, language) {
+    try {
+      const stored = localStorage.getItem('bazar-locale')
+      const lang = language || (['uz', 'ru'].includes(stored) ? stored : 'uz')
+      const body = {
+        phone: normalizePhone(phone),
+        first_name: firstName,
+        language: lang,
+      }
+      if (lastName) body.last_name = lastName
+      const data = await publicPost('/auth/register', body)
+      return { success: true, phone: data?.phone, expiresIn: data?.expires_in || 120 }
+    } catch (e) {
+      return { success: false, message: e.message, status: e.status }
+    }
+  }
+
   async function verifyRegistration(phone, code, device) {
     try {
       const data = await publicPost('/auth/register/verify', {
-        phone: phone.replace(/\s/g, ''),
+        phone: normalizePhone(phone),
         code,
-        device: device || navigator.userAgent?.slice(0, 50),
+        device: device || defaultDevice(),
       })
-      setToken(data.session_key)
-      token.value = data.session_key
-      user.value = {
-        id: data.user.id,
-        uuid: data.user.uuid,
-        firstName: data.user.first_name,
-        lastName: data.user.last_name || '',
-        phone: data.user.phone,
-        verified: data.user.is_phone_verified,
-        language: data.user.language,
-      }
+      applySession(data)
       applyPendingReferral()
       return { success: true }
     } catch (e) {
-      return { success: false, message: e.message }
+      return { success: false, message: e.message, status: e.status }
     }
   }
 
-  // Resend OTP during registration
   async function resendRegistrationCode(phone) {
     try {
-      const data = await publicPost('/auth/register/resend', {
-        phone: phone.replace(/\s/g, ''),
-      })
-      return { success: true, expiresIn: data.expires_in }
+      const data = await publicPost('/auth/register/resend', { phone: normalizePhone(phone) })
+      return { success: true, expiresIn: data?.expires_in || 60 }
     } catch (e) {
-      return { success: false, message: e.message }
+      return { success: false, message: e.message, status: e.status, retryAfter: e.data?.retryAfter }
     }
   }
 
-  // Forgot password — send reset code
-  async function forgotPassword(phone) {
-    try {
-      const data = await publicPost('/auth/forgot-password', {
-        phone: phone.replace(/\s/g, ''),
-      })
-      return { success: true, expiresIn: data.expires_in }
-    } catch (e) {
-      return { success: false, message: e.message }
-    }
-  }
-
-  // Reset password with code
-  async function resetPassword(phone, code, newPassword) {
-    try {
-      await publicPost('/auth/reset-password', {
-        phone: phone.replace(/\s/g, ''),
-        code,
-        new_password: newPassword,
-      })
-      return { success: true }
-    } catch (e) {
-      return { success: false, message: e.message }
-    }
-  }
-
+  // ── Profile (name + language) ──
   async function updateProfile(fields) {
     try {
       const body = {}
@@ -144,65 +167,88 @@ export function useAuth() {
       if (fields.lastName !== undefined) body.last_name = fields.lastName
       if (fields.language !== undefined) body.language = fields.language
       const data = await patch('/auth/me/update', body)
-      user.value = {
-        ...user.value,
-        firstName: data.first_name,
-        lastName: data.last_name || '',
-        phone: data.phone,
-        language: data.language,
-      }
+      setUserFromData(data)
       return { success: true }
     } catch (e) {
       return { success: false, message: e.message }
     }
   }
 
-  async function applyPendingReferral() {
-    const code = localStorage.getItem('bazar-pending-referral')
-    if (!code) return
+  // ── Change phone (separate flow) ──
+  async function requestPhoneChange(newPhone) {
     try {
-      await post('/referral/apply', { referral_code: code })
-    } catch {}
-    localStorage.removeItem('bazar-pending-referral')
+      const data = await post('/auth/me/phone', { new_phone: normalizePhone(newPhone) })
+      return { success: true, expiresIn: data?.expires_in || 120 }
+    } catch (e) {
+      return { success: false, message: e.message, status: e.status }
+    }
   }
 
+  async function verifyPhoneChange(code) {
+    try {
+      await post('/auth/me/phone/verify', { code })
+      // Server invalidates *all* sessions including this one.
+      doLogoutLocal()
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: e.message, status: e.status }
+    }
+  }
+
+  // ── Logout / delete ──
   async function logout() {
     try { await post('/auth/logout') } catch {}
-    token.value = null
-    user.value = null
-    clearToken()
+    doLogoutLocal()
   }
 
-  function getUser() {
-    return user.value
+  async function logoutAll() {
+    try { await post('/auth/logout-all') } catch {}
+    doLogoutLocal()
+  }
+
+  async function deleteAccount() {
+    try {
+      await post('/auth/me/delete')
+    } catch (e) {
+      return { success: false, message: e.message }
+    }
+    doLogoutLocal()
+    return { success: true }
   }
 
   return {
-    user,
-    token,
-    isLoggedIn,
-    isVerified,
-    isAuthenticated,
-    getUser,
+    user, token,
+    isLoggedIn, isVerified, isAuthenticated,
     fetchProfile,
-    login,
-    register,
-    verifyRegistration,
-    resendRegistrationCode,
-    forgotPassword,
-    resetPassword,
+    requestLoginCode, verifyLogin, resendLoginCode,
+    register, verifyRegistration, resendRegistrationCode,
     updateProfile,
-    logout,
+    requestPhoneChange, verifyPhoneChange,
+    logout, logoutAll, deleteAccount,
   }
 }
 
 export async function initAuth() {
-  const t = getToken()
-  if (!t) return
+  if (!getToken()) return
+  const exp = getTokenExpiry()
+  if (exp && Date.now() > exp) {
+    clearToken()
+    return
+  }
   const { fetchProfile } = useAuth()
   try {
     await fetchProfile()
-  } catch {
-    clearToken()
+  } catch (e) {
+    // 401 already cleared the token via http.js. Other errors leave the
+    // token in place — the next authenticated request will retry.
   }
+}
+
+// Reset local refs when http.js signals an expired session.
+if (typeof window !== 'undefined') {
+  window.addEventListener('bazar:auth-expired', () => {
+    token.value = null
+    user.value = null
+    fireLogout()
+  })
 }

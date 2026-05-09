@@ -29,6 +29,7 @@ export default {
   'categories.all_in': 'All in',
   'categories.no_products': 'No products found',
   'categories.search_placeholder': 'Search categories...',
+  'categories.show_all': 'Show all',
 
   // Product badges
   'badge.new': 'NEW',
@@ -72,6 +73,7 @@ export default {
   'checkout.location_unavailable': 'Geolocation unavailable',
   'checkout.change': 'Change',
   'checkout.you_are_here': 'You are here',
+  'checkout.map_unavailable': 'Map unavailable',
 
   // Orders
   'orders.title': 'My orders',
@@ -122,13 +124,10 @@ export default {
   'login.welcome': 'Welcome back!',
   'login.title': 'Log in',
   'login.subtitle': 'Sign in to your account',
-  'login.password': 'Password',
-  'login.password_placeholder': 'Enter password',
-  'login.create_password': 'Create a password',
-  'login.password_hint': 'At least 4 characters',
-  'login.password_short': 'Password too short (at least 4 characters)',
-  'login.invalid_credentials': 'Invalid phone or password',
-  'login.forgot_password': 'Forgot password?',
+  'login.phone_subtitle': 'Enter your phone — we\'ll send you an SMS code',
+  'login.send_code': 'Send code',
+  'login.use_different_phone': 'Use a different phone',
+  'login.rate_limited': 'Try again in {sec} seconds',
   'login.button': 'Log in',
   'login.or': 'or',
   'login.no_account': 'Don\'t have an account? Sign up',
@@ -153,12 +152,25 @@ export default {
   'register.invalid_phone': 'Invalid phone number',
   'register.enter_code': 'Enter 6-digit code',
   'register.wrong_code': 'Wrong code',
+  'register.optional': '(optional)',
 
   // Settings
   'settings.language_desc': 'Choose app language',
   'settings.theme_desc': 'Light or dark mode',
   'settings.notifications': 'Notifications',
   'settings.notifications_desc': 'Order status updates',
+  'settings.logout_all': 'Log out from all devices',
+  'settings.logout_all_desc': 'End sessions on every other device',
+  'settings.logout_all_confirm_title': 'Log out from all devices?',
+  'settings.logout_all_confirm_subtitle': 'You will be signed out everywhere',
+  'settings.logout_all_yes': 'Yes, log out',
+  'settings.logout_all_done': 'All sessions ended',
+  'settings.delete_account': 'Delete account',
+  'settings.delete_account_desc': 'This action is irreversible',
+  'settings.delete_confirm_title': 'Delete your account permanently?',
+  'settings.delete_confirm_subtitle': 'All your data will be erased and cannot be recovered.',
+  'settings.delete_yes': 'Yes, delete',
+  'settings.account_deleted': 'Account deleted',
 
   // Support
   'support.title': 'Help Center',
@@ -222,6 +234,10 @@ export default {
   'addresses.set_default': 'Set as default',
   'addresses.comment': 'Comment',
   'addresses.comment_placeholder': 'Additional info (entrance, floor, door...)',
+  'addresses.delete': 'Delete',
+  'addresses.delete_confirm_title': 'Delete address?',
+  'addresses.delete_yes': 'Yes, delete',
+  'addresses.map_unavailable': 'Map could not load. Check your connection and try again.',
 
   // Coupons
   'coupons.title': 'Coupons',
@@ -270,6 +286,9 @@ export default {
   'common.yes': 'Yes',
   'common.no': 'No',
   'common.loading': 'Loading...',
+  'common.session_expired': 'Session expired. Please log in again.',
+  'common.error_generic': 'Something went wrong. Please try again later.',
+  'common.clear': 'Clear',
 
   'product.left_in_stock': 'Only {count} left',
   'product.out_of_stock': 'Out of stock',
@@ -295,14 +314,6 @@ export default {
   'verify.will_receive_sms': 'An SMS code will be sent to this number',
   'verify.send_sms': 'Send SMS',
 
-  'forgot.title': 'Reset password',
-  'forgot.subtitle': 'Enter your phone number',
-  'forgot.send_code': 'Send code',
-  'forgot.reset_title': 'New password',
-  'forgot.reset_subtitle': 'Enter the code and create a new password',
-  'forgot.new_password': 'New password',
-  'forgot.new_password_placeholder': 'Enter new password',
-  'forgot.reset_button': 'Reset password',
   'register.resend_in': 'Resend in {sec}s',
 
   'checkout.note': 'Note',

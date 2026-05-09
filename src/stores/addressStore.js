@@ -1,9 +1,17 @@
 import { ref } from 'vue'
 import { getAddresses, addAddressAPI, deleteAddressAPI, setDefaultAddressAPI } from '../services/api.js'
 import { getToken } from '../services/http.js'
+import { onLogout } from './authStore.js'
 
 const addresses = ref([])
 let loaded = false
+
+function resetAddressesInternal() {
+  addresses.value = []
+  loaded = false
+}
+
+onLogout(resetAddressesInternal)
 
 export function useAddresses() {
   async function loadAddresses(force = false) {
@@ -56,10 +64,5 @@ export function useAddresses() {
     }
   }
 
-  function resetAddresses() {
-    addresses.value = []
-    loaded = false
-  }
-
-  return { addresses, loadAddresses, addAddress, removeAddress, setDefault, resetAddresses }
+  return { addresses, loadAddresses, addAddress, removeAddress, setDefault, resetAddresses: resetAddressesInternal }
 }

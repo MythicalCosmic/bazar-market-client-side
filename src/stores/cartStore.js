@@ -2,41 +2,88 @@ import { reactive, computed, ref } from 'vue'
 import { getCart, addToCartAPI, updateCartAPI, removeFromCartAPI, clearCartAPI, getDeliveryInfo } from '../services/api.js'
 import { getToken } from '../services/http.js'
 import { useToast } from '../composables/useToast.js'
+import { onLogout } from './authStore.js'
 
 const state = reactive({
   items: [],
   deliveryCost: 10000,
   minOrderTotal: 30000,
   discount: 0,
+  appliedCoupon: null,
 })
 
 const syncing = ref(false)
 
+// Per-product debounced sync — coalesces rapid increments into one round-trip
+// and reloads the cart on failure so we don't trust a stale optimistic state.
+const SYNC_DELAY = 250
+const debounces = new Map() // productId -> timer
+const DEFAULT_DELIVERY = 10000
+const DEFAULT_MIN_ORDER = 30000
+
 function round(val, decimals = 3) {
-  return Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals)
+  const m = 10 ** decimals
+  return Math.round(val * m) / m
 }
+
+function clearDebounce(productId) {
+  const t = debounces.get(productId)
+  if (t) { clearTimeout(t); debounces.delete(productId) }
+}
+
+function syncQty(productId, qty, onError) {
+  clearDebounce(productId)
+  debounces.set(productId, setTimeout(async () => {
+    debounces.delete(productId)
+    try {
+      await updateCartAPI(productId, qty)
+    } catch (e) {
+      const { error } = useToast()
+      error(e.message || 'Failed to update cart')
+      onError?.()
+      // Reconcile with server truth on any failure.
+      try { await loadCartImpl() } catch {}
+    }
+  }, SYNC_DELAY))
+}
+
+async function loadCartImpl() {
+  if (!getToken()) return
+  const data = await getCart()
+  state.items = data.items || []
+}
+
+function resetCart() {
+  state.items = []
+  state.discount = 0
+  state.appliedCoupon = null
+  for (const t of debounces.values()) clearTimeout(t)
+  debounces.clear()
+}
+
+onLogout(resetCart)
 
 export function useCartStore() {
   const cartItems    = computed(() => state.items)
   const totalCount   = computed(() => state.items.length)
-  const subtotal     = computed(() => state.items.reduce((s, i) => s + (i.price * (parseFloat(i.quantity) || 0)), 0))
-  const total        = computed(() => subtotal.value - state.discount + state.deliveryCost)
+  const subtotal     = computed(() => state.items.reduce((s, i) => {
+    const price = i.discountedPrice ?? i.price
+    return s + (price * (parseFloat(i.quantity) || 0))
+  }, 0))
+  const total        = computed(() => Math.max(0, subtotal.value - state.discount + state.deliveryCost))
   const deliveryCost = computed(() => state.deliveryCost)
   const discount     = computed(() => state.discount)
+  const appliedCoupon = computed(() => state.appliedCoupon)
 
   async function loadCart() {
-    if (!getToken()) return
-    try {
-      const data = await getCart()
-      state.items = data.items || []
-    } catch {}
+    try { await loadCartImpl() } catch {}
   }
 
   async function loadDeliveryInfo() {
     try {
       const data = await getDeliveryInfo()
-      state.deliveryCost = parseFloat(data.default_delivery_fee) || 10000
-      state.minOrderTotal = parseFloat(data.min_order_total) || 30000
+      state.deliveryCost = parseFloat(data.default_delivery_fee) || DEFAULT_DELIVERY
+      state.minOrderTotal = parseFloat(data.min_order_total) || DEFAULT_MIN_ORDER
     } catch {}
   }
 
@@ -46,35 +93,40 @@ export function useCartStore() {
     const existing = state.items.find((i) => i.id === product.id)
 
     if (existing) {
-      const oldQty = parseFloat(existing.quantity)
-      existing.quantity = round(oldQty + step)
+      const oldQty = parseFloat(existing.quantity) || 0
+      const newQty = round(oldQty + step)
+      existing.quantity = newQty
       if (getToken()) {
-        updateCartAPI(product.id, existing.quantity).catch((e) => {
+        syncQty(product.id, newQty, () => {
+          // Best-effort revert; loadCartImpl will reconcile next.
           existing.quantity = oldQty
-          const { error } = useToast()
-          error(e.message || 'Failed to update cart')
         })
       }
-    } else {
-      const newItem = {
-        id: product.id,
-        name: product.name,
-        price: product.discountedPrice || product.price,
-        image: product.image,
-        unit: product.unit || 'piece',
-        step: step,
-        minQty: minQty,
-        quantity: minQty,
-      }
-      state.items.push(newItem)
-      if (getToken()) {
-        addToCartAPI(product.id, minQty).catch((e) => {
-          const idx = state.items.indexOf(newItem)
-          if (idx !== -1) state.items.splice(idx, 1)
-          const { error } = useToast()
-          error(e.message || 'Failed to add to cart')
-        })
-      }
+      return
+    }
+
+    const newItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      discountedPrice: product.discountedPrice ?? null,
+      image: product.image,
+      unit: product.unit || 'piece',
+      step,
+      minQty,
+      maxQty: product.maxQty ?? null,
+      stockQty: product.stockQty ?? null,
+      quantity: minQty,
+    }
+    state.items.push(newItem)
+    if (getToken()) {
+      addToCartAPI(product.id, minQty).catch(async (e) => {
+        const { error } = useToast()
+        error(e.message || 'Failed to add to cart')
+        const idx = state.items.findIndex(i => i.id === product.id)
+        if (idx !== -1) state.items.splice(idx, 1)
+        try { await loadCartImpl() } catch {}
+      })
     }
   }
 
@@ -89,20 +141,22 @@ export function useCartStore() {
       const newQty = round(qty - step)
       item.quantity = newQty
       if (getToken()) {
-        updateCartAPI(productId, newQty).catch((e) => {
-          item.quantity = qty
-          const { error } = useToast()
-          error(e.message || 'Failed to update cart')
-        })
+        syncQty(productId, newQty, () => { item.quantity = qty })
       }
     } else {
-      const idx = state.items.indexOf(item)
-      state.items.splice(idx, 1)
+      // Drop below min — remove the line.
+      const idx = state.items.findIndex(i => i.id === productId)
+      if (idx === -1) return
+      const removed = state.items.splice(idx, 1)[0]
+      clearDebounce(productId)
       if (getToken()) {
-        removeFromCartAPI(productId).catch((e) => {
-          state.items.splice(idx, 0, { ...item, quantity: qty })
+        removeFromCartAPI(productId).catch(async (e) => {
           const { error } = useToast()
           error(e.message || 'Failed to remove from cart')
+          // Re-find by id — DON'T use stale idx; cart may have changed.
+          const exists = state.items.some(i => i.id === productId)
+          if (!exists) state.items.push(removed)
+          try { await loadCartImpl() } catch {}
         })
       }
     }
@@ -110,18 +164,26 @@ export function useCartStore() {
 
   function deleteItem(productId) {
     const idx = state.items.findIndex((i) => i.id === productId)
-    const removed = idx !== -1 ? state.items.splice(idx, 1)[0] : null
+    if (idx === -1) return
+    const removed = state.items.splice(idx, 1)[0]
+    clearDebounce(productId)
     if (getToken()) {
-      removeFromCartAPI(productId).catch((e) => {
-        if (removed) state.items.splice(idx, 0, removed)
+      removeFromCartAPI(productId).catch(async (e) => {
         const { error } = useToast()
         error(e.message || 'Failed to remove item')
+        const exists = state.items.some(i => i.id === productId)
+        if (!exists) state.items.push(removed)
+        try { await loadCartImpl() } catch {}
       })
     }
   }
 
   function clearCart() {
     state.items.splice(0)
+    state.discount = 0
+    state.appliedCoupon = null
+    for (const t of debounces.values()) clearTimeout(t)
+    debounces.clear()
     if (getToken()) {
       clearCartAPI().catch(() => {})
     }
@@ -132,20 +194,25 @@ export function useCartStore() {
     return item ? (parseFloat(item.quantity) || 0) : 0
   }
 
-  function setDeliveryCost(cost) {
-    state.deliveryCost = cost
+  function setDeliveryCost(cost) { state.deliveryCost = cost }
+
+  function setDiscount(d, coupon = null) {
+    state.discount = d
+    state.appliedCoupon = coupon
   }
 
-  function setDiscount(d) {
-    state.discount = d
+  function clearDiscount() {
+    state.discount = 0
+    state.appliedCoupon = null
   }
 
   const minOrderTotal = computed(() => state.minOrderTotal)
 
   return {
     cartItems, totalCount, subtotal, total,
-    deliveryCost, discount, minOrderTotal, syncing,
+    deliveryCost, discount, appliedCoupon, minOrderTotal, syncing,
     addToCart, decrement, deleteItem, clearCart, getQty,
-    loadCart, loadDeliveryInfo, setDeliveryCost, setDiscount,
+    loadCart, loadDeliveryInfo, setDeliveryCost, setDiscount, clearDiscount,
+    resetCart,
   }
 }
