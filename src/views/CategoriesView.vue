@@ -34,27 +34,6 @@ function getColor(index) {
   return categoryColors[index % categoryColors.length]
 }
 
-function tileGridCols(count) {
-  if (count <= 1) return 'grid-cols-1'
-  if (count === 2) return 'grid-cols-2'
-  return 'grid-cols-3'
-}
-
-function tileShape(count) {
-  if (count <= 1) return 'cat-tile--wide'
-  if (count === 2) return 'cat-tile--mid'
-  return 'cat-tile--square'
-}
-
-function tilesFor(cat) {
-  return cat.children?.length ? cat.children : [cat]
-}
-
-function openTile(cat, item) {
-  if (cat.children?.length) goToSubcategory(cat, item)
-  else selectParent(cat)
-}
-
 onMounted(async () => {
   try {
     categoryTree.value = await getCategoryTree()
@@ -194,26 +173,51 @@ const filteredCategories = computed(() => {
 
         <!-- Category sections -->
         <div v-for="(cat, catIdx) in filteredCategories" :key="cat.id" class="cat-section">
-          <h2 class="cat-section-title">{{ getLocalizedName(cat.name) }}</h2>
-
-          <div
-            class="grid gap-2.5"
-            :class="tileGridCols(tilesFor(cat).length)"
-            :style="{ '--tile-bg': getColor(catIdx).bg }">
+          <div class="flex items-baseline justify-between mb-2.5 px-0.5">
+            <h2 class="text-[15px] font-bold tracking-tight" style="color: var(--text-primary)">
+              {{ getLocalizedName(cat.name) }}
+            </h2>
             <button
-              v-for="item in tilesFor(cat)"
-              :key="item.id"
-              @click="openTile(cat, item)"
-              class="cat-tile btn-press"
-              :class="tileShape(tilesFor(cat).length)">
-              <span class="cat-tile-name">{{ getLocalizedName(item.name) }}</span>
-              <img
-                v-if="item.image"
-                :src="item.image"
-                :alt="getLocalizedName(item.name)"
-                class="cat-tile-img"
-                loading="lazy" />
-              <span v-else class="cat-tile-fallback">{{ getLocalizedName(item.name).charAt(0) }}</span>
+              v-if="cat.children && cat.children.length"
+              @click="selectParent(cat)"
+              class="text-[11px] font-semibold btn-press"
+              :style="{ color: getColor(catIdx).text }">
+              {{ t('home.see_all') }} →
+            </button>
+          </div>
+
+          <!-- Subcategory tiles. Categories with no children show a single tile that drills straight into the parent. -->
+          <div class="grid gap-2 grid-cols-2">
+            <template v-if="cat.children && cat.children.length">
+              <button
+                v-for="(sub, subIdx) in cat.children"
+                :key="sub.id"
+                @click="goToSubcategory(cat, sub)"
+                class="subcat-tile btn-press"
+                :style="{ '--c-bg': getColor(catIdx * 7 + subIdx).bg, '--c-fg': getColor(catIdx * 7 + subIdx).text }">
+                <div class="subcat-thumb">
+                  <img v-if="sub.image" :src="sub.image" :alt="getLocalizedName(sub.name)" class="w-full h-full object-cover" />
+                  <span v-else class="subcat-initial">{{ getLocalizedName(sub.name).charAt(0) }}</span>
+                </div>
+                <span class="subcat-name">{{ getLocalizedName(sub.name) }}</span>
+                <svg class="subcat-chev" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </template>
+            <button
+              v-else
+              @click="selectParent(cat)"
+              class="subcat-tile btn-press"
+              :style="{ '--c-bg': getColor(catIdx).bg, '--c-fg': getColor(catIdx).text }">
+              <div class="subcat-thumb">
+                <img v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-cover" />
+                <span v-else class="subcat-initial">{{ getLocalizedName(cat.name).charAt(0) }}</span>
+              </div>
+              <span class="subcat-name">{{ t('categories.show_all') }}</span>
+              <svg class="subcat-chev" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -299,76 +303,69 @@ const filteredCategories = computed(() => {
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
 }
 
+/* No card wrapper around each section — section spacing is enough. */
 .cat-section {
   margin-bottom: 22px;
 }
 
-.cat-section-title {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-  color: var(--text-primary);
-  margin: 0 2px 10px;
-}
-
-.cat-tile {
-  position: relative;
-  display: block;
+.subcat-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-align: left;
-  padding: 14px;
-  border-radius: 18px;
-  background: var(--tile-bg);
+  padding: 10px 12px 10px 10px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 2px 8px var(--shadow);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
+  min-height: 64px;
+  position: relative;
   overflow: hidden;
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.cat-tile:active {
+.subcat-tile:active {
   transform: scale(0.97);
 }
+.subcat-tile:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 0 6px 16px var(--shadow-lg);
+}
 
-.cat-tile--wide   { aspect-ratio: 5 / 2; }
-.cat-tile--mid    { aspect-ratio: 5 / 3; }
-.cat-tile--square { aspect-ratio: 1 / 1; }
+.subcat-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--c-bg);
+  color: var(--c-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.subcat-initial {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
 
-.cat-tile-name {
-  position: relative;
-  z-index: 2;
+.subcat-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-width: 60%;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
 }
 
-.cat-tile-img {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  max-width: 70%;
-  max-height: 85%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  object-position: right bottom;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.cat-tile-fallback {
-  position: absolute;
-  right: 14px;
-  bottom: 10px;
-  font-size: 36px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -1px;
-  color: var(--text-primary);
-  opacity: 0.18;
-  z-index: 1;
+.subcat-chev {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  opacity: 0.6;
 }
 
 .chip-btn {
