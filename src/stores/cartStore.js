@@ -189,6 +189,31 @@ export function useCartStore() {
     }
   }
 
+  function setQty(productId, rawQty) {
+    const item = state.items.find((i) => i.id === productId)
+    if (!item) return
+    const step = item.step || 1
+    const minQty = item.minQty || step
+    const stockMax = item.stockQty != null ? item.stockQty : Infinity
+    const hardMax = item.maxQty != null ? item.maxQty : Infinity
+    const max = Math.min(stockMax, hardMax)
+
+    const parsed = typeof rawQty === 'number' ? rawQty : parseFloat(String(rawQty).replace(',', '.'))
+    if (!Number.isFinite(parsed) || parsed <= 0) return
+
+    let qty = round(Math.round(parsed / step) * step)
+    if (qty < minQty) qty = minQty
+    if (qty > max) qty = round(Math.floor(max / step) * step)
+    if (qty <= 0) return
+
+    const oldQty = parseFloat(item.quantity) || 0
+    if (qty === oldQty) return
+    item.quantity = qty
+    if (getToken()) {
+      syncQty(productId, qty, () => { item.quantity = oldQty })
+    }
+  }
+
   function getQty(productId) {
     const item = state.items.find((i) => i.id === productId)
     return item ? (parseFloat(item.quantity) || 0) : 0
@@ -211,7 +236,7 @@ export function useCartStore() {
   return {
     cartItems, totalCount, subtotal, total,
     deliveryCost, discount, appliedCoupon, minOrderTotal, syncing,
-    addToCart, decrement, deleteItem, clearCart, getQty,
+    addToCart, decrement, deleteItem, clearCart, getQty, setQty,
     loadCart, loadDeliveryInfo, setDeliveryCost, setDiscount, clearDiscount,
     resetCart,
   }

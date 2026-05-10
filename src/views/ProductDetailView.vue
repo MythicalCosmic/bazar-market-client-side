@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useFormat } from '../composables/useFormat.js'
@@ -11,7 +11,7 @@ import { getProduct } from '../services/api.js'
 const { navigate, routeParams } = useRouter()
 const { t, getLocalizedName } = useI18n()
 const { formatPrice, formatQty } = useFormat()
-const { addToCart, decrement, getQty } = useCartStore()
+const { addToCart, decrement, getQty, setQty } = useCartStore()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { isLoggedIn } = useAuth()
 
@@ -43,6 +43,37 @@ const allImages = computed(() => {
 async function handleFavorite() {
   if (!isLoggedIn.value) { navigate('login'); return }
   await toggleFavorite(product.value.id)
+}
+
+const qtyDraft = ref('')
+const isEditingQty = ref(false)
+
+const stepInfo = computed(() => {
+  const p = product.value
+  if (!p) return { step: 1, isFractional: false }
+  const step = p.step || (['kg', 'liter'].includes(p.unit) ? 0.1 : 1)
+  return { step, isFractional: step < 1 }
+})
+
+watch(qty, (v) => {
+  if (!isEditingQty.value) qtyDraft.value = String(v || '')
+}, { immediate: true })
+
+function onQtyFocus(e) {
+  isEditingQty.value = true
+  e.target.select()
+}
+
+function commitQty() {
+  if (!product.value) return
+  isEditingQty.value = false
+  const raw = qtyDraft.value
+  const parsed = parseFloat(String(raw).replace(',', '.'))
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    qtyDraft.value = String(qty.value || '')
+    return
+  }
+  setQty(product.value.id, parsed)
 }
 </script>
 
@@ -171,7 +202,15 @@ async function handleFavorite() {
             <button @click.stop="decrement(product.id)" class="qty-btn btn-press">
               <svg width="18" height="18" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
-            <span class="text-[16px] font-bold min-w-[36px] text-center text-primary">{{ formatQty(qty, product.unit) }}</span>
+            <input
+              v-model="qtyDraft"
+              @focus="onQtyFocus"
+              @blur="commitQty"
+              @keyup.enter="$event.target.blur()"
+              type="text"
+              :inputmode="stepInfo.isFractional ? 'decimal' : 'numeric'"
+              class="qty-input text-[16px] font-bold text-center text-primary"
+              aria-label="Quantity" />
             <button @click.stop="addToCart(product)" class="qty-btn btn-press">
               <svg width="18" height="18" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
@@ -338,5 +377,23 @@ async function handleFavorite() {
 }
 .qty-btn:active {
   transform: scale(0.9);
+}
+
+.qty-input {
+  width: 56px;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0 4px;
+  -moz-appearance: textfield;
+}
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qty-input:focus {
+  background: var(--surface);
+  border-radius: 8px;
 }
 </style>

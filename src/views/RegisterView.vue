@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onUnmounted, nextTick, useTemplateRef } from 'vue'
+import { ref, onUnmounted, nextTick } from 'vue'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
@@ -16,7 +16,8 @@ const code = ref('')
 const isLoading = ref(false)
 const error = ref('')
 const codeInputs = ref(['', '', '', '', '', ''])
-const codeRefs = useTemplateRef('codeRefs')
+const codeRefs = ref([])
+const setCodeRef = (i) => (el) => { codeRefs.value[i] = el }
 const countdown = ref(0)
 let countdownTimer = null
 
@@ -184,7 +185,7 @@ onUnmounted(() => clearInterval(countdownTimer))
             <input
               v-for="(d, i) in codeInputs"
               :key="i"
-              :ref="(el) => { if (codeRefs) codeRefs[i] = el }"
+              :ref="setCodeRef(i)"
               :value="codeInputs[i]"
               @input="onCodeInput(i, $event)"
               @keydown="onCodeKeydown(i, $event)"
