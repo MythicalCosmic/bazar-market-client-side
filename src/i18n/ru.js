@@ -14,6 +14,9 @@ export default {
   'search.clear_all': 'Очистить',
   'search.no_results': 'Ничего не найдено',
   'search.try_different': 'Попробуйте другое слово',
+  'search.hero_title': 'Что вы ищете?',
+  'search.hero_subtitle': 'Ищите товары по названию или категории',
+  'search.results_count': '{count} результатов',
 
   // Home
   'home.featured': 'Популярные товары',

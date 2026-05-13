@@ -21,6 +21,7 @@ import AddressesView      from './views/AddressesView.vue'
 import CouponsView        from './views/CouponsView.vue'
 import RewardsView        from './views/RewardsView.vue'
 import ProductDetailView  from './views/ProductDetailView.vue'
+import SearchView         from './views/SearchView.vue'
 import BottomNav          from './components/BottomNav.vue'
 import ScrollToTop        from './components/ScrollToTop.vue'
 
@@ -61,6 +62,7 @@ onUnmounted(() => window.removeEventListener('bazar:auth-expired', onAuthExpired
         <CouponsView        v-else-if="currentRoute === 'coupons'"        key="coupons"  />
         <RewardsView        v-else-if="currentRoute === 'rewards'"        key="rewards"  />
         <ProductDetailView  v-else-if="currentRoute === 'product'"        key="product"  />
+        <SearchView         v-else-if="currentRoute === 'search'"         key="search"   />
       </Transition>
     </main>
 

@@ -5,7 +5,7 @@ export const currentRoute = ref('splash')
 export const routeParams = ref({})
 
 const routeOrder = [
-  'splash', 'home', 'categories', 'favorites', 'cart', 'checkout', 'orders',
+  'splash', 'home', 'search', 'categories', 'favorites', 'cart', 'checkout', 'orders',
   'profile', 'settings', 'support', 'payment-methods', 'login', 'register',
   'addresses', 'coupons', 'rewards', 'product',
 ]

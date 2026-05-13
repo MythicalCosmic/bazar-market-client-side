@@ -1,27 +1,14 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from '../i18n/index.js'
 import { useAddresses } from '../stores/addressStore.js'
 import { useRouter } from '../router/index.js'
-import { useSearchStore } from '../stores/searchStore.js'
 
-const { t, getLocalizedName } = useI18n()
+const { t } = useI18n()
 const { addresses } = useAddresses()
 const { navigate } = useRouter()
-const { history, addToHistory, removeFromHistory, clearHistory, runSearch } = useSearchStore()
 
 const showDropdown = ref(false)
-const searchQuery = ref('')
-const searchResults = ref([])
-const isSearchFocused = ref(false)
-const isSearching = ref(false)
-let searchTimer = null
-let searchSeq = 0
-
-const trimmedQuery = computed(() => searchQuery.value.trim())
-const showHistory = computed(() => isSearchFocused.value && !trimmedQuery.value && history.value.length > 0)
-const showResults = computed(() => isSearchFocused.value && trimmedQuery.value.length > 0)
-const panelOpen = computed(() => showHistory.value || showResults.value)
 
 const currentAddress = computed(() => {
   const def = addresses.value.find(a => a.isDefault)
@@ -44,53 +31,8 @@ function goToAddresses() {
   navigate('addresses')
 }
 
-function onSearchInput() {
-  clearTimeout(searchTimer)
-  const q = searchQuery.value.trim()
-  if (!q) {
-    searchResults.value = []
-    isSearching.value = false
-    return
-  }
-  isSearching.value = true
-  const seq = ++searchSeq
-  searchTimer = setTimeout(async () => {
-    const items = await runSearch(q)
-    if (seq !== searchSeq) return
-    searchResults.value = items
-    isSearching.value = false
-  }, 250)
-}
-
-function onSearchFocus() {
-  isSearchFocused.value = true
-}
-
-function closeSearch() {
-  isSearchFocused.value = false
-}
-
-function clearQuery() {
-  searchQuery.value = ''
-  searchResults.value = []
-  isSearching.value = false
-  nextTick(() => {
-    const input = document.querySelector('.search-bar input')
-    input?.focus()
-  })
-}
-
-function goToProduct(product) {
-  if (trimmedQuery.value) addToHistory(trimmedQuery.value)
-  searchQuery.value = ''
-  searchResults.value = []
-  isSearchFocused.value = false
-  navigate('product', { productId: product.id })
-}
-
-function applyHistory(entry) {
-  searchQuery.value = entry
-  onSearchInput()
+function openSearch() {
+  navigate('search')
 }
 </script>
 
@@ -140,80 +82,18 @@ function applyHistory(entry) {
       </div>
     </Transition>
 
-    <!-- Search -->
-    <div class="relative">
-      <div class="flex items-center rounded-2xl px-4 py-3 gap-2.5 transition-all duration-200 search-bar"
-        :class="{ 'search-active': panelOpen }">
-        <svg width="18" height="18" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <input
-          v-model="searchQuery"
-          @input="onSearchInput"
-          @focus="onSearchFocus"
-          type="text"
-          :placeholder="t('header.search_placeholder')"
-          class="bg-transparent outline-none text-sm font-medium flex-1"
-          style="color: var(--text-primary)"
-        />
-        <button v-if="searchQuery" @click="clearQuery" class="btn-press p-1" :aria-label="t('common.clear')">
-          <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-
-      <!-- History panel (focused, no query) -->
-      <div v-if="showHistory" class="search-panel">
-        <div class="flex items-center justify-between px-4 pt-3 pb-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wider" style="color: var(--text-tertiary)">{{ t('search.recent') }}</p>
-          <button @click="clearHistory" class="text-[11px] font-semibold btn-press" style="color: var(--primary)">{{ t('search.clear_all') }}</button>
-        </div>
-        <div v-for="entry in history" :key="entry"
-          @click="applyHistory(entry)"
-          class="flex items-center gap-3 px-4 py-2.5 btn-press">
-          <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--surface-secondary)">
-            <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="9" stroke-width="2"/>
-              <path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <span class="flex-1 min-w-0 text-sm font-medium truncate" style="color: var(--text-primary)">{{ entry }}</span>
-          <button @click.stop="removeFromHistory(entry)" class="btn-press p-1" :aria-label="t('common.clear')">
-            <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Results panel -->
-      <div v-else-if="showResults" class="search-panel">
-        <div v-if="isSearching && !searchResults.length" class="flex items-center gap-3 px-4 py-4">
-          <div class="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style="border-color: var(--primary); border-top-color: transparent;"></div>
-          <p class="text-xs font-medium" style="color: var(--text-secondary)">{{ t('common.loading') }}</p>
-        </div>
-        <div v-else-if="!searchResults.length" class="px-4 py-5 text-center">
-          <p class="text-sm font-semibold" style="color: var(--text-primary)">{{ t('search.no_results') }}</p>
-          <p class="text-[11px] font-medium mt-1" style="color: var(--text-tertiary)">{{ t('search.try_different') }}</p>
-        </div>
-        <div v-for="product in searchResults.slice(0, 8)" :key="product.id"
-          @click="goToProduct(product)"
-          class="flex items-center gap-3 px-4 py-3 btn-press border-b" :style="{ borderColor: 'var(--border)' }">
-          <img v-if="product.image" :src="product.image" class="w-11 h-11 rounded-xl object-contain flex-shrink-0" style="background: var(--surface-secondary)" />
-          <div v-else class="w-11 h-11 rounded-xl flex-shrink-0" style="background: var(--surface-secondary)"></div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-semibold truncate" style="color: var(--text-primary)">{{ getLocalizedName(product.name) }}</p>
-            <p class="text-[10px] font-medium" style="color: var(--text-secondary)">{{ product.price ? product.price.toLocaleString() + " so'm" : '' }}</p>
-          </div>
-          <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </div>
-    </div>
+    <!-- Search trigger -->
+    <button type="button" @click="openSearch" class="search-trigger btn-press" :aria-label="t('header.search_placeholder')">
+      <svg width="18" height="18" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="search-trigger-text">{{ t('header.search_placeholder') }}</span>
+    </button>
   </header>
 
   <!-- Backdrops -->
   <Teleport to="#app">
     <div v-if="showDropdown" class="fixed inset-0 z-20" @click="showDropdown = false"></div>
-    <div v-if="panelOpen" class="fixed inset-0 z-20" @click="closeSearch"></div>
   </Teleport>
 </template>
 
@@ -228,32 +108,28 @@ function applyHistory(entry) {
   background: rgba(10, 15, 12, 0.88);
 }
 
-.search-bar {
+.search-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 16px;
   background: var(--surface-secondary);
   border: 1.5px solid transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-.search-bar:focus-within {
+.search-trigger:active {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
-}
-.search-active {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
-}
-
-.search-panel {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  margin-top: 8px;
-  border-radius: 16px;
-  overflow: hidden;
-  z-index: 50;
   background: var(--surface);
-  box-shadow: 0 12px 48px var(--shadow-lg);
-  border: 1px solid var(--border);
-  max-height: 360px;
-  overflow-y: auto;
+}
+.search-trigger-text {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary);
 }
 </style>

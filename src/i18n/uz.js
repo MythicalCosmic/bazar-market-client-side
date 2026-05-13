@@ -14,6 +14,9 @@ export default {
   'search.clear_all': 'Tozalash',
   'search.no_results': 'Hech narsa topilmadi',
   'search.try_different': 'Boshqa so\'z bilan urinib ko\'ring',
+  'search.hero_title': 'Nimani qidiryapsiz?',
+  'search.hero_subtitle': 'Mahsulotni nomi yoki kategoriyasi bo\'yicha qidiring',
+  'search.results_count': '{count} ta natija',
 
   // Home
   'home.featured': 'Ommabop mahsulotlar',

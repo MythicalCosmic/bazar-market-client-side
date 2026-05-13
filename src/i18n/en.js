@@ -14,6 +14,9 @@ export default {
   'search.clear_all': 'Clear all',
   'search.no_results': 'Nothing found',
   'search.try_different': 'Try a different word',
+  'search.hero_title': 'What are you looking for?',
+  'search.hero_subtitle': 'Search products by name or category',
+  'search.results_count': '{count} results',
 
   // Home
   'home.featured': 'Popular products',
