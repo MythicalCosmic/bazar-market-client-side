@@ -9,6 +9,12 @@ export default {
   'header.current_location': 'Current location',
   'header.search_placeholder': 'Search...',
 
+  // Search
+  'search.recent': 'Recent searches',
+  'search.clear_all': 'Clear all',
+  'search.no_results': 'Nothing found',
+  'search.try_different': 'Try a different word',
+
   // Home
   'home.featured': 'Popular products',
   'home.see_all': 'See all',

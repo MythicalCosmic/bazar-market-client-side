@@ -9,6 +9,12 @@ export default {
   'header.current_location': 'Текущий адрес',
   'header.search_placeholder': 'Поиск...',
 
+  // Search
+  'search.recent': 'Недавние запросы',
+  'search.clear_all': 'Очистить',
+  'search.no_results': 'Ничего не найдено',
+  'search.try_different': 'Попробуйте другое слово',
+
   // Home
   'home.featured': 'Популярные товары',
   'home.see_all': 'Все',

@@ -9,6 +9,12 @@ export default {
   'header.current_location': 'Hozirgi manzil',
   'header.search_placeholder': 'Qidirish...',
 
+  // Search
+  'search.recent': 'So\'nggi qidiruvlar',
+  'search.clear_all': 'Tozalash',
+  'search.no_results': 'Hech narsa topilmadi',
+  'search.try_different': 'Boshqa so\'z bilan urinib ko\'ring',
+
   // Home
   'home.featured': 'Ommabop mahsulotlar',
   'home.see_all': 'Hammasi',
