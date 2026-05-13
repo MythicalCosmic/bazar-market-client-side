@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useFormat } from '../composables/useFormat.js'
@@ -45,9 +45,6 @@ async function handleFavorite() {
   await toggleFavorite(product.value.id)
 }
 
-const qtyDraft = ref('')
-const isEditingQty = ref(false)
-
 const stepInfo = computed(() => {
   const p = product.value
   if (!p) return { step: 1, isFractional: false }
@@ -55,25 +52,44 @@ const stepInfo = computed(() => {
   return { step, isFractional: step < 1 }
 })
 
-watch(qty, (v) => {
-  if (!isEditingQty.value) qtyDraft.value = String(v || '')
-}, { immediate: true })
+const qtyModalOpen = ref(false)
+const qtyModalDraft = ref('')
+const qtyInputRef = ref(null)
 
-function onQtyFocus(e) {
-  isEditingQty.value = true
-  e.target.select()
+function trimNum(n) {
+  if (!Number.isFinite(n)) return ''
+  return String(Number(n.toFixed(3)))
 }
 
-function commitQty() {
-  if (!product.value) return
-  isEditingQty.value = false
-  const raw = qtyDraft.value
-  const parsed = parseFloat(String(raw).replace(',', '.'))
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    qtyDraft.value = String(qty.value || '')
-    return
+function openQtyModal() {
+  qtyModalDraft.value = String(qty.value || '')
+  qtyModalOpen.value = true
+  nextTick(() => {
+    const el = qtyInputRef.value
+    if (!el) return
+    el.focus()
+    el.select?.()
+  })
+}
+
+function closeQtyModal() {
+  qtyModalOpen.value = false
+}
+
+function confirmQtyModal() {
+  if (!product.value) { qtyModalOpen.value = false; return }
+  const parsed = parseFloat(String(qtyModalDraft.value).replace(',', '.'))
+  if (Number.isFinite(parsed) && parsed > 0) {
+    setQty(product.value.id, parsed)
   }
-  setQty(product.value.id, parsed)
+  qtyModalOpen.value = false
+}
+
+function adjustQtyModal(direction) {
+  const cur = parseFloat(String(qtyModalDraft.value).replace(',', '.')) || 0
+  const step = stepInfo.value.step
+  const next = Math.max(step, cur + direction * step)
+  qtyModalDraft.value = trimNum(next)
 }
 </script>
 
@@ -181,6 +197,59 @@ function commitQty() {
       </div>
     </template>
 
+    <!-- ── Custom quantity modal ── -->
+    <Teleport to="#app">
+      <Transition name="fade">
+        <div
+          v-if="qtyModalOpen && product"
+          class="fixed inset-0 z-[120] flex items-center justify-center p-5"
+          style="background: rgba(0,0,0,0.5)"
+          @click.self="closeQtyModal"
+          @keydown.esc="closeQtyModal">
+          <div class="qty-sheet" @click.stop>
+            <div class="qty-sheet-header">
+              <p class="qty-sheet-title">{{ t('product.enter_quantity') }}</p>
+              <button @click="closeQtyModal" class="qty-sheet-close btn-press" :aria-label="t('profile.cancel')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6l12 12M18 6L6 18" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="qty-sheet-row">
+              <button type="button" @click="adjustQtyModal(-1)" class="qty-sheet-step btn-press" aria-label="Decrease">
+                <svg width="22" height="22" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <input
+                ref="qtyInputRef"
+                v-model="qtyModalDraft"
+                @keyup.enter="confirmQtyModal"
+                type="text"
+                :inputmode="stepInfo.isFractional ? 'decimal' : 'numeric'"
+                class="qty-sheet-input"
+                aria-label="Quantity" />
+              <button type="button" @click="adjustQtyModal(1)" class="qty-sheet-step btn-press" aria-label="Increase">
+                <svg width="22" height="22" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <p class="qty-sheet-unit">
+              {{ product.unit === 'kg' ? 'kg' : product.unit === 'liter' ? 'l' : t('product.piece') }}
+            </p>
+
+            <div class="qty-sheet-actions">
+              <button @click="closeQtyModal" class="qty-sheet-cancel btn-press">{{ t('profile.cancel') }}</button>
+              <button @click="confirmQtyModal" class="qty-sheet-confirm btn-press">{{ t('common.done') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- ── Bottom action bar ── -->
     <div v-if="product" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 safe-bottom bottom-bar">
       <div class="px-4 py-3">
@@ -202,15 +271,13 @@ function commitQty() {
             <button @click.stop="decrement(product.id)" class="qty-btn btn-press">
               <svg width="18" height="18" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
-            <input
-              v-model="qtyDraft"
-              @focus="onQtyFocus"
-              @blur="commitQty"
-              @keyup.enter="$event.target.blur()"
-              type="text"
-              :inputmode="stepInfo.isFractional ? 'decimal' : 'numeric'"
-              class="qty-input text-[16px] font-bold text-center text-primary"
-              aria-label="Quantity" />
+            <button
+              type="button"
+              @click.stop="openQtyModal"
+              class="qty-display text-[15px] font-bold text-center text-primary btn-press"
+              :aria-label="t('product.enter_quantity')">
+              {{ formatQty(qty, product.unit) }}
+            </button>
             <button @click.stop="addToCart(product)" class="qty-btn btn-press">
               <svg width="18" height="18" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
@@ -379,21 +446,131 @@ function commitQty() {
   transform: scale(0.9);
 }
 
-.qty-input {
-  width: 56px;
-  background: transparent;
+.qty-display {
+  min-width: 56px;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--surface);
   border: none;
+  border-radius: 10px;
   outline: none;
-  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Custom quantity modal ── */
+.qty-sheet {
+  width: 100%;
+  max-width: 340px;
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.qty-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.qty-sheet-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.qty-sheet-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  border: none;
+}
+
+.qty-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 18px;
+  background: var(--primary-light);
+}
+.qty-sheet-step {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.qty-sheet-input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: none;
+  border-radius: 14px;
+  outline: none;
+  padding: 0 8px;
   -moz-appearance: textfield;
 }
-.qty-input::-webkit-outer-spin-button,
-.qty-input::-webkit-inner-spin-button {
+.qty-sheet-input::-webkit-outer-spin-button,
+.qty-sheet-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.qty-input:focus {
-  background: var(--surface);
-  border-radius: 8px;
+
+.qty-sheet-unit {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.qty-sheet-actions {
+  display: flex;
+  gap: 10px;
+}
+.qty-sheet-cancel,
+.qty-sheet-confirm {
+  flex: 1;
+  height: 50px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.qty-sheet-cancel {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+.qty-sheet-confirm {
+  background: linear-gradient(135deg, #059669, #047857);
+  color: white;
+  box-shadow: 0 4px 16px var(--primary-glow);
 }
 </style>

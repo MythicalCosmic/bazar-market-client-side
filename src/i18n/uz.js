@@ -290,6 +290,7 @@ export default {
   'common.session_expired': 'Sessiya muddati tugadi. Qaytadan kiring.',
   'common.error_generic': 'Xatolik yuz berdi. Keyinroq urinib ko\'ring.',
   'common.clear': 'Tozalash',
+  'common.done': 'Tayyor',
 
   // Checkout extras
   // Product
@@ -307,6 +308,7 @@ export default {
   'product.review_submitted': 'Sharh yuborildi!',
   'product.no_reviews': 'Hali sharhlar yo\'q',
   'product.login_to_review': 'Sharh yozish uchun kiring',
+  'product.enter_quantity': 'Miqdorni kiriting',
   'cart.in_cart': 'savatchada',
 
   // Verify

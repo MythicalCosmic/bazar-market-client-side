@@ -289,6 +289,7 @@ export default {
   'common.session_expired': 'Session expired. Please log in again.',
   'common.error_generic': 'Something went wrong. Please try again later.',
   'common.clear': 'Clear',
+  'common.done': 'Done',
 
   'product.left_in_stock': 'Only {count} left',
   'product.out_of_stock': 'Out of stock',
@@ -304,6 +305,7 @@ export default {
   'product.review_submitted': 'Review submitted!',
   'product.no_reviews': 'No reviews yet',
   'product.login_to_review': 'Log in to leave a review',
+  'product.enter_quantity': 'Enter quantity',
   'cart.in_cart': 'in cart',
 
   'verify.title': 'Phone verification',

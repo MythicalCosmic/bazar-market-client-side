@@ -289,6 +289,7 @@ export default {
   'common.session_expired': 'Сессия истекла. Войдите снова.',
   'common.error_generic': 'Что-то пошло не так. Попробуйте позже.',
   'common.clear': 'Очистить',
+  'common.done': 'Готово',
 
   'product.left_in_stock': 'Осталось {count} шт',
   'product.out_of_stock': 'Нет в наличии',
@@ -304,6 +305,7 @@ export default {
   'product.review_submitted': 'Отзыв отправлен!',
   'product.no_reviews': 'Отзывов пока нет',
   'product.login_to_review': 'Войдите, чтобы оставить отзыв',
+  'product.enter_quantity': 'Введите количество',
   'cart.in_cart': 'в корзине',
 
   'verify.title': 'Подтверждение телефона',
