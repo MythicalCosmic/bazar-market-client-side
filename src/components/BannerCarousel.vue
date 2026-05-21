@@ -79,10 +79,10 @@ const current = computed(() => String(currentIndex.value + 1).padStart(2, '0'))
 
           <!-- Bottom: title + cta -->
           <div>
-            <p class="serif text-[28px] leading-[0.95] text-cream max-w-[240px]" style="font-weight: 500; letter-spacing: -0.02em;">
+            <p class="serif banner-title max-w-[260px]">
               {{ typeof banner.title === 'object' ? getLocalizedName(banner.title) : banner.title }}
             </p>
-            <p v-if="banner.subtitle" class="text-[12px] mt-2.5 leading-snug max-w-[220px]" style="color: rgba(245,239,227,0.78);">
+            <p v-if="banner.subtitle" class="banner-subtitle max-w-[240px]">
               {{ typeof banner.subtitle === 'object' ? getLocalizedName(banner.subtitle) : banner.subtitle }}
             </p>
             <div class="mt-4 flex items-center gap-2">
@@ -135,16 +135,36 @@ const current = computed(() => String(currentIndex.value + 1).padStart(2, '0'))
 }
 
 .banner-img-overlay {
-  background: linear-gradient(
-    160deg,
-    rgba(26, 38, 32, 0.20) 0%,
-    rgba(26, 38, 32, 0.45) 50%,
-    rgba(26, 38, 32, 0.78) 100%
-  );
+  background:
+    linear-gradient(180deg,
+      rgba(26, 38, 32, 0.10) 0%,
+      rgba(26, 38, 32, 0.35) 35%,
+      rgba(26, 38, 32, 0.78) 70%,
+      rgba(10, 20, 14, 0.92) 100%
+    );
 }
 
 .text-cream {
   color: var(--cream);
+}
+
+.banner-title {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  color: #FFFAEC;
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.45),
+    0 4px 24px rgba(0, 0, 0, 0.35);
+}
+.banner-subtitle {
+  font-size: 13px;
+  margin-top: 10px;
+  line-height: 1.4;
+  color: rgba(255, 250, 236, 0.92);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  font-weight: 500;
 }
 
 .banner-dash {
