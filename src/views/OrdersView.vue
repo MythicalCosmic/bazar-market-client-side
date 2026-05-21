@@ -152,6 +152,12 @@ async function handleReorder(order) {
   padding: 5px 10px;
   border: 1px solid currentColor;
   border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-badge .eyebrow-sm {
+  letter-spacing: 0.16em;
+  font-size: 8.5px;
 }
 
 /* Progress */

@@ -211,7 +211,7 @@ function confirmClear() {
             <div class="hairline-strong my-1"></div>
             <div class="flex justify-between items-baseline">
               <span class="eyebrow">{{ t('cart.total') }}</span>
-              <span class="serif text-[26px] tabular" style="color: var(--text-primary); font-weight: 500; letter-spacing: -0.02em">{{ formatNum(total) }} <span class="eyebrow" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+              <span class="serif text-[20px] tabular" style="color: var(--text-primary); font-weight: 600; letter-spacing: -0.02em">{{ formatNum(total) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
             </div>
           </div>
         </div>
@@ -365,14 +365,19 @@ function confirmClear() {
   outline: none;
 }
 .promo-apply {
-  padding: 0 18px;
+  padding: 0 22px;
   background: var(--surface-ink);
   border: none;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: background 0.2s ease;
+  min-width: 92px;
+}
+.promo-apply:active {
+  background: var(--primary-dark);
 }
 .promo-apply-disabled {
-  opacity: 0.5;
+  background: var(--text-muted);
+  cursor: not-allowed;
 }
 
 .checkout-fab-wrap {

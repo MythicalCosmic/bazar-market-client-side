@@ -506,8 +506,8 @@ function productCount(catId) {
 .preview-thumb {
   width: 64px;
   height: 64px;
-  background: var(--surface);
-  border: 1.5px solid var(--surface);
+  background: #FFFFFF;
+  border: 1.5px solid #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -516,6 +516,7 @@ function productCount(catId) {
   box-shadow: 0 4px 12px rgba(26, 38, 32, 0.12);
   flex-shrink: 0;
   transition: transform 0.3s ease;
+  isolation: isolate;
 }
 .preview-thumb img {
   width: 80%;
@@ -648,8 +649,8 @@ function productCount(catId) {
 .preview-mini {
   width: 44px;
   height: 44px;
-  background: var(--surface);
-  border: 1.5px solid var(--surface);
+  background: #FFFFFF;
+  border: 1.5px solid #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -657,6 +658,7 @@ function productCount(catId) {
   overflow: hidden;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(26, 38, 32, 0.10);
+  isolation: isolate;
 }
 .preview-mini img {
   width: 78%;

@@ -32,6 +32,11 @@ const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'sho
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
 
+    <!-- Floating fireflies -->
+    <div class="fireflies">
+      <span v-for="n in 14" :key="n" class="firefly" :style="{ '--n': n, '--delay': (n * 0.7) + 's', '--dur': (8 + (n % 5) * 2) + 's', '--x': ((n * 37) % 100) + '%', '--size': (2 + (n % 3)) + 'px' }"></span>
+    </div>
+
     <!-- Paper texture overlay -->
     <div class="paper-tex"></div>
 
@@ -76,6 +81,13 @@ const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'sho
       <p class="tagline" :class="{ show: stage >= 5 }">
         {{ t('brand.tagline') }}
       </p>
+
+      <!-- Ornament cluster -->
+      <div class="ornament-cluster" :class="{ show: stage >= 5 }">
+        <span class="orn-star orn-1">✦</span>
+        <span class="orn-star orn-2">✧</span>
+        <span class="orn-star orn-3">✦</span>
+      </div>
     </div>
 
     <!-- Bottom date -->
@@ -99,10 +111,10 @@ const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'sho
   justify-content: space-between;
   padding: 60px 32px;
   background:
-    radial-gradient(ellipse at 75% 18%, rgba(184, 92, 58, 0.28), transparent 50%),
-    radial-gradient(ellipse at 18% 78%, rgba(46, 154, 111, 0.42), transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(201, 150, 98, 0.12), transparent 60%),
-    linear-gradient(165deg, #1E5A3F 0%, #134A32 35%, #0E3825 65%, #0A2A1C 100%);
+    radial-gradient(ellipse at 78% 12%, rgba(201, 150, 98, 0.32), transparent 45%),
+    radial-gradient(ellipse at 18% 75%, rgba(60, 175, 125, 0.45), transparent 55%),
+    radial-gradient(ellipse at 55% 50%, rgba(245, 239, 227, 0.10), transparent 55%),
+    linear-gradient(165deg, #3D8F66 0%, #2F7A53 30%, #246144 60%, #194B37 100%);
   color: var(--cream);
 }
 
@@ -121,9 +133,9 @@ const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'sho
   opacity: 0.35;
   pointer-events: none;
 }
-.orb-1 { width: 320px; height: 320px; background: #2E9A6F; top: -12%; right: -12%; opacity: 0.45; animation: float-1 12s ease-in-out infinite; }
-.orb-2 { width: 260px; height: 260px; background: #1A6B47; bottom: -10%; left: -10%; opacity: 0.5; animation: float-2 14s ease-in-out infinite; }
-.orb-3 { width: 200px; height: 200px; background: var(--terracotta); top: 50%; left: 60%; opacity: 0.30; animation: float-3 10s ease-in-out infinite; }
+.orb-1 { width: 340px; height: 340px; background: #5DBF8A; top: -14%; right: -14%; opacity: 0.45; animation: float-1 12s ease-in-out infinite; }
+.orb-2 { width: 280px; height: 280px; background: #3D8F66; bottom: -12%; left: -12%; opacity: 0.55; animation: float-2 14s ease-in-out infinite; }
+.orb-3 { width: 220px; height: 220px; background: #E8B585; top: 52%; left: 62%; opacity: 0.32; animation: float-3 10s ease-in-out infinite; }
 @keyframes float-1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-20px, 30px); } }
 @keyframes float-2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px, -20px); } }
 @keyframes float-3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-15px, -25px); } }
@@ -135,6 +147,63 @@ const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'sho
   background-image:
     repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(245, 239, 227, 0.014) 2px, rgba(245, 239, 227, 0.014) 3px),
     repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(245, 239, 227, 0.014) 2px, rgba(245, 239, 227, 0.014) 3px);
+}
+
+/* Floating fireflies — magical depth */
+.fireflies {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.firefly {
+  position: absolute;
+  bottom: -10px;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: #FFEFC2;
+  box-shadow: 0 0 8px 2px rgba(255, 239, 194, 0.7), 0 0 16px 4px rgba(255, 239, 194, 0.35);
+  opacity: 0;
+  animation: firefly-rise var(--dur) ease-in var(--delay) infinite;
+}
+@keyframes firefly-rise {
+  0%   { transform: translate3d(0, 0, 0) scale(0.6); opacity: 0; }
+  10%  { opacity: 0.9; }
+  30%  { transform: translate3d(8px, -20vh, 0) scale(1); }
+  50%  { opacity: 0.7; }
+  60%  { transform: translate3d(-6px, -50vh, 0) scale(0.9); }
+  80%  { transform: translate3d(10px, -85vh, 0) scale(1.05); opacity: 0.6; }
+  100% { transform: translate3d(0, -110vh, 0) scale(0.5); opacity: 0; }
+}
+
+/* Ornament cluster (3 stars) below tagline */
+.ornament-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease 0.7s, transform 0.8s ease 0.7s;
+}
+.ornament-cluster.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.orn-star {
+  font-family: 'Fraunces', Georgia, serif;
+  color: rgba(245, 239, 227, 0.55);
+  text-shadow: 0 0 12px rgba(201, 150, 98, 0.4);
+}
+.orn-1 { font-size: 12px; animation: orn-twinkle 3s ease-in-out infinite 0s; }
+.orn-2 { font-size: 16px; color: var(--saffron); opacity: 0.85; animation: orn-twinkle 3s ease-in-out infinite 1s; text-shadow: 0 0 12px rgba(201, 150, 98, 0.65); }
+.orn-3 { font-size: 12px; animation: orn-twinkle 3s ease-in-out infinite 2s; }
+@keyframes orn-twinkle {
+  0%, 100% { opacity: 0.4; transform: scale(0.92); }
+  50%      { opacity: 1;   transform: scale(1.1); }
 }
 
 /* Editorial frame with corner marks */

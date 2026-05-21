@@ -321,7 +321,7 @@ async function handlePlaceOrder() {
           <div class="hairline-strong my-1"></div>
           <div class="flex justify-between items-baseline">
             <span class="eyebrow">{{ t('checkout.total') }}</span>
-            <span class="serif text-[26px] tabular" style="color: var(--text-primary); font-weight: 500; letter-spacing: -0.02em">{{ formatNum(total) }} <span class="eyebrow" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+            <span class="serif text-[20px] tabular" style="color: var(--text-primary); font-weight: 600; letter-spacing: -0.02em">{{ formatNum(total) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
           </div>
         </div>
       </div>
