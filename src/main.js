@@ -5,6 +5,7 @@ import { useTelegram } from './composables/useTelegram.js'
 import { useTheme } from './composables/useTheme.js'
 import { initAuth } from './stores/authStore.js'
 import { useCartStore } from './stores/cartStore.js'
+import { currentRoute } from './router/index.js'
 
 const { init: initTelegram } = useTelegram()
 const { init: initTheme } = useTheme()
@@ -12,6 +13,15 @@ const { init: initTheme } = useTheme()
 initTelegram()
 initTheme()
 initAuth()
+
+// URL shortcut: ?promo or #promo lands directly on the 15s reel
+// (skips the splash → home auto-redirect)
+try {
+  const params = new URLSearchParams(window.location.search)
+  if (params.has('promo') || window.location.hash === '#promo') {
+    currentRoute.value = 'promo'
+  }
+} catch {}
 
 // ?ref=CODE / Telegram start_param ref_CODE — capture for first-order reward.
 // Cap length and charset to avoid storing arbitrary attacker-supplied content.
