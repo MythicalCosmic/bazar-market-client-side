@@ -7,7 +7,7 @@ export const routeParams = ref({})
 const routeOrder = [
   'splash', 'home', 'search', 'categories', 'favorites', 'cart', 'checkout', 'orders',
   'profile', 'settings', 'support', 'payment-methods', 'login', 'register',
-  'addresses', 'coupons', 'rewards', 'product',
+  'addresses', 'coupons', 'rewards', 'product', 'promo',
 ]
 
 // Routes that require an active session. The router auth-gates them; views
