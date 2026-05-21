@@ -17,23 +17,6 @@ const isLoading = ref(true)
 const isLoadingProducts = ref(false)
 const searchQuery = ref('')
 
-const categoryColors = [
-  { bg: '#ECFDF5', text: '#059669', accent: 'rgba(5,150,105,0.08)' },
-  { bg: '#EFF6FF', text: '#2563EB', accent: 'rgba(37,99,235,0.08)' },
-  { bg: '#FFF7ED', text: '#EA580C', accent: 'rgba(234,88,12,0.08)' },
-  { bg: '#FDF2F8', text: '#DB2777', accent: 'rgba(219,39,119,0.08)' },
-  { bg: '#F5F3FF', text: '#7C3AED', accent: 'rgba(124,58,237,0.08)' },
-  { bg: '#ECFEFF', text: '#0891B2', accent: 'rgba(8,145,178,0.08)' },
-  { bg: '#FFFBEB', text: '#D97706', accent: 'rgba(217,119,6,0.08)' },
-  { bg: '#FEF2F2', text: '#DC2626', accent: 'rgba(220,38,38,0.08)' },
-  { bg: '#F0FDF4', text: '#16A34A', accent: 'rgba(22,163,74,0.08)' },
-  { bg: '#EEF2FF', text: '#4F46E5', accent: 'rgba(79,70,229,0.08)' },
-]
-
-function getColor(index) {
-  return categoryColors[index % categoryColors.length]
-}
-
 onMounted(async () => {
   try {
     categoryTree.value = await getCategoryTree()
@@ -148,136 +131,118 @@ const filteredCategories = computed(() => {
     <!-- Loading -->
     <template v-if="isLoading">
       <div class="page-container mt-4 flex flex-col gap-4">
-        <div class="skeleton h-12 w-full rounded-2xl"></div>
-        <div class="skeleton h-5 w-32 rounded-md mt-2"></div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <div v-for="i in 8" :key="i" class="skeleton h-[68px] rounded-2xl"></div>
+        <div class="skeleton h-3 w-20 mb-2"></div>
+        <div class="skeleton h-9 w-2/3 mb-4"></div>
+        <div class="skeleton h-10 w-full"></div>
+        <div class="flex flex-col gap-3 mt-2">
+          <div v-for="i in 6" :key="i" class="skeleton h-[70px]"></div>
         </div>
       </div>
     </template>
 
     <template v-else>
       <!-- ═══ Category Browse ═══ -->
-      <div v-if="!selectedParent" class="page-container mt-3">
+      <div v-if="!selectedParent" class="page-container mt-4">
+        <!-- Editorial title -->
+        <div class="mb-5">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="num-label text-[11px] tabular">№ 01</span>
+            <span class="block w-4 h-px" style="background: var(--hairline)"></span>
+            <p class="eyebrow-sm">{{ t('ed.browse') }}</p>
+          </div>
+          <h1 class="display text-[34px]" style="color: var(--text-primary)">
+            {{ t('ed.all_dep_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.all_dep_italic') }}</span>
+          </h1>
+          <div class="hairline mt-4"></div>
+        </div>
+
         <!-- Search -->
-        <div class="flex items-center rounded-2xl px-4 py-3 gap-2.5 mb-5 search-field">
-          <svg width="16" height="16" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+        <div class="search-field mb-6">
+          <svg width="15" height="15" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
           </svg>
-          <input v-model="searchQuery" :placeholder="t('categories.search_placeholder')" type="text"
-            class="bg-transparent outline-none text-sm font-medium flex-1" style="color: var(--text-primary)" />
-          <button v-if="searchQuery" @click="searchQuery = ''" :aria-label="t('common.clear')" class="btn-press p-0.5">
-            <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
+          <input v-model="searchQuery" :placeholder="t('categories.search_placeholder')" type="text" class="search-input" />
+          <button v-if="searchQuery" @click="searchQuery = ''" :aria-label="t('common.clear')" class="btn-press">
+            <svg width="13" height="13" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
           </button>
         </div>
 
-        <!-- Category sections -->
-        <div v-for="(cat, catIdx) in filteredCategories" :key="cat.id" class="cat-section">
-          <div class="flex items-baseline justify-between mb-2.5 px-0.5">
-            <h2 class="text-[15px] font-bold tracking-tight" style="color: var(--text-primary)">
-              {{ getLocalizedName(cat.name) }}
-            </h2>
-            <button
-              v-if="cat.children && cat.children.length"
-              @click="selectParent(cat)"
-              class="text-[11px] font-semibold btn-press"
-              :style="{ color: getColor(catIdx).text }">
-              {{ t('home.see_all') }} →
-            </button>
-          </div>
-
-          <!-- Subcategory tiles. Categories with no children show a single tile that drills straight into the parent. -->
-          <div class="grid gap-2 grid-cols-2">
-            <template v-if="cat.children && cat.children.length">
-              <button
-                v-for="(sub, subIdx) in cat.children"
-                :key="sub.id"
-                @click="goToSubcategory(cat, sub)"
-                class="subcat-tile btn-press"
-                :style="{ '--c-bg': getColor(catIdx * 7 + subIdx).bg, '--c-fg': getColor(catIdx * 7 + subIdx).text }">
-                <div class="subcat-thumb">
-                  <img v-if="sub.image" :src="sub.image" :alt="getLocalizedName(sub.name)" class="w-full h-full object-cover" />
-                  <span v-else class="subcat-initial">{{ getLocalizedName(sub.name).charAt(0) }}</span>
-                </div>
-                <span class="subcat-name">{{ getLocalizedName(sub.name) }}</span>
-                <svg class="subcat-chev" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            </template>
-            <button
-              v-else
-              @click="selectParent(cat)"
-              class="subcat-tile btn-press"
-              :style="{ '--c-bg': getColor(catIdx).bg, '--c-fg': getColor(catIdx).text }">
-              <div class="subcat-thumb">
-                <img v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-cover" />
-                <span v-else class="subcat-initial">{{ getLocalizedName(cat.name).charAt(0) }}</span>
-              </div>
-              <span class="subcat-name">{{ t('categories.show_all') }}</span>
-              <svg class="subcat-chev" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
+        <!-- Category list (editorial) -->
+        <div class="flex flex-col">
+          <button v-for="(cat, catIdx) in filteredCategories" :key="cat.id" @click="selectParent(cat)"
+            class="dept-row btn-press">
+            <div class="dept-num">
+              <span class="num-label text-[13px]">0{{ catIdx + 1 }}</span>
+            </div>
+            <div class="dept-thumb">
+              <img v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-contain p-1.5" style="mix-blend-mode: multiply;" />
+              <span v-else class="serif text-[24px]" style="color: var(--text-primary); font-weight: 500">{{ getLocalizedName(cat.name).charAt(0) }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="dept-name">{{ getLocalizedName(cat.name) }}</p>
+              <p v-if="cat.children && cat.children.length" class="text-[11px] mt-0.5" style="color: var(--text-tertiary)">{{ cat.children.length }} {{ t('categories.subcategories') }}</p>
+            </div>
+            <svg width="12" height="12" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+              <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
 
         <!-- No results -->
-        <div v-if="!filteredCategories.length && searchQuery" class="flex flex-col items-center py-20">
-          <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4" style="background: var(--surface-secondary)">
-            <svg width="28" height="28" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <p class="text-sm font-semibold" style="color: var(--text-tertiary)">{{ t('categories.no_products') }}</p>
+        <div v-if="!filteredCategories.length && searchQuery" class="flex flex-col items-center pt-16 px-8 text-center">
+          <p class="num-label text-[12px] mb-3">— {{ t('ed.empty_n') }} —</p>
+          <h3 class="display text-[22px]" style="color: var(--text-primary)">{{ t('categories.no_products') }}</h3>
+          <p class="serif-italic text-[13px] mt-2" style="color: var(--text-secondary)">{{ t('search.try_different') }}</p>
         </div>
       </div>
 
       <!-- ═══ Products View ═══ -->
-      <div v-else class="page-container mt-3">
-        <!-- Back + title -->
-        <div class="flex items-center gap-2.5 mb-3">
-          <button @click="goBack" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press flex-shrink-0" style="background: var(--surface-secondary)">
-            <svg width="18" height="18" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <h2 class="text-base font-bold" style="color: var(--text-primary)">{{ getLocalizedName(selectedParent.name) }}</h2>
+      <div v-else class="page-container mt-4">
+        <!-- Back -->
+        <button @click="goBack" class="flex items-center gap-2 btn-press mb-4">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="eyebrow-sm">{{ t('ed.back_to_dep') }}</span>
+        </button>
+
+        <!-- Title -->
+        <div class="mb-5">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="num-label text-[11px] tabular">{{ t('ed.department') }}</span>
+            <span class="block w-4 h-px" style="background: var(--hairline)"></span>
+            <p class="eyebrow-sm" v-if="selectedChild">{{ t('ed.subcategory') }}</p>
+          </div>
+          <h1 class="display text-[30px]" style="color: var(--text-primary)">
+            {{ selectedChild ? getLocalizedName(selectedChild.name) : getLocalizedName(selectedParent.name) }}
+          </h1>
+          <p v-if="selectedChild" class="serif-italic text-[14px] mt-1" style="color: var(--text-tertiary)">{{ t('ed.in_category') }} {{ getLocalizedName(selectedParent.name) }}</p>
+          <div class="hairline mt-4"></div>
         </div>
 
         <!-- Subcategory chips -->
-        <div v-if="currentSubcategories.length" class="scroll-x flex gap-2 pb-3">
-          <button
-            @click="selectedChild = null; loadAllProducts(selectedParent)"
-            class="chip-btn btn-press"
-            :class="{ 'chip-active': !selectedChild }">
-            <span class="text-xs font-semibold whitespace-nowrap">{{ t('categories.all_in') }} {{ getLocalizedName(selectedParent.name) }}</span>
+        <div v-if="currentSubcategories.length" class="scroll-x flex gap-2 pb-4">
+          <button @click="selectedChild = null; loadAllProducts(selectedParent)"
+            class="chip-btn btn-press" :class="{ 'chip-active': !selectedChild }">
+            <span class="eyebrow-sm">{{ t('categories.all_in') }}</span>
           </button>
-          <button
-            v-for="(sub, idx) in currentSubcategories"
-            :key="sub.id"
-            @click="selectChild(sub)"
-            class="chip-btn btn-press"
-            :class="{ 'chip-active': selectedChild?.id === sub.id }">
-            <img v-if="sub.image" :src="sub.image" class="w-4 h-4 rounded object-cover" />
-            <span class="text-xs font-semibold whitespace-nowrap">{{ getLocalizedName(sub.name) }}</span>
+          <button v-for="sub in currentSubcategories" :key="sub.id" @click="selectChild(sub)"
+            class="chip-btn btn-press" :class="{ 'chip-active': selectedChild?.id === sub.id }">
+            <span class="eyebrow-sm">{{ getLocalizedName(sub.name) }}</span>
           </button>
         </div>
 
         <!-- Products grid -->
         <div v-if="isLoadingProducts" class="mt-1 grid grid-cols-2 gap-3">
-          <div v-for="i in 4" :key="i" class="skeleton h-[220px] rounded-[18px]"></div>
+          <div v-for="i in 4" :key="i" class="skeleton h-[260px]"></div>
         </div>
         <div v-else-if="productsList.length" class="mt-1 grid grid-cols-2 gap-3">
           <ProductCard v-for="p in productsList" :key="p.id" :product="p" />
         </div>
-        <div v-else class="flex flex-col items-center py-20">
-          <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4" style="background: var(--surface-secondary)">
-            <svg width="28" height="28" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke-width="2"/>
-            </svg>
-          </div>
-          <p class="text-sm font-semibold" style="color: var(--text-tertiary)">{{ t('categories.no_products') }}</p>
+        <div v-else class="flex flex-col items-center pt-16 px-8 text-center">
+          <p class="num-label text-[12px] mb-3">— {{ t('ed.empty_shelves') }} —</p>
+          <h3 class="display text-[22px]" style="color: var(--text-primary)">{{ t('categories.no_products') }}</h3>
+          <p class="serif-italic text-[13px] mt-2" style="color: var(--text-secondary)">{{ t('ed.try_aisle') }}</p>
         </div>
       </div>
     </template>
@@ -285,104 +250,100 @@ const filteredCategories = computed(() => {
 </template>
 
 <style scoped>
-/* Mobile-first viewport that doesn't stretch absurdly on desktop. */
 .page-container {
   width: 100%;
   max-width: 480px;
   margin-inline: auto;
-  padding-inline: 16px;
+  padding-inline: 20px;
 }
 
 .search-field {
-  background: var(--surface-secondary);
-  border: 1.5px solid transparent;
-  transition: all 0.2s ease;
-}
-.search-field:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
-}
-
-/* No card wrapper around each section — section spacing is enough. */
-.cat-section {
-  margin-bottom: 22px;
-}
-
-.subcat-tile {
   display: flex;
   align-items: center;
   gap: 10px;
-  text-align: left;
-  padding: 10px 12px 10px 10px;
-  border-radius: 14px;
+  padding: 12px 14px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 2px 8px var(--shadow);
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
-  min-height: 64px;
-  position: relative;
-  overflow: hidden;
+  border: 1px solid var(--hairline);
+  transition: border-color 0.2s ease;
 }
-.subcat-tile:active {
-  transform: scale(0.97);
+.search-field:focus-within {
+  border-color: var(--text-primary);
 }
-.subcat-tile:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 0 6px 16px var(--shadow-lg);
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.search-input::placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
 }
 
-.subcat-thumb {
+/* Department row */
+.dept-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+}
+.dept-row:first-of-type {
+  border-top: 1px solid var(--hairline);
+}
+.dept-num {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--c-bg);
-  color: var(--c-fg);
+  width: 28px;
+}
+.dept-thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  background: var(--img-bg);
+  border: 1px solid var(--hairline);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
-.subcat-initial {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  text-transform: uppercase;
-}
-
-.subcat-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.25;
+.dept-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: 'opsz' 96, 'SOFT' 40;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.15;
 }
 
-.subcat-chev {
-  flex-shrink: 0;
-  color: var(--text-tertiary);
-  opacity: 0.6;
-}
-
+/* Chips */
 .chip-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   flex-shrink: 0;
-  padding: 8px 16px;
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text-secondary);
-  box-shadow: 0 1px 3px var(--shadow);
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--hairline);
   transition: all 0.2s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .chip-active {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 4px 12px var(--primary-glow);
+  background: var(--surface-ink);
+  border-color: var(--surface-ink);
+}
+.chip-active .eyebrow-sm {
+  color: var(--cream);
 }
 </style>

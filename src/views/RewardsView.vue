@@ -37,9 +37,7 @@ onMounted(async () => {
       totalRewards.value = refData.value.total_rewards || '0'
       rewardInfo.value = refData.value.reward_info || null
     }
-    if (rewardsData.status === 'fulfilled') {
-      rewards.value = rewardsData.value
-    }
+    if (rewardsData.status === 'fulfilled') rewards.value = rewardsData.value
     if (refListData.status === 'fulfilled') {
       const list = refListData.value
       referrals.value = list.items || list || []
@@ -78,127 +76,196 @@ async function handleApply() {
 
 <template>
   <div class="min-h-screen pb-10" style="background: var(--bg-app)">
-    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-      <button @click="navigate('profile')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
-        <svg width="20" height="20" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <!-- Editorial header -->
+    <div class="px-5 pt-5 pb-3">
+      <button @click="navigate('profile')" class="flex items-center gap-2 btn-press mb-3">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="eyebrow-sm">{{ t('ed.profile_word') }}</span>
       </button>
-      <p class="text-base font-black" style="color: var(--text-primary)">{{ t('referral.page_title') }}</p>
-      <div class="w-9"></div>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="num-label text-[11px] tabular">§</span>
+        <p class="eyebrow-sm">{{ t('ed.invite_earn') }}</p>
+      </div>
+      <h1 class="display text-[32px]" style="color: var(--text-primary)">
+        {{ t('ed.refer_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.refer_italic') }}</span>
+      </h1>
+      <div class="hairline mt-4"></div>
     </div>
 
-    <div v-if="isLoading" class="px-4 mt-4 flex flex-col gap-3">
-      <div class="skeleton h-[160px] rounded-2xl"></div>
-      <div class="skeleton h-[100px] rounded-2xl"></div>
+    <div v-if="isLoading" class="px-5 mt-5">
+      <div class="skeleton h-[220px] mb-4"></div>
+      <div class="skeleton h-[100px]"></div>
     </div>
 
-    <div v-else class="px-4 mt-4 flex flex-col gap-3">
-      <!-- My referral code -->
-      <div v-if="referralCode" class="rounded-2xl p-5" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); box-shadow: 0 4px 20px var(--primary-glow)">
-        <p class="text-white/80 text-xs font-semibold mb-1">{{ t('referral.your_code') }}</p>
-        <div class="flex items-center gap-3 mb-3">
-          <p class="text-white text-2xl font-black tracking-wider flex-1">{{ referralCode }}</p>
-          <button @click="copyCode" class="px-3 py-1.5 rounded-xl btn-press text-xs font-black transition-all"
-            :style="{ background: referralCopied ? 'white' : 'rgba(255,255,255,0.2)', color: referralCopied ? 'var(--primary)' : 'white' }">
-            {{ referralCopied ? t('referral.copied') : t('referral.copy') }}
-          </button>
+    <div v-else class="px-5 mt-5 flex flex-col gap-7">
+      <!-- Referral code -->
+      <section v-if="referralCode" class="referral-feature">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="num-label text-[11px] tabular" style="color: var(--saffron)">01</span>
+          <p class="eyebrow-sm" style="color: var(--cream); opacity: 0.7">{{ t('referral.your_code') }}</p>
         </div>
 
-        <!-- What friends get -->
-        <div v-if="rewardInfo" class="bg-white/10 rounded-xl p-3 mb-3">
-          <p class="text-white/80 text-[10px] font-semibold mb-1">{{ t('referral.friend_gets') }}</p>
-          <p class="text-white text-sm font-black">{{ rewardInfo.name }}</p>
-        </div>
+        <p class="serif text-[42px] tabular leading-none" style="color: var(--cream); font-weight: 500; letter-spacing: 0.05em">{{ referralCode }}</p>
+
+        <p v-if="rewardInfo" class="serif-italic text-[14px] mt-3" style="color: var(--cream); opacity: 0.8">
+          {{ rewardInfo.name }}
+        </p>
+
+        <div class="referral-divider"></div>
 
         <!-- Stats -->
-        <div class="flex gap-4">
+        <div class="flex gap-8 mb-4">
           <div>
-            <p class="text-white text-xl font-black">{{ totalReferrals }}</p>
-            <p class="text-white/60 text-[10px] font-semibold">{{ t('referral.invited') }}</p>
+            <p class="serif text-[28px] tabular leading-none" style="color: var(--cream); font-weight: 500">{{ totalReferrals }}</p>
+            <p class="eyebrow-sm mt-1" style="color: var(--cream); opacity: 0.6">{{ t('referral.invited') }}</p>
           </div>
           <div>
-            <p class="text-white text-xl font-black">{{ totalRewards }}</p>
-            <p class="text-white/60 text-[10px] font-semibold">{{ t('referral.earned') }}</p>
+            <p class="serif text-[28px] tabular leading-none" style="color: var(--cream); font-weight: 500">{{ totalRewards }}</p>
+            <p class="eyebrow-sm mt-1" style="color: var(--cream); opacity: 0.6">{{ t('referral.earned') }}</p>
           </div>
         </div>
 
-        <button @click="shareLink" class="w-full mt-3 py-2.5 rounded-xl bg-white/20 text-white text-xs font-black btn-press flex items-center justify-center gap-2">
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {{ t('referral.share') }}
-        </button>
-      </div>
-
-      <!-- My rewards -->
-      <div v-if="rewards.length" class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <p class="text-sm font-black mb-3" style="color: var(--text-primary)">{{ t('referral.my_rewards') }}</p>
-        <div class="flex flex-col gap-2">
-          <div v-for="reward in rewards" :key="reward.id" class="flex items-center gap-3 p-3 rounded-xl" style="background: var(--surface-secondary)">
-            <!-- Coupon -->
-            <template v-if="reward.type === 'coupon'">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
-                <svg width="20" height="20" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6M22 6H2v6h20V6z" stroke-width="2" stroke-linecap="round"/></svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-black" style="color: var(--text-primary)">{{ t('referral.reward_coupon') }}</p>
-                <p class="text-[10px] font-bold font-mono" style="color: var(--text-secondary)">{{ reward.coupon_code }}</p>
-              </div>
-            </template>
-
-            <!-- Free delivery -->
-            <template v-else-if="reward.type === 'free_delivery'">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-500/10">
-                <svg width="20" height="20" class="text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2" stroke-width="2"/><path d="M16 8h4l3 5v5h-7V8z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5.5" cy="18.5" r="2.5" stroke-width="2"/><circle cx="18.5" cy="18.5" r="2.5" stroke-width="2"/></svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-black" style="color: var(--text-primary)">{{ t('referral.reward_free_delivery') }}</p>
-                <p class="text-[10px] font-semibold" style="color: var(--text-secondary)">{{ t('referral.deliveries_remaining', { count: reward.free_deliveries_remaining }) }}</p>
-              </div>
-            </template>
-
-            <!-- Bonus product -->
-            <template v-else-if="reward.type === 'bonus_product'">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-orange-500/10">
-                <svg width="20" height="20" class="text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-black" style="color: var(--text-primary)">{{ t('referral.reward_bonus') }}</p>
-                <p class="text-[10px] font-semibold" style="color: var(--text-secondary)">{{ reward.product_name }} × {{ reward.bonus_quantity }}</p>
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
-
-      <!-- Referral list -->
-      <div v-if="referrals.length" class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <p class="text-sm font-black mb-3" style="color: var(--text-primary)">{{ t('referral.invited_friends') }}</p>
-        <div class="flex flex-col gap-2">
-          <div v-for="ref in referrals" :key="ref.id" class="flex items-center justify-between py-2 border-b" style="border-color: var(--border)">
-            <div>
-              <p class="text-xs font-bold" style="color: var(--text-primary)">{{ ref.referred_name }}</p>
-              <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ ref.created_at?.split('T')[0] }}</p>
-            </div>
-            <span :class="['text-[10px] font-black px-2 py-0.5 rounded-lg', ref.is_rewarded ? 'text-primary' : 'text-orange-500']"
-              :style="{ background: ref.is_rewarded ? 'var(--primary-light)' : 'rgba(249,115,22,0.1)' }">
-              {{ ref.is_rewarded ? t('referral.rewarded') : t('referral.pending') }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Apply someone's code -->
-      <div class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <p class="text-sm font-black mb-2" style="color: var(--text-primary)">{{ t('referral.apply_title') }}</p>
-        <div v-if="!applySuccess" class="flex gap-2">
-          <input v-model="applyCode" :placeholder="t('referral.apply_placeholder')"
-            class="flex-1 text-sm font-bold px-3 py-2.5 rounded-xl outline-none"
-            style="background: var(--surface-secondary); color: var(--text-primary)" />
-          <button @click="handleApply" class="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-black btn-press">
-            {{ t('coupons.apply') }}
+        <div class="flex gap-2">
+          <button @click="copyCode" class="referral-action btn-press">
+            <span class="eyebrow-sm">{{ referralCopied ? t('referral.copied') : t('referral.copy') }}</span>
+          </button>
+          <button @click="shareLink" class="referral-action referral-action-light btn-press">
+            <span class="eyebrow-sm" style="color: var(--cream)">{{ t('referral.share') }}</span>
           </button>
         </div>
-        <p v-if="applySuccess" class="text-xs font-bold text-primary">✅ {{ t('referral.apply_success') }}</p>
-        <p v-if="applyError" class="text-xs font-bold text-red-500 mt-1">{{ applyError }}</p>
-      </div>
+      </section>
+
+      <!-- My rewards -->
+      <section v-if="rewards.length">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="num-label text-[11px] tabular">02</span>
+          <p class="eyebrow-sm">{{ t('referral.my_rewards') }}</p>
+        </div>
+        <div class="hairline mb-1"></div>
+        <div class="flex flex-col">
+          <div v-for="reward in rewards" :key="reward.id" class="reward-row">
+            <span class="num-label text-[12px] flex-shrink-0">→</span>
+            <div class="flex-1 min-w-0">
+              <p class="serif text-[15px]" style="color: var(--text-primary); font-weight: 500">
+                <template v-if="reward.type === 'coupon'">{{ t('referral.reward_coupon') }}</template>
+                <template v-else-if="reward.type === 'free_delivery'">{{ t('referral.reward_free_delivery') }}</template>
+                <template v-else-if="reward.type === 'bonus_product'">{{ t('referral.reward_bonus') }}</template>
+              </p>
+              <p class="text-[11.5px] mt-0.5 tabular" style="color: var(--text-tertiary)">
+                <template v-if="reward.type === 'coupon'">{{ reward.coupon_code }}</template>
+                <template v-else-if="reward.type === 'free_delivery'">{{ t('referral.deliveries_remaining', { count: reward.free_deliveries_remaining }) }}</template>
+                <template v-else-if="reward.type === 'bonus_product'">{{ reward.product_name }} × {{ reward.bonus_quantity }}</template>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Friends -->
+      <section v-if="referrals.length">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="num-label text-[11px] tabular">03</span>
+          <p class="eyebrow-sm">{{ t('referral.invited_friends') }}</p>
+        </div>
+        <div class="hairline mb-1"></div>
+        <div v-for="ref in referrals" :key="ref.id" class="friend-row">
+          <div>
+            <p class="serif text-[14.5px]" style="color: var(--text-primary); font-weight: 500">{{ ref.referred_name }}</p>
+            <p class="text-[10.5px] tabular" style="color: var(--text-tertiary)">{{ ref.created_at?.split('T')[0] }}</p>
+          </div>
+          <span class="eyebrow-sm" :style="{ color: ref.is_rewarded ? 'var(--primary)' : 'var(--saffron)' }">
+            {{ ref.is_rewarded ? t('referral.rewarded') : t('referral.pending') }}
+          </span>
+        </div>
+      </section>
+
+      <!-- Apply someone's code -->
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="num-label text-[11px] tabular">{{ referrals.length ? '04' : (rewards.length ? '03' : '02') }}</span>
+          <p class="eyebrow-sm">{{ t('referral.apply_title') }}</p>
+        </div>
+        <div class="hairline mb-3"></div>
+        <div v-if="!applySuccess" class="flex border" :style="{ borderColor: 'var(--hairline)' }">
+          <input v-model="applyCode" :placeholder="t('referral.apply_placeholder')" class="apply-input" />
+          <button @click="handleApply" class="apply-btn btn-press">
+            <span class="eyebrow-sm" style="color: var(--cream)">{{ t('coupons.apply') }}</span>
+          </button>
+        </div>
+        <p v-if="applySuccess" class="serif text-[14px]" style="color: var(--primary); font-weight: 500">✓ {{ t('referral.apply_success') }}</p>
+        <p v-if="applyError" class="serif-italic text-[13px] mt-2" style="color: var(--bordeaux)">{{ applyError }}</p>
+      </section>
     </div>
   </div>
 </template>
+
+<style scoped>
+.referral-feature {
+  background: #1A2620;
+  padding: 28px 24px;
+  position: relative;
+}
+.dark .referral-feature {
+  background: #232B26;
+  border: 1px solid rgba(245, 239, 227, 0.08);
+}
+
+.referral-divider {
+  height: 1px;
+  background: rgba(245, 239, 227, 0.18);
+  margin: 22px 0 18px;
+}
+
+.referral-action {
+  flex: 1;
+  padding: 12px 0;
+  background: #F5EFE3;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+.referral-action span {
+  color: #1A2620 !important;
+}
+.referral-action-light {
+  background: transparent;
+  border: 1px solid rgba(245, 239, 227, 0.4);
+}
+.referral-action-light span {
+  color: #F5EFE3 !important;
+}
+
+.reward-row,
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.friend-row {
+  justify-content: space-between;
+}
+
+.apply-input {
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 13px 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: none;
+  outline: none;
+}
+.apply-btn {
+  padding: 0 18px;
+  background: var(--surface-ink);
+  border: none;
+  cursor: pointer;
+}
+</style>

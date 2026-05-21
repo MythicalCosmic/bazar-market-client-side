@@ -170,7 +170,7 @@ export async function getPopularProducts() {
 }
 
 export async function searchProducts(q) {
-  const data = await publicGet(`/products/search?query=${encodeURIComponent(q)}`)
+  const data = await publicGet(`/products/search?q=${encodeURIComponent(q)}`)
   const items = data.items || data || []
   return items.map(transformProduct)
 }

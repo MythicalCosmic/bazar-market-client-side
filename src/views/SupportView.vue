@@ -16,9 +16,9 @@ const faqs = [
 ]
 
 const contactMethods = [
-  { icon: 'phone', labelKey: 'support.call', value: '+998 71 200 00 00', color: 'text-green-500', bg: 'bg-green-500/10' },
-  { icon: 'telegram', labelKey: 'support.telegram', value: '@bazarmarket_support', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  { icon: 'email', labelKey: 'support.email', value: 'support@bazarmarket.uz', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+  { icon: 'phone', labelKey: 'support.call', value: '+998 71 200 00 00' },
+  { icon: 'telegram', labelKey: 'support.telegram', value: '@bazarmarket_support' },
+  { icon: 'email', labelKey: 'support.email', value: 'support@bazarmarket.uz' },
 ]
 
 function toggleFaq(idx) {
@@ -28,104 +28,136 @@ function toggleFaq(idx) {
 
 <template>
   <div class="min-h-screen pb-10" style="background: var(--bg-app)">
-
-    <!-- Header -->
-    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20"
-      style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-      <button @click="navigate('profile')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
-        <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Editorial header -->
+    <div class="px-5 pt-5 pb-3">
+      <button @click="navigate('profile')" class="flex items-center gap-2 btn-press mb-3">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
+        <span class="eyebrow-sm">{{ t('ed.profile_word') }}</span>
       </button>
-      <p class="text-base font-black" style="color: var(--text-primary)">{{ t('support.title') }}</p>
-      <div class="w-9"></div>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="num-label text-[11px] tabular">§</span>
+        <p class="eyebrow-sm">{{ t('ed.assistance') }}</p>
+      </div>
+      <h1 class="display text-[34px]" style="color: var(--text-primary)">
+        {{ t('ed.help_q_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.help_q_italic') }}</span>?
+      </h1>
+      <p class="serif-italic text-[14px] mt-2" style="color: var(--text-secondary)">{{ t('support.hero_subtitle') }}</p>
+      <div class="hairline mt-4"></div>
     </div>
 
-    <div class="px-4 mt-4 flex flex-col gap-4">
-
-      <!-- Hero -->
-      <div class="rounded-2xl p-6 text-center" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-          <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h2 class="text-lg font-black mb-1" style="color: var(--text-primary)">{{ t('support.hero_title') }}</h2>
-        <p class="text-xs font-semibold" style="color: var(--text-tertiary)">{{ t('support.hero_subtitle') }}</p>
-      </div>
-
+    <div class="px-5 mt-5 flex flex-col gap-7">
       <!-- Contact Methods -->
-      <div class="rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <p class="px-4 pt-4 pb-2 text-sm font-black" style="color: var(--text-primary)">{{ t('support.contact_us') }}</p>
-        <div
-          v-for="(method, idx) in contactMethods"
-          :key="method.icon"
-          :class="['flex items-center gap-3 px-4 py-3.5 btn-press', idx < contactMethods.length - 1 ? 'border-b' : '']"
-          :style="{ borderColor: 'var(--border)' }"
-        >
-          <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', method.bg]">
-            <!-- Phone -->
-            <svg v-if="method.icon === 'phone'" :class="['w-5 h-5', method.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/>
-            </svg>
-            <!-- Telegram -->
-            <svg v-else-if="method.icon === 'telegram'" :class="['w-5 h-5', method.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M21 5L2 12.5l7 1M21 5l-4 15-8-8.5M21 5L9 13.5M9 13.5V19l3.2-3.2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <!-- Email -->
-            <svg v-else-if="method.icon === 'email'" :class="['w-5 h-5', method.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <rect x="2" y="4" width="20" height="16" rx="2" stroke-width="2"/>
-              <path d="M22 7l-10 7L2 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="flex-1">
-            <p class="text-xs font-bold" style="color: var(--text-primary)">{{ t(method.labelKey) }}</p>
-            <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ method.value }}</p>
-          </div>
-          <svg class="w-4 h-4" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="num-label text-[11px] tabular">01</span>
+          <p class="eyebrow-sm">{{ t('support.contact_us') }}</p>
         </div>
-      </div>
+        <div class="hairline mb-1"></div>
+        <div class="flex flex-col">
+          <a v-for="method in contactMethods" :key="method.icon"
+            class="contact-row btn-press">
+            <div class="contact-icon">
+              <svg v-if="method.icon === 'phone'" width="14" height="14" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z"/>
+              </svg>
+              <svg v-else-if="method.icon === 'telegram'" width="14" height="14" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+                <path d="M21 5L2 12.5l7 1M21 5l-4 15-8-8.5M21 5L9 13.5M9 13.5V19l3.2-3.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg v-else-if="method.icon === 'email'" width="14" height="14" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M22 7l-10 7L2 7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="flex-1 text-left">
+              <p class="eyebrow-sm mb-0.5">{{ t(method.labelKey) }}</p>
+              <p class="serif text-[14.5px] tabular" style="color: var(--text-primary); font-weight: 500">{{ method.value }}</p>
+            </div>
+            <svg width="11" height="11" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+              <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </section>
 
       <!-- FAQ -->
-      <div class="rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <p class="px-4 pt-4 pb-2 text-sm font-black" style="color: var(--text-primary)">{{ t('support.faq_title') }}</p>
-        <div
-          v-for="(faq, idx) in faqs"
-          :key="idx"
-          class="border-b last:border-b-0"
-          :style="{ borderColor: 'var(--border)' }"
-        >
-          <button
-            @click="toggleFaq(idx)"
-            class="w-full flex items-center justify-between px-4 py-3.5 btn-press text-left"
-          >
-            <span class="text-xs font-bold flex-1 pr-2" style="color: var(--text-primary)">{{ t(faq.key) }}</span>
-            <svg
-              class="w-4 h-4 flex-shrink-0 transition-transform duration-200"
-              :style="{ color: 'var(--text-tertiary)', transform: expandedFaq === idx ? 'rotate(180deg)' : '' }"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path d="M6 9l6 6 6-6" stroke-width="2.5" stroke-linecap="round"/>
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="num-label text-[11px] tabular">02</span>
+          <p class="eyebrow-sm">{{ t('support.faq_title') }}</p>
+        </div>
+        <div class="hairline mb-1"></div>
+
+        <div v-for="(faq, idx) in faqs" :key="idx" class="faq-item">
+          <button @click="toggleFaq(idx)" class="faq-q btn-press">
+            <span class="num-label text-[12px] tabular flex-shrink-0">Q{{ idx + 1 }}</span>
+            <span class="serif text-[15px] flex-1 text-left leading-snug" style="color: var(--text-primary); font-weight: 500">{{ t(faq.key) }}</span>
+            <svg width="12" height="12"
+              :style="{ color: 'var(--text-tertiary)', transform: expandedFaq === idx ? 'rotate(180deg)' : '', transition: 'transform 0.3s' }"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+              <path d="M6 9l6 6 6-6" stroke-linecap="round"/>
             </svg>
           </button>
-          <div
-            v-if="expandedFaq === idx"
-            class="px-4 pb-3.5"
-          >
-            <p class="text-xs font-semibold leading-relaxed" style="color: var(--text-secondary)">{{ t(faq.ansKey) }}</p>
+          <div v-if="expandedFaq === idx" class="faq-a">
+            <p class="serif-italic text-[14px] leading-relaxed" style="color: var(--text-secondary)">{{ t(faq.ansKey) }}</p>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Working hours -->
-      <div class="rounded-2xl p-4 text-center" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <p class="text-xs font-bold" style="color: var(--text-tertiary)">{{ t('support.working_hours') }}</p>
-        <p class="text-sm font-black mt-1" style="color: var(--text-primary)">09:00 - 22:00</p>
-        <p class="text-[10px] font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ t('support.every_day') }}</p>
-      </div>
-
+      <section class="text-center pt-2">
+        <div class="rule-center mb-3">
+          <span class="num-label text-[11px]">— {{ t('ed.hours_label') }} —</span>
+        </div>
+        <p class="serif text-[22px] tabular" style="color: var(--text-primary); font-weight: 500">09:00 — 22:00</p>
+        <p class="serif-italic text-[13px] mt-1" style="color: var(--text-tertiary)">{{ t('support.every_day') }}</p>
+      </section>
     </div>
   </div>
 </template>
+
+<style scoped>
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--hairline);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+.contact-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--hairline);
+}
+.faq-q {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.faq-a {
+  padding: 0 0 18px 32px;
+  animation: fade-up 0.3s ease both;
+}
+</style>

@@ -4,363 +4,375 @@ import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
 import { useFormat } from '../composables/useFormat.js'
 import { useCartStore } from '../stores/cartStore.js'
-import { useFavorites } from '../stores/favoritesStore.js'
 import { useAuth } from '../stores/authStore.js'
 import AppHeader from '../components/AppHeader.vue'
+import BannerCarousel from '../components/BannerCarousel.vue'
+import FeaturedSection from '../components/FeaturedSection.vue'
 import ProductCard from '../components/ProductCard.vue'
 import { featuredProducts, banners, categories, categoryProducts, loadProducts, isLoading } from '../stores/productsStore.js'
 
 const { navigate } = useRouter()
 const { t, getLocalizedName } = useI18n()
-const { formatPrice, formatQty } = useFormat()
-const { addToCart, getQty, decrement } = useCartStore()
-const { isFavorite, toggleFavorite } = useFavorites()
-const { isLoggedIn } = useAuth()
 
-const categoryAccents = [
-  { bg: '#ECFDF5', color: '#059669', glow: 'rgba(5,150,105,0.1)' },
-  { bg: '#EFF6FF', color: '#2563EB', glow: 'rgba(37,99,235,0.1)' },
-  { bg: '#FFF7ED', color: '#EA580C', glow: 'rgba(234,88,12,0.1)' },
-  { bg: '#FDF2F8', color: '#DB2777', glow: 'rgba(219,39,119,0.1)' },
-  { bg: '#F5F3FF', color: '#7C3AED', glow: 'rgba(124,58,237,0.1)' },
-  { bg: '#ECFEFF', color: '#0891B2', glow: 'rgba(8,145,178,0.1)' },
-  { bg: '#FFFBEB', color: '#D97706', glow: 'rgba(217,119,6,0.1)' },
-  { bg: '#FEF2F2', color: '#DC2626', glow: 'rgba(220,38,38,0.1)' },
-]
-
-onMounted(() => { loadProducts().then(() => startBannerAuto()) })
+onMounted(() => { loadProducts() })
 
 function goToCategory(catId) { navigate('categories', { category: catId }) }
 
-function handleBannerClick(banner) {
-  if (banner.linkType === 'category') navigate('categories', { category: parseInt(banner.linkValue) })
-  else if (banner.linkType === 'product') navigate('product', { productId: parseInt(banner.linkValue) })
+const today = new Date()
+const dateLine = computed(() => {
+  return today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+})
+const volume = computed(() => 'Vol. ' + String(today.getMonth() + 1).padStart(2, '0'))
+
+// Layout variants to break the repetitive horizontal scroll pattern
+const layoutVariants = ['scroll', 'feature', 'grid']
+function layoutFor(idx) {
+  return layoutVariants[idx % layoutVariants.length]
 }
 
-function handleFav(product) {
-  if (!isLoggedIn.value) { navigate('login'); return }
-  toggleFavorite(product.id)
-}
+// Pick a "Editor's pick" — first featured if any
+const editorsPick = computed(() => featuredProducts.value?.[0] || null)
+const editorsRest = computed(() => featuredProducts.value?.slice(1) || [])
 
-function getAccent(idx) { return categoryAccents[idx % categoryAccents.length] }
-
-// ── Banner auto-slide ──
-const bannerRef = ref(null)
-const bannerIndex = ref(0)
-let bannerTimer = null
-
-function bannerScrollTo(idx) {
-  bannerIndex.value = idx
-  const el = bannerRef.value
-  if (!el || !el.children[idx]) return
-  el.scrollTo({ left: el.children[idx].offsetLeft - 16, behavior: 'smooth' })
-}
-
-function startBannerAuto() {
-  if (bannerTimer) clearInterval(bannerTimer)
-  if (banners.value.length <= 1) return
-  bannerTimer = setInterval(() => {
-    bannerScrollTo((bannerIndex.value + 1) % banners.value.length)
-  }, 4000)
-}
-
-function onBannerScroll() {
-  const el = bannerRef.value
-  if (!el || !el.children[0]) return
-  const w = el.children[0].offsetWidth || 1
-  bannerIndex.value = Math.round(el.scrollLeft / (w + 12))
-}
-
-onUnmounted(() => { if (bannerTimer) clearInterval(bannerTimer) })
+// Marquee strip (translated, comma-separated)
+const marqueeItems = computed(() => t('ed.marquee').split('·').map(s => s.trim()).filter(Boolean))
 </script>
 
 <template>
-  <div class="pb-28 page-container">
+  <div class="pb-32 page-container">
     <AppHeader />
 
     <!-- Loading skeleton -->
     <template v-if="isLoading">
-      <div class="px-4 mt-4">
-        <div class="skeleton h-[160px] rounded-2xl mb-5"></div>
-        <div class="flex gap-3 mb-5"><div v-for="i in 5" :key="i" class="skeleton w-[60px] h-[76px] rounded-2xl flex-shrink-0"></div></div>
-        <div class="skeleton h-6 w-36 rounded-xl mb-3"></div>
-        <div class="flex gap-3"><div v-for="i in 3" :key="i" class="skeleton w-[160px] h-[240px] rounded-[18px] flex-shrink-0"></div></div>
+      <div class="px-5 mt-6">
+        <div class="skeleton h-3 w-32 mb-3"></div>
+        <div class="skeleton h-9 w-2/3 mb-6"></div>
+        <div class="skeleton h-[320px] mb-8"></div>
+        <div class="skeleton h-3 w-24 mb-3"></div>
+        <div class="skeleton h-7 w-1/2 mb-4"></div>
+        <div class="flex gap-3"><div v-for="i in 3" :key="i" class="skeleton w-[170px] h-[260px] flex-shrink-0"></div></div>
       </div>
     </template>
 
     <template v-else>
-      <!-- ═══ Banners ═══ -->
-      <div v-if="banners.length" class="mt-4 px-4">
-        <div ref="bannerRef" class="flex gap-3 scroll-x snap-x snap-mandatory pb-1"
-          @scroll="onBannerScroll"
-          @touchstart="bannerTimer && clearInterval(bannerTimer)"
-          @touchend="startBannerAuto()">
-          <div v-for="banner in banners" :key="banner.id"
-            @click="handleBannerClick(banner)"
-            class="flex-shrink-0 snap-center overflow-hidden relative btn-press banner-card"
-            :class="banner.linkType !== 'none' ? 'cursor-pointer' : ''"
-            :style="{ width: banners.length > 1 ? 'calc(100% - 28px)' : '100%' }">
-            <!-- Fallback gradient when no image -->
-            <div v-if="!banner.image" class="absolute inset-0 banner-gradient">
-              <div class="absolute top-0 right-0 w-36 h-36 rounded-full" style="background: rgba(255,255,255,0.06); filter: blur(30px); transform: translate(20%, -30%);"></div>
-              <div class="absolute bottom-0 left-1/3 w-28 h-28 rounded-full" style="background: rgba(255,255,255,0.04); filter: blur(24px); transform: translateY(40%);"></div>
-            </div>
-            <img v-if="banner.image" :src="banner.image" class="absolute inset-0 w-full h-full object-cover" />
-            <div class="absolute inset-0 banner-overlay"></div>
-            <!-- Content -->
-            <div class="relative z-10 p-5 flex flex-col justify-end h-full">
-              <p v-if="banner.title" class="text-white text-[17px] font-bold leading-snug max-w-[220px]">{{ banner.title }}</p>
-            </div>
-          </div>
+      <!-- ═══ Editorial intro / Masthead body ═══ -->
+      <section class="px-5 pt-6 pb-2 fade-up">
+        <div class="rule mb-3">
+          <span class="eyebrow">{{ t('ed.todays_edition') }}</span>
         </div>
-        <!-- Dots -->
-        <div v-if="banners.length > 1" class="flex items-center justify-center gap-1.5 mt-3">
-          <button v-for="(_, i) in banners" :key="i" @click="bannerScrollTo(i); startBannerAuto()"
-            class="banner-dot" :class="bannerIndex === i ? 'banner-dot-active' : 'banner-dot-idle'" />
+        <h1 class="display text-[40px] leading-[0.95]" style="color: var(--text-primary);">
+          {{ t('ed.fresh_l1') }}<br/>
+          <span class="serif-italic" style="color: var(--terracotta);">{{ t('ed.fresh_l2_italic') }}</span>.
+        </h1>
+        <div class="mt-3 flex items-center gap-2">
+          <span class="num-label text-[11px] tabular">{{ volume }}</span>
+          <span class="block w-3 h-px" style="background: var(--text-tertiary)"></span>
+          <p class="text-[11.5px]" style="color: var(--text-secondary); letter-spacing: 0.04em;">{{ dateLine }}</p>
+        </div>
+      </section>
+
+      <!-- ═══ Magazine Hero / Banners ═══ -->
+      <BannerCarousel :banners="banners" />
+
+      <!-- ═══ Editorial Marquee Strip ═══ -->
+      <div class="mt-6 marquee-strip">
+        <div class="marquee flex items-center gap-10 whitespace-nowrap py-2.5">
+          <template v-for="i in 2" :key="i">
+            <span class="eyebrow flex items-center gap-3" style="color: var(--text-primary)">
+              <template v-for="(item, idx) in marqueeItems" :key="idx">
+                {{ item }}<span class="dot"></span>
+              </template>
+            </span>
+          </template>
         </div>
       </div>
 
-      <!-- ═══ Quick Categories ═══ -->
-      <div v-if="categories.length" class="mt-5">
-        <div class="scroll-x flex gap-2.5 px-4 pb-2">
+      <!-- ═══ Categories — editorial chip grid ═══ -->
+      <section v-if="categories.length" class="mt-8 fade-up">
+        <div class="px-5 mb-4">
+          <div class="flex items-end justify-between mb-1">
+            <div>
+              <p class="eyebrow">{{ t('ed.departments') }}</p>
+              <h2 class="display text-[24px] mt-1" style="color: var(--text-primary)">
+                {{ t('ed.aisles_l1') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.aisles_italic') }}</span>
+              </h2>
+            </div>
+            <button @click="navigate('categories')" class="see-all">
+              <span class="eyebrow-sm">{{ t('ed.view_all') }}</span>
+            </button>
+          </div>
+          <div class="hairline mt-3"></div>
+        </div>
+        <div class="scroll-x flex gap-2.5 px-5 pb-1">
           <button v-for="(cat, i) in categories" :key="cat.id" @click="goToCategory(cat.id)"
-            class="flex-shrink-0 btn-press cat-chip"
-            :style="{ background: getAccent(i).bg }">
-            <!-- Category image or icon -->
-            <div class="cat-chip-icon" :style="{ background: getAccent(i).color + '14' }">
-              <img v-if="cat.image" :src="cat.image" class="w-8 h-8 object-contain" />
-              <svg v-else width="20" height="20" :style="{ color: getAccent(i).color }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/>
-                <rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
+            class="cat-card btn-press">
+            <div class="cat-img">
+              <img v-if="cat.image" :src="cat.image" class="w-full h-full object-contain p-2" style="mix-blend-mode: multiply;" />
+              <svg v-else width="22" height="22" style="color: var(--text-tertiary); opacity: 0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.4">
+                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
               </svg>
             </div>
-            <!-- Name -->
-            <span class="text-[12px] font-semibold whitespace-nowrap pr-1" :style="{ color: getAccent(i).color }">
-              {{ getLocalizedName(cat.name) }}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <!-- ═══ Featured ═══ -->
-      <div v-if="featuredProducts.length" class="mt-6">
-        <div class="flex items-center justify-between px-4 mb-3">
-          <div class="flex items-center gap-2.5">
-            <span class="section-accent" style="background: var(--primary)"></span>
-            <h2 class="text-base font-bold tracking-tight" style="color: var(--text-primary)">{{ t('home.featured') }}</h2>
-          </div>
-          <button @click="navigate('categories')" class="text-xs font-semibold text-primary btn-press flex items-center gap-0.5">
-            {{ t('home.see_all') }}
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
-        <div class="scroll-x flex gap-3 px-4 pb-2">
-          <div v-for="product in featuredProducts" :key="product.id"
-            @click="navigate('product', { productId: product.id })"
-            class="flex-shrink-0 w-[160px] overflow-hidden btn-press featured-card">
-            <!-- Image -->
-            <div class="relative w-full flex items-center justify-center p-3" style="height: 130px; background: var(--img-bg);">
-              <img v-if="product.image" :src="product.image" class="max-w-full max-h-full object-contain" style="mix-blend-mode: multiply;" />
-              <span v-if="product.discountedPrice && product.discountedPrice < product.price"
-                class="absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded-lg"
-                style="background: linear-gradient(135deg, #F97316, #EA580C)">
-                -{{ Math.round((1 - product.discountedPrice / product.price) * 100) }}%
-              </span>
+            <div class="text-left">
+              <span class="num-label text-[10px] block leading-none mb-1">0{{ i + 1 }}</span>
+              <span class="cat-name">{{ getLocalizedName(cat.name) }}</span>
             </div>
-            <!-- Info -->
-            <div class="p-3">
-              <p class="text-[11px] font-medium leading-tight line-clamp-2 mb-1.5" style="color: var(--text-secondary)">{{ getLocalizedName(product.name) }}</p>
-              <div class="flex items-center gap-1 mb-2.5">
-                <p v-if="product.discountedPrice && product.discountedPrice < product.price" class="text-sm font-bold text-primary">{{ formatPrice(product.discountedPrice) }}</p>
-                <p :class="['text-[10px]', (product.discountedPrice && product.discountedPrice < product.price) ? 'line-through' : 'font-bold text-sm']"
-                  :style="{ color: (product.discountedPrice && product.discountedPrice < product.price) ? 'var(--text-tertiary)' : 'var(--text-primary)' }">
-                  {{ formatPrice(product.price) }}
-                </p>
-              </div>
-              <button v-if="getQty(product.id) === 0" @click.stop="addToCart(product)"
-                class="w-full py-2 rounded-xl bg-primary text-white text-[10px] font-semibold flex items-center justify-center gap-1 btn-press"
-                style="box-shadow: 0 2px 8px var(--primary-glow)">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
-                {{ t('cart.add') }}
-              </button>
-              <div v-else class="flex items-center justify-between rounded-xl py-0.5 px-0.5" style="background: var(--primary-light)" @click.stop>
-                <button @click="decrement(product.id)" class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center btn-press">
-                  <svg width="11" height="11" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
-                </button>
-                <span class="text-[11px] font-bold text-primary">{{ formatQty(getQty(product.id), product.unit) }}</span>
-                <button @click="addToCart(product)" class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center btn-press">
-                  <svg width="11" height="11" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
-                </button>
+          </button>
+        </div>
+      </section>
+
+      <!-- ═══ Editor's Pick — large feature ═══ -->
+      <section v-if="editorsPick" class="mt-10 px-5 fade-up">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="num-label text-[11px] tabular">№ 01</span>
+          <span class="block w-4 h-px" style="background: var(--hairline)"></span>
+          <p class="eyebrow-sm">{{ t('ed.editors_pick') }}</p>
+        </div>
+
+        <div class="editors-pick" @click="navigate('product', { productId: editorsPick.id })">
+          <div class="editors-img">
+            <img v-if="editorsPick.image" :src="editorsPick.image" :alt="getLocalizedName(editorsPick.name)" class="w-full h-full object-contain p-8" style="mix-blend-mode: multiply;" />
+            <div class="editors-overlay">
+              <div class="absolute top-4 left-4 flex items-center gap-2">
+                <span class="block w-7 h-px bg-white opacity-60"></span>
+                <p class="eyebrow-sm text-white opacity-90">{{ t('ed.this_week') }}</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- ═══ Category Sections ═══ -->
-      <div v-for="(cat, catIdx) in categories" :key="'section-' + cat.id" class="mt-7">
-        <template v-if="categoryProducts[cat.id]?.length">
-          <!-- Section header -->
-          <div class="px-4 mb-3">
+          <div class="editors-meta">
+            <p class="eyebrow mb-2" style="color: var(--terracotta)">{{ t('ed.editors_eyebrow') }}</p>
+            <h3 class="display text-[28px] leading-[0.95] mb-3" style="color: var(--text-primary)">
+              {{ getLocalizedName(editorsPick.name) }}
+            </h3>
+            <p class="text-[13px] mb-4" style="color: var(--text-secondary); line-height: 1.55; letter-spacing: 0.01em;">
+              {{ t('ed.editors_desc') }}
+            </p>
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <span class="section-accent" :style="{ background: getAccent(catIdx).color }"></span>
-                <h2 class="text-base font-bold tracking-tight" style="color: var(--text-primary)">{{ getLocalizedName(cat.name) }}</h2>
+              <div class="flex items-center gap-2">
+                <span class="eyebrow-sm">{{ t('ed.discover') }}</span>
+                <span class="block w-6 h-px" style="background: var(--text-primary)"></span>
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
+                  <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
-              <button @click="goToCategory(cat.id)" class="text-xs font-semibold btn-press flex items-center gap-0.5" :style="{ color: getAccent(catIdx).color }">
-                {{ t('home.see_all') }}
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ Featured collection ═══ -->
+      <FeaturedSection
+        v-if="editorsRest.length"
+        :products="editorsRest"
+        :eyebrow="t('ed.collection')"
+        :italic="t('ed.popular_italic')"
+        :title="t('ed.this_season')"
+        number="02"
+        :on-see-all="() => navigate('categories')"
+      />
+
+      <!-- ═══ Pull quote / editorial break ═══ -->
+      <section class="mt-10 px-5 fade-up">
+        <div class="rule-center mb-4">
+          <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('ed.note_market') }}</span>
+        </div>
+        <blockquote class="text-center px-2">
+          <p class="serif-italic text-[24px] leading-[1.2]" style="color: var(--text-primary); letter-spacing: -0.015em;">
+            "{{ t('ed.quote') }}"
+          </p>
+          <p class="eyebrow-sm mt-4" style="color: var(--terracotta); letter-spacing: 0.22em;">{{ t('ed.curators') }}</p>
+        </blockquote>
+        <div class="hairline mt-6"></div>
+      </section>
+
+      <!-- ═══ Category Sections (alternating layouts) ═══ -->
+      <template v-for="(cat, catIdx) in categories" :key="'section-' + cat.id">
+        <FeaturedSection
+          v-if="categoryProducts[cat.id]?.length && layoutFor(catIdx) === 'scroll'"
+          :products="categoryProducts[cat.id]"
+          :eyebrow="t('ed.department')"
+          :title="getLocalizedName(cat.name)"
+          :number="String(catIdx + 3).padStart(2, '0')"
+          :see-all-label="t('ed.view_all')"
+          :on-see-all="() => goToCategory(cat.id)"
+        />
+
+        <!-- Grid layout variant -->
+        <section v-else-if="categoryProducts[cat.id]?.length && layoutFor(catIdx) === 'grid'" class="mt-10 px-5 fade-up">
+          <div class="mb-4">
+            <div class="flex items-end justify-between gap-4 mb-2.5">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="num-label text-[11px] tabular">№ {{ String(catIdx + 3).padStart(2, '0') }}</span>
+                  <span class="block w-4 h-px" style="background: var(--hairline)"></span>
+                  <p class="eyebrow-sm">{{ t('ed.department') }}</p>
+                </div>
+                <h2 class="display text-[26px]" style="color: var(--text-primary)">{{ getLocalizedName(cat.name) }}</h2>
+              </div>
+              <button @click="goToCategory(cat.id)" class="see-all">
+                <span class="eyebrow-sm">{{ t('ed.view_all') }}</span>
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                  <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </button>
             </div>
+            <div class="hairline"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <ProductCard v-for="prod in categoryProducts[cat.id].slice(0, 4)" :key="prod.id" :product="prod" />
+          </div>
+        </section>
+
+        <!-- Feature single (1 big + 2 small) -->
+        <section v-else-if="categoryProducts[cat.id]?.length" class="mt-10 px-5 fade-up">
+          <div class="mb-4">
+            <div class="flex items-end justify-between gap-4 mb-2.5">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="num-label text-[11px] tabular">№ {{ String(catIdx + 3).padStart(2, '0') }}</span>
+                  <span class="block w-4 h-px" style="background: var(--hairline)"></span>
+                  <p class="eyebrow-sm">{{ t('ed.department') }}</p>
+                </div>
+                <h2 class="display text-[26px]" style="color: var(--text-primary)">{{ getLocalizedName(cat.name) }}</h2>
+              </div>
+              <button @click="goToCategory(cat.id)" class="see-all">
+                <span class="eyebrow-sm">{{ t('ed.view_all') }}</span>
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                  <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="hairline"></div>
           </div>
 
-          <!-- Horizontal product scroll -->
-          <div class="scroll-x flex gap-3 px-4 pb-2">
-            <div v-for="product in categoryProducts[cat.id]" :key="product.id"
-              @click="navigate('product', { productId: product.id })"
-              class="flex-shrink-0 w-[160px] overflow-hidden btn-press featured-card">
-              <!-- Image -->
-              <div class="relative w-full flex items-center justify-center p-2.5" style="height: 120px; background: var(--img-bg);">
-                <img v-if="product.image" :src="product.image" class="max-w-full max-h-full object-contain" style="mix-blend-mode: multiply;" />
-                <svg v-else width="24" height="24" style="color: var(--text-tertiary); opacity: 0.3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/></svg>
-                <!-- Discount -->
-                <span v-if="product.discountedPrice && product.discountedPrice < product.price"
-                  class="absolute top-2 left-2 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md" style="background: linear-gradient(135deg, #F97316, #EA580C)">
-                  -{{ Math.round((1 - product.discountedPrice / product.price) * 100) }}%
-                </span>
-                <!-- Favorite -->
-                <button @click.stop="handleFav(product)" class="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center btn-press"
-                  :style="{ background: isFavorite(product.id) ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.85)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }">
-                  <svg width="12" height="12" :class="isFavorite(product.id) ? 'text-red-500' : ''" :style="!isFavorite(product.id) ? 'color: var(--text-tertiary)' : ''"
-                    :fill="isFavorite(product.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-width="2"/>
-                  </svg>
-                </button>
-              </div>
-              <!-- Info -->
-              <div class="p-2.5">
-                <p class="text-[11px] font-medium leading-tight line-clamp-2 mb-1" style="color: var(--text-secondary)">{{ getLocalizedName(product.name) }}</p>
-                <div class="flex items-center gap-1 mb-2">
-                  <p v-if="product.discountedPrice && product.discountedPrice < product.price" class="text-xs font-bold text-primary">{{ formatPrice(product.discountedPrice) }}</p>
-                  <p :class="['text-[10px]', (product.discountedPrice && product.discountedPrice < product.price) ? 'line-through' : 'font-bold']"
-                    :style="{ color: (product.discountedPrice && product.discountedPrice < product.price) ? 'var(--text-tertiary)' : 'var(--text-primary)' }">
-                    {{ formatPrice(product.price) }}
-                  </p>
-                </div>
-                <button v-if="getQty(product.id) === 0" @click.stop="addToCart(product)"
-                  class="w-full py-1.5 rounded-lg bg-primary text-white text-[10px] font-semibold flex items-center justify-center gap-1 btn-press"
-                  style="box-shadow: 0 2px 6px var(--primary-glow)">
-                  <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="3" stroke-linecap="round"/></svg>
-                  {{ t('cart.add') }}
-                </button>
-                <div v-else class="flex items-center justify-between rounded-lg py-0.5 px-0.5" style="background: var(--primary-light)" @click.stop>
-                  <button @click="decrement(product.id)" class="w-6 h-6 rounded-md bg-primary flex items-center justify-center btn-press">
-                    <svg width="10" height="10" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="3" stroke-linecap="round"/></svg>
-                  </button>
-                  <span class="text-[10px] font-bold text-primary">{{ formatQty(getQty(product.id), product.unit) }}</span>
-                  <button @click="addToCart(product)" class="w-6 h-6 rounded-md bg-primary flex items-center justify-center btn-press">
-                    <svg width="10" height="10" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="3" stroke-linecap="round"/></svg>
-                  </button>
-                </div>
-              </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="row-span-2">
+              <ProductCard :product="categoryProducts[cat.id][0]" />
             </div>
+            <ProductCard v-if="categoryProducts[cat.id][1]" :product="categoryProducts[cat.id][1]" />
+            <ProductCard v-if="categoryProducts[cat.id][2]" :product="categoryProducts[cat.id][2]" />
           </div>
-        </template>
-      </div>
+        </section>
+      </template>
+
+      <!-- ═══ Closing editorial note ═══ -->
+      <section class="mt-14 px-5 fade-up">
+        <div class="rule-center mb-3">
+          <span class="num-label text-[12px]">{{ t('ed.fin') }}</span>
+        </div>
+        <p class="text-center serif text-[13px]" style="color: var(--text-tertiary); letter-spacing: 0.04em;">
+          {{ t('ed.signoff') }} <span class="serif-italic">{{ t('ed.see_tomorrow') }}</span>
+        </p>
+        <div class="text-center mt-4 flex items-center justify-center gap-1.5" style="color: var(--text-muted)">
+          <span class="block w-1 h-1 rounded-full" style="background: currentColor"></span>
+          <span class="block w-1 h-1 rounded-full" style="background: currentColor"></span>
+          <span class="block w-1 h-1 rounded-full" style="background: currentColor"></span>
+        </div>
+      </section>
     </template>
   </div>
 </template>
 
 <style scoped>
-/* Constrain to a phone-shaped column on desktop so the home doesn't sprawl. */
 .page-container {
   width: 100%;
   max-width: 480px;
   margin-inline: auto;
 }
 
-/* Vertical accent bar at the start of every section header — a tiny rhythm
-   element that ties the page together without adding visual noise. */
-.section-accent {
+.see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Marquee */
+.marquee-strip {
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  overflow: hidden;
+  background: var(--surface-secondary);
+}
+.dot {
   display: inline-block;
-  width: 4px;
-  height: 16px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.banner-card {
-  border-radius: 22px;
-  min-height: 156px;
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.04),
-    0 10px 28px rgba(0, 0, 0, 0.08);
-}
-.banner-gradient {
-  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%);
-}
-.banner-overlay {
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.55) 0%,
-    rgba(0, 0, 0, 0.15) 40%,
-    rgba(0, 0, 0, 0.03) 65%,
-    transparent 100%
-  );
-}
-.banner-dot {
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
-  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.banner-dot-active {
-  width: 22px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--primary);
-}
-.banner-dot-idle {
-  width: 6px;
-  height: 6px;
-  background: var(--surface-tertiary);
+  background: var(--terracotta);
 }
 
-.cat-chip {
+/* Category cards */
+.cat-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 14px 5px 5px;
-  border-radius: 14px;
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.02);
+  gap: 12px;
+  padding: 8px 16px 8px 8px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease;
+  flex-shrink: 0;
 }
-.cat-chip:active {
-  transform: scale(0.94);
+.cat-card:active {
+  transform: scale(0.96);
+  border-color: var(--text-primary);
 }
-.cat-chip:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 0 4px 14px rgba(0, 0, 0, 0.06);
-}
-.cat-chip-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+.cat-img {
+  width: 44px;
+  height: 44px;
+  background: var(--img-bg);
+  border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
+.cat-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: 'opsz' 96, 'SOFT' 40;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  display: block;
+  line-height: 1.1;
+  white-space: nowrap;
+}
 
-.featured-card {
-  border-radius: 18px;
+/* Editor's pick */
+.editors-pick {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   background: var(--surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px var(--shadow);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  overflow: hidden;
 }
-.featured-card:active {
-  transform: scale(0.97);
+.editors-pick:active {
+  transform: scale(0.99);
 }
-.featured-card:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 20px var(--shadow-lg);
+
+.editors-img {
+  position: relative;
+  height: 280px;
+  background: var(--img-bg);
+  overflow: hidden;
+}
+.editors-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.editors-meta {
+  padding: 22px 22px 24px;
+  background: var(--surface);
+}
+
+/* Skeleton sizing for editorial */
+.skeleton {
+  border-radius: 2px;
 }
 </style>
