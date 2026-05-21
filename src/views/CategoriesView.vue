@@ -17,6 +17,20 @@ const isLoading = ref(true)
 const isLoadingProducts = ref(false)
 const searchQuery = ref('')
 
+// Palette-tinted card variants (cycles through to give each card distinct character)
+const CARD_VARIANTS = [
+  { bg: 'var(--terracotta-light)', accent: 'var(--terracotta)', big: 'var(--terracotta)', ornament: '✦' },
+  { bg: 'var(--sage-light)',       accent: 'var(--primary)',    big: 'var(--primary)',    ornament: '❀' },
+  { bg: 'var(--saffron-light)',    accent: 'var(--terracotta-dark)', big: 'var(--terracotta-dark)', ornament: '✺' },
+  { bg: 'var(--cream)',            accent: 'var(--bordeaux)',   big: 'var(--bordeaux)',   ornament: '❋' },
+  { bg: 'var(--primary-tint)',     accent: 'var(--primary-mid)', big: 'var(--primary-mid)', ornament: '✣' },
+  { bg: 'var(--bordeaux-light)',   accent: 'var(--bordeaux)',   big: 'var(--bordeaux)',   ornament: '✦' },
+]
+
+function variantFor(idx) {
+  return CARD_VARIANTS[idx % CARD_VARIANTS.length]
+}
+
 onMounted(async () => {
   try {
     categoryTree.value = await getCategoryTree()
@@ -122,6 +136,9 @@ const filteredCategories = computed(() => {
     return (cat.children || []).some(ch => getLocalizedName(ch.name).toLowerCase().includes(q))
   })
 })
+
+const featuredCategory = computed(() => filteredCategories.value[0] || null)
+const restCategories = computed(() => filteredCategories.value.slice(1))
 </script>
 
 <template>
@@ -134,17 +151,18 @@ const filteredCategories = computed(() => {
         <div class="skeleton h-3 w-20 mb-2"></div>
         <div class="skeleton h-9 w-2/3 mb-4"></div>
         <div class="skeleton h-10 w-full"></div>
-        <div class="flex flex-col gap-3 mt-2">
-          <div v-for="i in 6" :key="i" class="skeleton h-[70px]"></div>
+        <div class="skeleton h-[180px] w-full mt-2"></div>
+        <div class="grid grid-cols-2 gap-3 mt-2">
+          <div v-for="i in 6" :key="i" class="skeleton h-[140px]"></div>
         </div>
       </div>
     </template>
 
     <template v-else>
-      <!-- ═══ Category Browse ═══ -->
+      <!-- ═══ Category Browse (fun grid) ═══ -->
       <div v-if="!selectedParent" class="page-container mt-4">
-        <!-- Editorial title -->
-        <div class="mb-5">
+        <!-- Editorial title with ornament -->
+        <div class="mb-5 relative">
           <div class="flex items-center gap-2 mb-2">
             <span class="num-label text-[11px] tabular">№ 01</span>
             <span class="block w-4 h-px" style="background: var(--hairline)"></span>
@@ -153,6 +171,8 @@ const filteredCategories = computed(() => {
           <h1 class="display text-[34px]" style="color: var(--text-primary)">
             {{ t('ed.all_dep_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.all_dep_italic') }}</span>
           </h1>
+          <!-- Decorative ornament floating top-right -->
+          <span class="ornament-deco">✦</span>
           <div class="hairline mt-4"></div>
         </div>
 
@@ -167,25 +187,69 @@ const filteredCategories = computed(() => {
           </button>
         </div>
 
-        <!-- Category list (editorial) -->
-        <div class="flex flex-col">
-          <button v-for="(cat, catIdx) in filteredCategories" :key="cat.id" @click="selectParent(cat)"
-            class="dept-row btn-press">
-            <div class="dept-num">
-              <span class="num-label text-[13px]">0{{ catIdx + 1 }}</span>
+        <!-- Featured hero card (first category) -->
+        <button v-if="featuredCategory" @click="selectParent(featuredCategory)"
+          class="featured-card btn-press"
+          :style="{ background: variantFor(0).bg }">
+          <!-- Big floating italic number (decorative) -->
+          <span class="big-num" :style="{ color: variantFor(0).big }">01</span>
+          <!-- Content -->
+          <div class="featured-content">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="block w-4 h-px" :style="{ background: variantFor(0).accent }"></span>
+              <p class="eyebrow-sm" :style="{ color: variantFor(0).accent }">{{ t('ed.editors_pick') }}</p>
             </div>
-            <div class="dept-thumb">
-              <img v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-contain p-1.5" style="mix-blend-mode: multiply;" />
-              <span v-else class="serif text-[24px]" style="color: var(--text-primary); font-weight: 500">{{ getLocalizedName(cat.name).charAt(0) }}</span>
+            <h2 class="featured-name">{{ getLocalizedName(featuredCategory.name) }}</h2>
+            <p v-if="featuredCategory.children?.length" class="featured-sub">
+              {{ featuredCategory.children.length }} {{ t('categories.subcategories') }}
+            </p>
+            <div class="featured-arrow">
+              <span class="eyebrow-sm" :style="{ color: variantFor(0).accent }">{{ t('ed.discover') }}</span>
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" :style="{ color: variantFor(0).accent }">
+                <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="dept-name">{{ getLocalizedName(cat.name) }}</p>
-              <p v-if="cat.children && cat.children.length" class="text-[11px] mt-0.5" style="color: var(--text-tertiary)">{{ cat.children.length }} {{ t('categories.subcategories') }}</p>
+          </div>
+          <!-- Thumbnail -->
+          <div class="featured-thumb">
+            <img v-if="featuredCategory.image" :src="featuredCategory.image" :alt="getLocalizedName(featuredCategory.name)" class="w-full h-full object-contain" style="mix-blend-mode: multiply;" />
+            <span v-else class="featured-initial serif">{{ getLocalizedName(featuredCategory.name).charAt(0) }}</span>
+          </div>
+          <!-- Ornament -->
+          <span class="card-ornament" :style="{ color: variantFor(0).accent }">{{ variantFor(0).ornament }}</span>
+        </button>
+
+        <!-- Department grid (staggered, colorful) -->
+        <div class="dept-grid mt-3">
+          <button v-for="(cat, idx) in restCategories" :key="cat.id" @click="selectParent(cat)"
+            class="dept-card btn-press"
+            :class="{ 'dept-card-tall': idx % 3 === 1 }"
+            :style="{ background: variantFor(idx + 1).bg }">
+            <!-- Big italic number in background -->
+            <span class="dept-num" :style="{ color: variantFor(idx + 1).big }">{{ String(idx + 2).padStart(2, '0') }}</span>
+            <!-- Ornament -->
+            <span class="dept-ornament" :style="{ color: variantFor(idx + 1).accent }">{{ variantFor(idx + 1).ornament }}</span>
+            <!-- Content -->
+            <div class="dept-content">
+              <div class="dept-thumb">
+                <img v-if="cat.image" :src="cat.image" :alt="getLocalizedName(cat.name)" class="w-full h-full object-contain p-1" style="mix-blend-mode: multiply;" />
+                <span v-else class="serif text-[18px]" style="color: var(--text-primary); font-weight: 500">{{ getLocalizedName(cat.name).charAt(0) }}</span>
+              </div>
+              <div class="dept-meta">
+                <p class="dept-name">{{ getLocalizedName(cat.name) }}</p>
+                <p v-if="cat.children?.length" class="dept-sub" :style="{ color: variantFor(idx + 1).accent }">
+                  {{ cat.children.length }} {{ t('categories.subcategories') }}
+                </p>
+              </div>
             </div>
-            <svg width="12" height="12" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-              <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
           </button>
+        </div>
+
+        <!-- Closing ornament -->
+        <div class="closing-ornament">
+          <span class="block w-12 h-px" style="background: var(--hairline)"></span>
+          <span class="num-label text-[14px]" style="color: var(--terracotta)">✦</span>
+          <span class="block w-12 h-px" style="background: var(--hairline)"></span>
         </div>
 
         <!-- No results -->
@@ -198,7 +262,6 @@ const filteredCategories = computed(() => {
 
       <!-- ═══ Products View ═══ -->
       <div v-else class="page-container mt-4">
-        <!-- Back -->
         <button @click="goBack" class="flex items-center gap-2 btn-press mb-4">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
             <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -206,7 +269,6 @@ const filteredCategories = computed(() => {
           <span class="eyebrow-sm">{{ t('ed.back_to_dep') }}</span>
         </button>
 
-        <!-- Title -->
         <div class="mb-5">
           <div class="flex items-center gap-2 mb-2">
             <span class="num-label text-[11px] tabular">{{ t('ed.department') }}</span>
@@ -220,7 +282,6 @@ const filteredCategories = computed(() => {
           <div class="hairline mt-4"></div>
         </div>
 
-        <!-- Subcategory chips -->
         <div v-if="currentSubcategories.length" class="scroll-x flex gap-2 pb-4">
           <button @click="selectedChild = null; loadAllProducts(selectedParent)"
             class="chip-btn btn-press" :class="{ 'chip-active': !selectedChild }">
@@ -232,7 +293,6 @@ const filteredCategories = computed(() => {
           </button>
         </div>
 
-        <!-- Products grid -->
         <div v-if="isLoadingProducts" class="mt-1 grid grid-cols-2 gap-3">
           <div v-for="i in 4" :key="i" class="skeleton h-[260px]"></div>
         </div>
@@ -257,6 +317,22 @@ const filteredCategories = computed(() => {
   padding-inline: 20px;
 }
 
+.ornament-deco {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 28px;
+  color: var(--saffron);
+  opacity: 0.7;
+  animation: spin-slow 18s linear infinite;
+  transform-origin: center;
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .search-field {
   display: flex;
   align-items: center;
@@ -265,6 +341,7 @@ const filteredCategories = computed(() => {
   background: var(--surface);
   border: 1px solid var(--hairline);
   transition: border-color 0.2s ease;
+  border-radius: 2px;
 }
 .search-field:focus-within {
   border-color: var(--text-primary);
@@ -284,48 +361,215 @@ const filteredCategories = computed(() => {
   font-style: italic;
 }
 
-/* Department row */
-.dept-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+/* ── Featured hero card ── */
+.featured-card {
+  position: relative;
+  display: block;
   width: 100%;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--hairline);
-  background: transparent;
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  padding: 22px 22px 24px;
+  margin-bottom: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  overflow: hidden;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: transform 0.32s cubic-bezier(.22,1,.36,1), border-color 0.32s ease;
   text-align: left;
+  min-height: 180px;
 }
-.dept-row:first-of-type {
-  border-top: 1px solid var(--hairline);
+.featured-card:active {
+  transform: scale(0.985);
 }
-.dept-num {
-  flex-shrink: 0;
-  width: 28px;
+.featured-card:hover {
+  border-color: var(--text-primary);
 }
-.dept-thumb {
-  flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  background: var(--img-bg);
+
+.big-num {
+  position: absolute;
+  top: -20px;
+  right: -10px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-variation-settings: 'opsz' 144, 'SOFT' 60, 'WONK' 1;
+  font-size: 180px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  opacity: 0.12;
+  pointer-events: none;
+  user-select: none;
+}
+
+.featured-content {
+  position: relative;
+  z-index: 2;
+  max-width: 65%;
+}
+.featured-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.0;
+  color: var(--text-primary);
+  margin: 4px 0 6px;
+}
+.featured-sub {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.featured-arrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.featured-thumb {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  width: 100px;
+  height: 100px;
+  background: var(--surface);
   border: 1px solid var(--hairline);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  z-index: 2;
+  box-shadow: 0 8px 20px rgba(26, 38, 32, 0.10);
+}
+.featured-initial {
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.card-ornament {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 18px;
+  z-index: 2;
+  animation: float-orn 4s ease-in-out infinite;
+}
+@keyframes float-orn {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(15deg); }
+}
+
+/* ── Department grid (staggered colorful) ── */
+.dept-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.dept-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.32s cubic-bezier(.22,1,.36,1), border-color 0.32s ease;
+  text-align: left;
+  min-height: 140px;
+}
+.dept-card:active {
+  transform: scale(0.96) rotate(-0.4deg);
+}
+.dept-card:hover {
+  border-color: var(--text-primary);
+}
+.dept-card-tall {
+  min-height: 180px;
+}
+
+.dept-num {
+  position: absolute;
+  bottom: -28px;
+  right: -10px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-variation-settings: 'opsz' 144, 'SOFT' 60, 'WONK' 1;
+  font-size: 120px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  opacity: 0.16;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dept-ornament {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.dept-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 12px;
+}
+
+.dept-thumb {
+  width: 52px;
+  height: 52px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.dept-meta {
+  margin-top: auto;
 }
 .dept-name {
   font-family: 'Fraunces', Georgia, serif;
   font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.01em;
   color: var(--text-primary);
   line-height: 1.15;
+}
+.dept-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.closing-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 32px;
+  padding-bottom: 8px;
 }
 
 /* Chips */

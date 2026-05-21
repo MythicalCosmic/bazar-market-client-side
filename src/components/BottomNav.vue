@@ -13,11 +13,11 @@ const { haptic } = useTelegram()
 const { formatPrice } = useFormat()
 
 const navItems = [
-  { id: 'home',       labelKey: 'nav.home',       icon: 'home'  },
-  { id: 'categories', labelKey: 'nav.categories', icon: 'grid'  },
-  { id: 'favorites',  labelKey: 'nav.favorites',  icon: 'heart' },
-  { id: 'orders',     labelKey: 'nav.orders',     icon: 'receipt' },
-  { id: 'profile',    labelKey: 'nav.profile',    icon: 'user'  },
+  { id: 'home',       labelKey: 'nav.short.home',       icon: 'home'  },
+  { id: 'categories', labelKey: 'nav.short.categories', icon: 'grid'  },
+  { id: 'favorites',  labelKey: 'nav.short.favorites',  icon: 'heart' },
+  { id: 'orders',     labelKey: 'nav.short.orders',     icon: 'receipt' },
+  { id: 'profile',    labelKey: 'nav.short.profile',    icon: 'user'  },
 ]
 
 function onNav(id) { haptic('selection'); navigate(id) }
@@ -135,10 +135,14 @@ const isCartVisible = computed(() => totalCount.value > 0 && !['cart','checkout'
 .nav-label {
   font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-tertiary);
   transition: color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .nav-label-active {
   color: var(--text-primary);

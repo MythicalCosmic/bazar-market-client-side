@@ -5,6 +5,13 @@ export default {
   'nav.orders': 'Buyurtmalar',
   'nav.profile': 'Profil',
 
+  // Bottom nav short labels (single-word, fit narrow phones)
+  'nav.short.home': 'Bosh',
+  'nav.short.categories': 'Katalog',
+  'nav.short.favorites': 'Sevimli',
+  'nav.short.orders': 'Buyurtma',
+  'nav.short.profile': 'Profil',
+
   // Header
   'header.current_location': 'Hozirgi manzil',
   'header.search_placeholder': 'Qidirish...',

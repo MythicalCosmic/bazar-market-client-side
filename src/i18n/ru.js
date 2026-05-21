@@ -5,6 +5,13 @@ export default {
   'nav.orders': 'Заказы',
   'nav.profile': 'Профиль',
 
+  // Bottom nav short labels
+  'nav.short.home': 'Главная',
+  'nav.short.categories': 'Каталог',
+  'nav.short.favorites': 'Избр.',
+  'nav.short.orders': 'Заказы',
+  'nav.short.profile': 'Профиль',
+
   // Header
   'header.current_location': 'Текущий адрес',
   'header.search_placeholder': 'Поиск...',

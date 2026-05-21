@@ -5,6 +5,13 @@ export default {
   'nav.orders': 'Orders',
   'nav.profile': 'Profile',
 
+  // Bottom nav short labels
+  'nav.short.home': 'Home',
+  'nav.short.categories': 'Catalog',
+  'nav.short.favorites': 'Saved',
+  'nav.short.orders': 'Orders',
+  'nav.short.profile': 'Profile',
+
   // Header
   'header.current_location': 'Current location',
   'header.search_placeholder': 'Search...',
