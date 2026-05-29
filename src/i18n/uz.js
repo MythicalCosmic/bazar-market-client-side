@@ -14,6 +14,7 @@ export default {
 
   // Header
   'header.current_location': 'Hozirgi manzil',
+  'header.no_address': 'Manzilni tanlang',
   'header.search_placeholder': 'Qidirish...',
 
   // Search
@@ -342,6 +343,9 @@ export default {
   'checkout.note': 'Izoh',
   'checkout.note_placeholder': 'Buyurtma uchun qo\'shimcha izoh...',
   'checkout.select_address': 'Manzilni tanlang',
+  'checkout.save_address_title': 'Manzilni saqlaymizmi?',
+  'checkout.save_address_yes': 'Ha, saqlash',
+  'checkout.save_address_no': 'Yo\'q, kerak emas',
   'orders.cancel': 'Bekor qilish',
   'orders.status_label.pending': 'Kutilmoqda',
   'orders.status_label.confirmed': 'Tasdiqlandi',

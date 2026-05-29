@@ -14,6 +14,7 @@ export default {
 
   // Header
   'header.current_location': 'Текущий адрес',
+  'header.no_address': 'Выберите адрес',
   'header.search_placeholder': 'Поиск...',
 
   // Search
@@ -337,6 +338,9 @@ export default {
   'checkout.note': 'Комментарий',
   'checkout.note_placeholder': 'Дополнительные пожелания к заказу...',
   'checkout.select_address': 'Выберите адрес',
+  'checkout.save_address_title': 'Сохранить адрес?',
+  'checkout.save_address_yes': 'Да, сохранить',
+  'checkout.save_address_no': 'Нет, не нужно',
   'orders.cancel': 'Отменить',
   'orders.status_label.pending': 'Ожидание',
   'orders.status_label.confirmed': 'Подтверждён',

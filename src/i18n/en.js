@@ -14,6 +14,7 @@ export default {
 
   // Header
   'header.current_location': 'Current location',
+  'header.no_address': 'Select address',
   'header.search_placeholder': 'Search...',
 
   // Search
@@ -337,6 +338,9 @@ export default {
   'checkout.note': 'Note',
   'checkout.note_placeholder': 'Additional instructions for your order...',
   'checkout.select_address': 'Select an address',
+  'checkout.save_address_title': 'Save this address?',
+  'checkout.save_address_yes': 'Yes, save it',
+  'checkout.save_address_no': 'No, thanks',
   'orders.cancel': 'Cancel',
   'orders.status_label.pending': 'Pending',
   'orders.status_label.confirmed': 'Confirmed',

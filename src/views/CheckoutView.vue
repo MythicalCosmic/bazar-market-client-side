@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useCartStore } from '../stores/cartStore.js'
 import { useFormat } from '../composables/useFormat.js'
 import { useRouter } from '../router/index.js'
@@ -7,7 +7,7 @@ import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
 import { useAddresses } from '../stores/addressStore.js'
 import { placeOrder as placeOrderAPI } from '../services/api.js'
-import { ensureLeaflet } from '../composables/useLeaflet.js'
+import { ensureYmaps, reverseGeocode, DEFAULT_LAT, DEFAULT_LNG } from '../composables/useYandexMaps.js'
 import { useToast } from '../composables/useToast.js'
 
 const { total, subtotal, deliveryCost, discount, clearCart } = useCartStore()
@@ -15,7 +15,7 @@ const { formatNum } = useFormat()
 const { navigate, routeParams } = useRouter()
 const { t } = useI18n()
 const { isAuthenticated, user } = useAuth()
-const { addresses, loadAddresses } = useAddresses()
+const { addresses, loadAddresses, addAddress, removeAddress } = useAddresses()
 const { error: toastError } = useToast()
 
 const selectedPayment = ref('card')
@@ -28,72 +28,83 @@ const userNote = ref('')
 const isPlacing = ref(false)
 const orderError = ref('')
 
+// Marker position — the live delivery point. When the user taps/drags the map
+// this holds a custom location with no saved address behind it.
+const pickedLat = ref(null)
+const pickedLng = ref(null)
+
+// Post-order "save this address?" prompt (only for freshly-picked locations).
+const showSavePrompt = ref(false)
+const pendingSaveAddressId = ref(null)
+const placedOrderId = ref(null)
+
 const paymentMethods = [
   { id: 'card', labelKey: 'checkout.card', emoji: '💳' },
   { id: 'cash', labelKey: 'checkout.cash', emoji: '💵' },
 ]
 
-const DEFAULT_LAT = 40.5553
-const DEFAULT_LNG = 71.4742
-
+let ymaps = null
 let map = null
 let marker = null
-let abortController = null
 let debounceTimer = null
+let geoSeq = 0
 
-async function getAddress(lat, lng) {
-  if (abortController) abortController.abort()
-  abortController = new AbortController()
+async function geocodeAt(lat, lng) {
+  const seq = ++geoSeq
+  addressText.value = t('checkout.detecting_address')
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=uz`, { signal: abortController.signal })
-    if (!res.ok) throw new Error()
-    const data = await res.json()
-    if (data?.display_name) {
-      const road = data.address?.road || data.address?.pedestrian || ''
-      const house = data.address?.house_number || ''
-      const city = data.address?.city || data.address?.town || ''
-      addressText.value = road ? `${road}${house ? ' ' + house : ''}${city ? ', ' + city : ''}` : data.display_name.split(',').slice(0, 2).join(',')
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') addressText.value = t('checkout.address_unknown')
+    const line = await reverseGeocode(ymaps, [lat, lng])
+    if (seq !== geoSeq) return
+    addressText.value = line || t('checkout.address_unknown')
+  } catch {
+    if (seq !== geoSeq) return
+    addressText.value = t('checkout.address_unknown')
   }
 }
 
-function debouncedGetAddress(lat, lng) {
+function debouncedGeocode(lat, lng) {
   addressText.value = t('checkout.detecting_address')
   clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => getAddress(lat, lng), 300)
+  debounceTimer = setTimeout(() => geocodeAt(lat, lng), 300)
 }
 
-async function initMap(lat, lng) {
-  let L
+// User picked a custom point on the map — detach from any saved address.
+function onMapPick(coords) {
+  pickedLat.value = coords[0]
+  pickedLng.value = coords[1]
+  selectedAddressId.value = null
+  debouncedGeocode(coords[0], coords[1])
+}
+
+async function initMap(lat, lng, { geocode } = {}) {
   try {
-    L = await ensureLeaflet()
+    ymaps = await ensureYmaps()
   } catch {
     locationStatus.value = '⚠️ ' + t('checkout.map_unavailable')
     return
   }
-  map = L.map('leaflet-map', { zoomControl: true }).setView([lat, lng], 16)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
-  const icon = L.divIcon({
-    className: '',
-    html: `<div style="width:36px;height:36px;background:#059669;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:3px solid white"></div>`,
-    iconSize: [36, 36], iconAnchor: [18, 36],
-  })
-  marker = L.marker([lat, lng], { icon, draggable: true }).addTo(map)
-  map.on('click', (e) => { marker.setLatLng(e.latlng); debouncedGetAddress(e.latlng.lat, e.latlng.lng) })
-  marker.on('dragend', () => { const pos = marker.getLatLng(); debouncedGetAddress(pos.lat, pos.lng) })
-  getAddress(lat, lng)
+  pickedLat.value = lat
+  pickedLng.value = lng
+  map = new ymaps.Map('checkout-map',
+    { center: [lat, lng], zoom: 16, controls: ['zoomControl', 'geolocationControl'] },
+    { suppressMapOpenBlock: true })
+  marker = new ymaps.Placemark([lat, lng], {}, { draggable: true, preset: 'islands#greenDotIcon' })
+  map.geoObjects.add(marker)
+  map.events.add('click', (e) => { const c = e.get('coords'); marker.geometry.setCoordinates(c); onMapPick(c) })
+  marker.events.add('dragend', () => onMapPick(marker.geometry.getCoordinates()))
+  if (geocode) geocodeAt(lat, lng)
 }
 
-async function selectAddress(addr) {
+function selectAddress(addr) {
   selectedAddressId.value = addr.id
   addressText.value = addr.address
   showAddressPicker.value = false
   if (addr.lat && addr.lng) {
+    pickedLat.value = addr.lat
+    pickedLng.value = addr.lng
     if (map && marker) {
-      map.setView([addr.lat, addr.lng], 16)
-      marker.setLatLng([addr.lat, addr.lng])
+      map.setCenter([addr.lat, addr.lng], 16)
+      marker.geometry.setCoordinates([addr.lat, addr.lng])
     }
   }
 }
@@ -112,27 +123,18 @@ onMounted(async () => {
   locationStatus.value = t('checkout.detecting_location')
   if (!addressText.value) addressText.value = t('checkout.detecting_address')
 
-  const startLat = defaultAddr?.lat || DEFAULT_LAT
-  const startLng = defaultAddr?.lng || DEFAULT_LNG
-
   if (defaultAddr?.lat && defaultAddr?.lng) {
     locationStatus.value = '✅ ' + t('checkout.location_detected')
-    initMap(startLat, startLng)
-  } else if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { locationStatus.value = '✅ ' + t('checkout.location_detected'); initMap(pos.coords.latitude, pos.coords.longitude) },
-      () => { locationStatus.value = '📍 ' + t('checkout.location_default'); initMap(DEFAULT_LAT, DEFAULT_LNG) },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-    )
+    initMap(defaultAddr.lat, defaultAddr.lng, { geocode: false })
   } else {
-    locationStatus.value = '❌ ' + t('checkout.location_unavailable')
-    initMap(DEFAULT_LAT, DEFAULT_LNG)
+    // Always open on Marhamat (Andijon) — no device geolocation.
+    locationStatus.value = '📍 ' + t('checkout.location_default')
+    initMap(DEFAULT_LAT, DEFAULT_LNG, { geocode: true })
   }
 })
 
 onUnmounted(() => {
-  if (map) { map.remove(); map = null }
-  if (abortController) abortController.abort()
+  if (map) { map.destroy(); map = null }
   clearTimeout(debounceTimer)
 })
 
@@ -140,11 +142,36 @@ async function handlePlaceOrder() {
   // Re-entrancy guard at function entry — :disabled alone races with rapid taps.
   if (isPlacing.value) return
   if (!isAuthenticated.value) { navigate('login'); return }
-  const addrId = selectedAddressId.value || addresses.value.find(a => a.isDefault)?.id
-  if (!addrId) { orderError.value = t('checkout.select_address'); return }
+
+  let addrId = selectedAddressId.value
+  const usingMapPick = !addrId
+  const addressReady = addressText.value && addressText.value !== t('checkout.detecting_address')
+
+  if (usingMapPick && (!pickedLat.value || !pickedLng.value || !addressReady)) {
+    orderError.value = t('checkout.select_address')
+    return
+  }
+
   orderError.value = ''
   isPlacing.value = true
+  let createdAddrId = null
   try {
+    // No saved address — persist the picked map location so the order can
+    // reference it (the API requires an address_id). We offer to keep it later.
+    if (usingMapPick) {
+      const before = new Set(addresses.value.map(a => a.id))
+      const res = await addAddress({
+        label: t('addresses.label_home'),
+        address: addressText.value,
+        lat: pickedLat.value,
+        lng: pickedLng.value,
+        isDefault: before.size === 0, // first address becomes the default
+      })
+      addrId = res?.id ?? addresses.value.find(a => !before.has(a.id))?.id
+      if (!addrId) throw new Error(t('common.error_generic'))
+      createdAddrId = addrId
+    }
+
     const body = {
       address_id: addrId,
       payment_method: selectedPayment.value,
@@ -154,15 +181,42 @@ async function handlePlaceOrder() {
     const data = await placeOrderAPI(body)
     clearCart()
     const newOrderId = data?.order_id || data?.id
+
+    if (createdAddrId) {
+      // Ordered against a freshly-picked location — ask whether to keep it.
+      pendingSaveAddressId.value = createdAddrId
+      placedOrderId.value = newOrderId || null
+      showSavePrompt.value = true
+      return
+    }
     if (newOrderId) navigate('orders', { highlightOrderId: newOrderId, placed: true })
     else navigate('orders')
   } catch (e) {
+    // Roll back the address we created if the order itself failed.
+    if (createdAddrId) { try { await removeAddress(createdAddrId) } catch {} }
     orderError.value = e.message || t('common.error_generic')
     toastError(orderError.value)
     if (e.status === 400 && /cart is empty/i.test(e.message || '')) navigate('cart')
   } finally {
     isPlacing.value = false
   }
+}
+
+// "Save this address?" — yes keeps it and opens the addresses page.
+function keepPickedAddress() {
+  showSavePrompt.value = false
+  pendingSaveAddressId.value = null
+  navigate('addresses')
+}
+
+// No — discard the address that was only created to place the order.
+async function discardPickedAddress() {
+  showSavePrompt.value = false
+  const id = pendingSaveAddressId.value
+  pendingSaveAddressId.value = null
+  if (id) { try { await removeAddress(id) } catch {} }
+  if (placedOrderId.value) navigate('orders', { highlightOrderId: placedOrderId.value, placed: true })
+  else navigate('orders')
 }
 </script>
 
@@ -180,7 +234,7 @@ async function handlePlaceOrder() {
     <div class="px-4 mt-3 pb-32 flex flex-col gap-3">
       <!-- Map -->
       <div class="rounded-2xl overflow-hidden relative" style="height: 200px; box-shadow: 0 2px 12px var(--shadow)">
-        <div id="leaflet-map" style="width: 100%; height: 100%; z-index: 1;"></div>
+        <div id="checkout-map" style="width: 100%; height: 100%; z-index: 1;"></div>
         <div class="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-1 rounded-lg" style="z-index: 999; background: var(--surface); color: var(--text-secondary); box-shadow: 0 2px 6px var(--shadow-lg)">{{ locationStatus }}</div>
       </div>
 
@@ -323,5 +377,28 @@ async function handlePlaceOrder() {
         {{ isPlacing ? t('common.loading') : t('checkout.place_order') }}
       </button>
     </div>
+
+    <!-- Save picked address prompt -->
+    <Teleport to="#app">
+      <Transition name="fade">
+        <div v-if="showSavePrompt" class="fixed inset-0 z-[120] flex items-end justify-center" style="background: rgba(0,0,0,0.4)">
+          <div class="w-full max-w-[480px] rounded-t-[28px] p-6 safe-bottom" style="background: var(--surface)">
+            <div class="flex flex-col items-center mb-5">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3" style="background: var(--primary-light)">
+                <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('checkout.save_address_title') }}</h3>
+              <p class="text-sm font-medium mt-1 text-center" style="color: var(--text-tertiary)">{{ addressText }}</p>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button @click="keepPickedAddress" class="w-full bg-primary text-white font-bold py-3.5 rounded-2xl btn-press">{{ t('checkout.save_address_yes') }}</button>
+              <button @click="discardPickedAddress" class="w-full font-bold py-3.5 rounded-2xl btn-press" style="background: var(--surface-secondary); color: var(--text-primary)">{{ t('checkout.save_address_no') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

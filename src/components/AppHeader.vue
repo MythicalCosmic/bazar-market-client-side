@@ -1,18 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '../i18n/index.js'
 import { useAddresses } from '../stores/addressStore.js'
+import { useAuth } from '../stores/authStore.js'
 import { useRouter } from '../router/index.js'
 
 const { t } = useI18n()
-const { addresses } = useAddresses()
+const { addresses, loadAddresses } = useAddresses()
+const { isLoggedIn } = useAuth()
 const { navigate } = useRouter()
 
 const showDropdown = ref(false)
 
+onMounted(() => loadAddresses())
+// Pull the saved addresses in as soon as a session exists (e.g. after login).
+watch(isLoggedIn, (v) => { if (v) loadAddresses(true) })
+
 const currentAddress = computed(() => {
   const def = addresses.value.find(a => a.isDefault)
-  return def ? def.address : 'Marhamat shahri'
+  return def ? def.address : t('header.no_address')
 })
 
 const currentLabel = computed(() => {

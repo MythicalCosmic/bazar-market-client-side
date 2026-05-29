@@ -21,6 +21,19 @@ function fireLogout() {
   }
 }
 
+// Fires right after a session is established (login/registration verified) so
+// other stores can reconcile state built up while the user was a guest.
+const loginListeners = new Set()
+export function onLogin(fn) {
+  loginListeners.add(fn)
+  return () => loginListeners.delete(fn)
+}
+function fireLogin() {
+  for (const fn of loginListeners) {
+    try { fn() } catch {}
+  }
+}
+
 function normalizePhone(phone) {
   return (phone || '').replace(/\s/g, '')
 }
@@ -102,6 +115,7 @@ export function useAuth() {
       })
       applySession(data)
       applyPendingReferral()
+      fireLogin()
       return { success: true }
     } catch (e) {
       return { success: false, message: e.message, status: e.status }
@@ -144,6 +158,7 @@ export function useAuth() {
       })
       applySession(data)
       applyPendingReferral()
+      fireLogin()
       return { success: true }
     } catch (e) {
       return { success: false, message: e.message, status: e.status }

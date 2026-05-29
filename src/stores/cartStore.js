@@ -2,7 +2,7 @@ import { reactive, computed, ref } from 'vue'
 import { getCart, addToCartAPI, updateCartAPI, removeFromCartAPI, clearCartAPI, getDeliveryInfo } from '../services/api.js'
 import { getToken } from '../services/http.js'
 import { useToast } from '../composables/useToast.js'
-import { onLogout } from './authStore.js'
+import { onLogout, onLogin } from './authStore.js'
 
 const state = reactive({
   items: [],
@@ -62,6 +62,30 @@ function resetCart() {
 }
 
 onLogout(resetCart)
+
+// On login, push the guest cart (built up in memory while logged out) to the
+// server so checkout doesn't place an order against an empty server-side cart.
+// Items already on the server are left alone, then we reconcile with truth.
+async function mergeGuestCartIntoServer() {
+  if (!getToken()) return
+  const guestItems = state.items.slice()
+  try {
+    if (guestItems.length) {
+      let serverIds = new Set()
+      try {
+        const server = await getCart()
+        serverIds = new Set((server.items || []).map(i => i.id))
+      } catch {}
+      for (const item of guestItems) {
+        if (serverIds.has(item.id)) continue
+        try { await addToCartAPI(item.id, item.quantity) } catch {}
+      }
+    }
+    await loadCartImpl()
+  } catch {}
+}
+
+onLogin(mergeGuestCartIntoServer)
 
 export function useCartStore() {
   const cartItems    = computed(() => state.items)

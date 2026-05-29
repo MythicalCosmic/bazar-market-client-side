@@ -5,15 +5,12 @@ import { useI18n } from '../i18n/index.js'
 import { useAddresses } from '../stores/addressStore.js'
 import { updateAddressAPI } from '../services/api.js'
 import { useToast } from '../composables/useToast.js'
-import { ensureLeaflet } from '../composables/useLeaflet.js'
+import { ensureYmaps, reverseGeocode, DEFAULT_LAT, DEFAULT_LNG } from '../composables/useYandexMaps.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
 const { addresses, addAddress, removeAddress, setDefault, loadAddresses } = useAddresses()
 const { error: toastError } = useToast()
-
-const DEFAULT_LAT = 40.5553
-const DEFAULT_LNG = 71.4742
 
 const showMapPicker = ref(false)
 const pickedAddress = ref('')
@@ -34,54 +31,46 @@ const labels = [
   { id: 'other', emoji: '📍', nameKey: 'addresses.label_other' },
 ]
 
+let ymaps = null
 let map = null
 let marker = null
-let abortCtrl = null
 let debounce = null
+let geoSeq = 0
 
 onMounted(() => loadAddresses())
 
-async function reverseGeocode(lat, lng) {
-  if (abortCtrl) abortCtrl.abort()
-  abortCtrl = new AbortController()
+async function geocodeAt(lat, lng) {
+  const seq = ++geoSeq
   pickingStatus.value = t('checkout.detecting_address')
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=uz`, { signal: abortCtrl.signal })
-    if (!res.ok) throw new Error()
-    const data = await res.json()
-    if (data?.display_name) {
-      const road = data.address?.road || data.address?.pedestrian || ''
-      const house = data.address?.house_number || ''
-      const city = data.address?.city || data.address?.town || ''
-      pickedAddress.value = road ? `${road}${house ? ' ' + house : ''}${city ? ', ' + city : ''}` : data.display_name.split(',').slice(0, 3).join(',')
-    }
+    const line = await reverseGeocode(ymaps, [lat, lng])
+    if (seq !== geoSeq) return
+    pickedAddress.value = line || t('checkout.address_unknown')
     pickingStatus.value = ''
-  } catch (e) {
-    if (e.name !== 'AbortError') { pickedAddress.value = t('checkout.address_unknown'); pickingStatus.value = '' }
+  } catch {
+    if (seq !== geoSeq) return
+    pickedAddress.value = t('checkout.address_unknown')
+    pickingStatus.value = ''
   }
 }
 
-function debouncedGeo(lat, lng) { clearTimeout(debounce); debounce = setTimeout(() => reverseGeocode(lat, lng), 300) }
+function debouncedGeo(lat, lng) { clearTimeout(debounce); debounce = setTimeout(() => geocodeAt(lat, lng), 300) }
 
 async function setupMap(lat, lng) {
-  let L
   try {
-    L = await ensureLeaflet()
+    ymaps = await ensureYmaps()
   } catch {
     mapError.value = t('addresses.map_unavailable')
     return
   }
   mapError.value = ''
-  map = L.map('address-map', { zoomControl: true }).setView([lat, lng], 14)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
-  const icon = L.divIcon({
-    className: '',
-    html: `<div style="width:36px;height:36px;background:#059669;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:3px solid white"></div>`,
-    iconSize: [36, 36], iconAnchor: [18, 36],
-  })
-  marker = L.marker([lat, lng], { icon, draggable: true }).addTo(map)
-  map.on('click', (e) => { marker.setLatLng(e.latlng); debouncedGeo(e.latlng.lat, e.latlng.lng) })
-  marker.on('dragend', () => { const pos = marker.getLatLng(); debouncedGeo(pos.lat, pos.lng) })
+  map = new ymaps.Map('address-map',
+    { center: [lat, lng], zoom: 16, controls: ['zoomControl', 'geolocationControl'] },
+    { suppressMapOpenBlock: true })
+  marker = new ymaps.Placemark([lat, lng], {}, { draggable: true, preset: 'islands#greenDotIcon' })
+  map.geoObjects.add(marker)
+  map.events.add('click', (e) => { const c = e.get('coords'); marker.geometry.setCoordinates(c); debouncedGeo(c[0], c[1]) })
+  marker.events.add('dragend', () => { const c = marker.geometry.getCoordinates(); debouncedGeo(c[0], c[1]) })
 }
 
 function openMapPicker(addr = null) {
@@ -107,26 +96,16 @@ function openMapPicker(addr = null) {
     const startLat = addr?.lat || DEFAULT_LAT
     const startLng = addr?.lng || DEFAULT_LNG
     await setupMap(startLat, startLng)
-    if (!map) return // Leaflet failed to load
+    if (!map) return // Yandex failed to load
 
-    if (addr?.lat && addr?.lng) {
-      map.setView([startLat, startLng], 16)
-      reverseGeocode(startLat, startLng)
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { map.setView([pos.coords.latitude, pos.coords.longitude], 16); marker.setLatLng([pos.coords.latitude, pos.coords.longitude]); reverseGeocode(pos.coords.latitude, pos.coords.longitude) },
-        () => reverseGeocode(DEFAULT_LAT, DEFAULT_LNG),
-        { enableHighAccuracy: true, timeout: 8000 }
-      )
-    } else {
-      reverseGeocode(DEFAULT_LAT, DEFAULT_LNG)
-    }
+    // Editing → start on the saved address; adding → always Marhamat (no GPS).
+    map.setCenter([startLat, startLng], 16)
+    geocodeAt(startLat, startLng)
   })
 }
 
 function closeMapPicker() {
-  if (map) { map.remove(); map = null }
-  if (abortCtrl) abortCtrl.abort()
+  if (map) { map.destroy(); map = null }
   clearTimeout(debounce)
   showMapPicker.value = false
 }
@@ -139,18 +118,18 @@ async function saveAddress() {
   const label = selectedLabel.value === 'other' && customLabel.value.trim()
     ? customLabel.value.trim()
     : t(labelObj.nameKey)
-  const pos = marker.getLatLng()
+  const [lat, lng] = marker.geometry.getCoordinates()
   isSaving.value = true
   try {
     if (editingId.value) {
       await updateAddressAPI(editingId.value, {
         label, address_text: pickedAddress.value,
-        latitude: pos.lat, longitude: pos.lng,
+        latitude: lat, longitude: lng,
         comment: comment.value.trim(),
       })
       await loadAddresses(true)
     } else {
-      await addAddress({ label, address: pickedAddress.value, lat: pos.lat, lng: pos.lng, comment: comment.value.trim() })
+      await addAddress({ label, address: pickedAddress.value, lat, lng, comment: comment.value.trim() })
     }
     closeMapPicker()
   } catch (e) {
@@ -178,8 +157,7 @@ async function confirmDelete() {
 }
 
 onUnmounted(() => {
-  if (map) { map.remove(); map = null }
-  if (abortCtrl) abortCtrl.abort()
+  if (map) { map.destroy(); map = null }
   clearTimeout(debounce)
 })
 </script>
