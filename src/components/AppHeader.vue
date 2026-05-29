@@ -34,81 +34,64 @@ function goToAddresses() {
 function openSearch() {
   navigate('search')
 }
-
-const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
-const issueNo = String(new Date().getDay() + 1).padStart(2, '0')
 </script>
 
 <template>
-  <header class="px-5 pt-3 pb-3 sticky top-0 z-30 header-glass">
-    <!-- Editorial masthead row -->
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-2">
-        <span class="eyebrow-sm">{{ today }}</span>
-        <span class="w-3 h-px" style="background: var(--text-tertiary)"></span>
-        <span class="num-label text-[11px]">Vol. {{ issueNo }}</span>
-      </div>
-      <div class="serif text-[15px]" style="color: var(--text-primary); font-weight: 500;">
-        <span class="serif-italic" style="color: var(--terracotta)">{{ t('brand.bazar') }}</span>&nbsp;{{ t('brand.market') }}
-      </div>
-    </div>
-
-    <!-- Hairline -->
-    <div class="hairline mb-3"></div>
-
-    <!-- Location & search -->
-    <div class="flex items-center gap-3">
-      <!-- Location -->
-      <button
-        @click="showDropdown = !showDropdown"
-        class="flex items-center gap-2 btn-press flex-shrink-0"
-        :aria-label="currentLabel"
-      >
-        <svg width="14" height="14" style="color: var(--terracotta)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3"/>
-        </svg>
-        <div class="text-left">
-          <p class="eyebrow-sm" style="font-size: 8.5px;">{{ currentLabel }}</p>
-          <p class="text-[13px] font-medium leading-tight truncate max-w-[120px]" style="color: var(--text-primary)">{{ currentAddress }}</p>
+  <header class="px-4 pt-3 pb-3 sticky top-0 z-30 header-glass">
+    <!-- Location -->
+    <div class="flex items-center justify-between mb-2.5 relative">
+      <div class="flex items-center gap-2.5 cursor-pointer btn-press" @click="showDropdown = !showDropdown">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
+          <svg width="14" height="14" class="text-primary" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
         </div>
-        <svg width="10" height="10" :style="{ color: 'var(--text-tertiary)', transform: showDropdown ? 'rotate(180deg)' : '', transition: 'transform 0.3s' }" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
-
-      <!-- Vertical hairline -->
-      <div class="w-px h-7" style="background: var(--hairline)"></div>
-
-      <!-- Search trigger -->
-      <button type="button" @click="openSearch" class="search-trigger btn-press flex-1" :aria-label="t('header.search_placeholder')">
-        <svg width="16" height="16" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
-        </svg>
-        <span class="serif-italic text-[13.5px]" style="color: var(--text-tertiary)">{{ t('ed.search_market') }}</span>
-      </button>
+        <div class="flex-1 min-w-0">
+          <p class="text-[10px] font-medium tracking-wider uppercase" style="color: var(--text-tertiary)">{{ currentLabel }}</p>
+          <div class="flex items-center gap-0.5">
+            <p class="text-sm font-bold leading-tight truncate" style="color: var(--text-primary)">{{ currentAddress }}</p>
+            <svg width="14" height="14" class="flex-shrink-0 transition-transform duration-300" :style="{ color: 'var(--text-tertiary)', transform: showDropdown ? 'rotate(180deg)' : '' }" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Address dropdown -->
     <Transition name="slide-up">
-      <div v-if="showDropdown" class="mt-3 overflow-hidden dropdown-card">
+      <div v-if="showDropdown" class="mb-3 rounded-2xl overflow-hidden"
+        style="background: var(--surface); box-shadow: 0 8px 32px var(--shadow-lg); border: 1px solid var(--border)">
         <div v-if="addresses.length">
-          <div v-for="(addr, idx) in addresses" :key="addr.id" @click="selectAddress(addr)"
-            class="flex items-center gap-3 px-4 py-3.5 btn-press" :class="idx !== 0 ? 'border-t' : ''" :style="{ borderColor: 'var(--hairline)' }">
-            <span class="num-label text-[12px] flex-shrink-0">0{{ idx + 1 }}</span>
-            <div class="flex-1 min-w-0">
-              <p class="text-[13px] font-medium" style="color: var(--text-primary)">{{ addr.label }}</p>
-              <p class="text-[11px] truncate" style="color: var(--text-tertiary)">{{ addr.address }}</p>
+          <div v-for="addr in addresses" :key="addr.id" @click="selectAddress(addr)"
+            class="flex items-center gap-3 px-4 py-3.5 btn-press border-b" :style="{ borderColor: 'var(--border)' }">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" :style="{ background: addr.isDefault ? 'var(--primary-light)' : 'var(--surface-secondary)' }">
+              <svg width="16" height="16" :class="addr.isDefault ? 'text-primary' : ''" :style="!addr.isDefault ? 'color: var(--text-tertiary)' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
             </div>
-            <svg v-if="addr.isDefault" width="14" height="14" style="color: var(--primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold" style="color: var(--text-primary)">{{ addr.label }}</p>
+              <p class="text-[10px] font-medium truncate" style="color: var(--text-tertiary)">{{ addr.address }}</p>
+            </div>
+            <svg v-if="addr.isDefault" width="16" height="16" class="text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
         </div>
-        <button @click="goToAddresses" class="w-full flex items-center gap-3 px-4 py-3.5 btn-press" :class="addresses.length ? 'border-t' : ''" :style="{ borderColor: 'var(--hairline)' }">
-          <span class="text-[14px] font-light" style="color: var(--primary)">+</span>
-          <span class="eyebrow text-[10px]" style="color: var(--primary)">{{ t('addresses.add_new') }}</span>
+        <button @click="goToAddresses" class="w-full flex items-center gap-3 px-4 py-3.5 btn-press">
+          <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+            <svg width="16" height="16" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+          </div>
+          <span class="text-xs font-bold text-primary">{{ t('addresses.add_new') }}</span>
         </button>
       </div>
     </Transition>
+
+    <!-- Search trigger -->
+    <button type="button" @click="openSearch" class="search-trigger btn-press" :aria-label="t('header.search_placeholder')">
+      <svg width="18" height="18" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="search-trigger-text">{{ t('header.search_placeholder') }}</span>
+    </button>
   </header>
 
+  <!-- Backdrops -->
   <Teleport to="#app">
     <div v-if="showDropdown" class="fixed inset-0 z-20" @click="showDropdown = false"></div>
   </Teleport>
@@ -116,30 +99,37 @@ const issueNo = String(new Date().getDay() + 1).padStart(2, '0')
 
 <style scoped>
 .header-glass {
-  background: rgba(250, 247, 241, 0.86);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 1px solid var(--hairline);
+  background: rgba(245, 250, 247, 0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
 }
 :root.dark .header-glass, .dark .header-glass {
-  background: rgba(14, 20, 17, 0.86);
+  background: rgba(10, 15, 12, 0.88);
 }
 
 .search-trigger {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  background: transparent;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--surface-secondary);
+  border: 1.5px solid transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  text-align: left;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-
-.dropdown-card {
+.search-trigger:active {
+  border-color: var(--primary);
   background: var(--surface);
-  border-radius: 14px;
-  border: 1px solid var(--hairline);
-  box-shadow: var(--shadow);
+}
+.search-trigger-text {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary);
 }
 </style>

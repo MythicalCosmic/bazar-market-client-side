@@ -72,7 +72,9 @@ function openQtyModal() {
   })
 }
 
-function closeQtyModal() { qtyModalOpen.value = false }
+function closeQtyModal() {
+  qtyModalOpen.value = false
+}
 
 function confirmQtyModal() {
   if (!product.value) { qtyModalOpen.value = false; return }
@@ -94,144 +96,103 @@ function adjustQtyModal(direction) {
 <template>
   <div class="min-h-screen pb-28" style="background: var(--bg-app)">
     <!-- Loading -->
-    <div v-if="isLoading" class="pt-4 px-5">
-      <div class="skeleton h-3 w-24 mb-2"></div>
-      <div class="skeleton h-[340px] mb-6"></div>
-      <div class="skeleton h-8 w-3/4 mb-3"></div>
-      <div class="skeleton h-4 w-32 mb-6"></div>
-      <div class="skeleton h-12 w-full"></div>
+    <div v-if="isLoading" class="pt-4 px-4">
+      <div class="skeleton h-[300px] rounded-3xl mb-4"></div>
+      <div class="skeleton h-6 w-48 rounded-xl mb-2"></div>
+      <div class="skeleton h-4 w-32 rounded-xl mb-4"></div>
+      <div class="skeleton h-12 w-full rounded-2xl"></div>
     </div>
 
     <template v-else-if="product">
-      <!-- Top bar with editorial breadcrumb -->
-      <div class="px-5 pt-3 pb-3 flex items-center justify-between sticky top-0 z-20 detail-header">
-        <button @click="navigate('home')" class="flex items-center gap-2 btn-press">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="eyebrow-sm">{{ t('ed.back_market') }}</span>
+      <!-- ── Image gallery ── -->
+      <div class="relative img-area">
+        <!-- Nav buttons -->
+        <button @click="navigate('home')" class="absolute top-3 left-3 z-20 nav-btn btn-press">
+          <svg width="20" height="20" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button @click="handleFavorite" class="fav-circle btn-press" :class="{ 'fav-active': fav }">
-          <svg width="15" height="15"
-            :style="{ color: fav ? 'var(--terracotta)' : 'var(--text-primary)' }"
-            :fill="fav ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+
+        <button @click="handleFavorite" class="absolute top-3 right-3 z-20 nav-btn btn-press"
+          :class="{ 'fav-active': fav }">
+          <svg width="20" height="20" :class="fav ? 'text-red-500' : ''" :style="!fav ? 'color: var(--text-tertiary)' : ''"
+            :fill="fav ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-width="2"/>
           </svg>
         </button>
-      </div>
 
-      <!-- Editorial category eyebrow -->
-      <div class="px-5 mt-2 mb-1">
-        <div class="flex items-center gap-2">
-          <span class="num-label text-[11px] tabular">№ {{ String(product.id).slice(-3).padStart(3, '0') }}</span>
-          <span class="block w-4 h-px" style="background: var(--hairline)"></span>
-          <p class="eyebrow-sm">{{ product.categoryName || t('ed.from_market') }}</p>
-        </div>
-      </div>
+        <!-- Discount badge -->
+        <span v-if="hasDiscount" class="absolute top-3 left-14 z-10 discount-tag">
+          -{{ discountPercent }}%
+        </span>
 
-      <!-- Product name (display serif) -->
-      <div class="px-5 mt-2 mb-5">
-        <h1 class="display text-[36px] leading-[0.98]" style="color: var(--text-primary);">
-          {{ getLocalizedName(product.name) }}
-        </h1>
-      </div>
-
-      <!-- ── Image gallery (large, magazine-style) ── -->
-      <div class="relative mx-5 img-frame">
-        <div class="img-stage">
-          <img v-if="allImages.length" :src="allImages[activeImage]" :alt="getLocalizedName(product.name)" class="max-w-full max-h-full object-contain transition-all duration-500" style="mix-blend-mode: multiply;" />
-          <svg v-else width="64" height="64" style="color: var(--text-tertiary); opacity: 0.3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-          </svg>
-
-          <!-- Discount tag (corner) -->
-          <div v-if="hasDiscount" class="discount-corner-detail">
-            <span class="num-label text-[14px] leading-none" style="color: var(--cream)">−{{ discountPercent }}<span class="text-[10px] align-top">%</span></span>
+        <!-- Main image -->
+        <div class="w-full flex items-center justify-center p-8 img-stage">
+          <img v-if="allImages.length" :src="allImages[activeImage]" :alt="getLocalizedName(product.name)" class="max-w-full max-h-full object-contain" style="mix-blend-mode: multiply;" />
+          <div v-else class="w-28 h-28 rounded-2xl flex items-center justify-center" style="background: var(--surface-secondary)">
+            <svg width="48" height="48" style="color: var(--text-tertiary); opacity: 0.3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/><path d="M21 15l-5-5L5 21" stroke-width="2"/></svg>
           </div>
-
-          <!-- Frame inset border -->
-          <div class="img-frame-border"></div>
         </div>
 
         <!-- Image dots -->
-        <div v-if="allImages.length > 1" class="flex items-center justify-center gap-1.5 mt-4">
+        <div v-if="allImages.length > 1" class="flex items-center justify-center gap-1.5 pb-4">
           <button v-for="(_, i) in allImages" :key="i" @click="activeImage = i"
-            class="img-dash"
-            :class="activeImage === i ? 'img-dash-active' : ''" />
+            class="img-dot" :class="activeImage === i ? 'img-dot-active' : 'img-dot-idle'" />
         </div>
       </div>
 
-      <!-- Price block -->
-      <div class="px-5 mt-7">
-        <div class="hairline mb-4"></div>
-        <div class="flex items-end justify-between">
-          <div>
-            <p class="eyebrow mb-1.5">{{ t('ed.price_label') }}</p>
-            <div class="flex items-baseline gap-2.5">
-              <p v-if="hasDiscount" class="serif text-[34px] tabular" style="color: var(--text-primary); font-weight: 500; letter-spacing: -0.025em;">{{ formatPrice(product.discountedPrice) }}</p>
-              <p :class="['tabular', hasDiscount ? 'text-[14px] line-through' : 'serif text-[34px]']"
-                :style="{ color: hasDiscount ? 'var(--text-muted)' : 'var(--text-primary)', fontWeight: '500', letterSpacing: '-0.025em' }">
-                {{ formatPrice(product.price) }}
+      <!-- ── Product info card ── -->
+      <div class="px-4 -mt-4 relative z-10">
+        <div class="info-card">
+          <!-- Category tag -->
+          <div v-if="product.categoryName" class="cat-tag">
+            <span class="text-primary">{{ product.categoryName }}</span>
+          </div>
+
+          <!-- Name -->
+          <h1 class="text-[18px] font-bold leading-snug mb-3" style="color: var(--text-primary)">{{ getLocalizedName(product.name) }}</h1>
+
+          <!-- Price row -->
+          <div class="flex items-center gap-2.5 mb-4">
+            <p v-if="hasDiscount" class="text-[22px] font-bold text-primary">{{ formatPrice(product.discountedPrice) }}</p>
+            <p :class="['font-bold', hasDiscount ? 'text-sm line-through' : 'text-[22px]']"
+              :style="{ color: hasDiscount ? 'var(--text-tertiary)' : 'var(--text-primary)' }">
+              {{ formatPrice(product.price) }}
+            </p>
+            <span class="unit-tag">
+              / {{ product.unit === 'kg' ? 'kg' : product.unit === 'liter' ? 'l' : t('product.piece') }}
+            </span>
+          </div>
+
+          <!-- Stock indicator -->
+          <div v-if="product.stockQty !== null" class="mb-4">
+            <div class="flex items-center gap-2 mb-1.5">
+              <div class="w-2 h-2 rounded-full" :style="{ background: product.stockQty <= 10 ? '#ef4444' : '#059669' }"></div>
+              <p class="text-[11px] font-semibold" :style="{ color: product.stockQty <= 10 ? '#ef4444' : 'var(--text-secondary)' }">
+                {{ product.stockQty <= 10 ? t('product.left_in_stock', { count: Math.round(product.stockQty) }) : t('product.in_stock') }}
               </p>
             </div>
+            <div class="stock-bar">
+              <div class="stock-fill" :style="{
+                width: Math.min(100, (product.stockQty / 100) * 100) + '%',
+                background: product.stockQty <= 10 ? '#ef4444' : '#059669',
+              }"></div>
+            </div>
           </div>
-          <div class="text-right">
-            <p class="eyebrow mb-1.5">{{ t('ed.per_label') }}</p>
-            <p class="serif-italic text-[18px]" style="color: var(--text-primary)">
-              {{ product.unit === 'kg' ? t('ed.kg_word') : product.unit === 'liter' ? t('ed.liter_word') : t('ed.piece_word') }}
-            </p>
+
+          <!-- Description -->
+          <div v-if="desc" class="desc-section">
+            <p class="text-[11px] font-semibold mb-1.5 uppercase tracking-wider" style="color: var(--text-tertiary)">{{ t('product.description') }}</p>
+            <p class="text-[13px] font-medium leading-relaxed" style="color: var(--text-primary)">{{ desc }}</p>
           </div>
-        </div>
-        <div class="hairline mt-4"></div>
-      </div>
 
-      <!-- Stock indicator -->
-      <div v-if="product.stockQty !== null" class="px-5 mt-5">
-        <div class="flex items-center justify-between mb-2">
-          <p class="eyebrow-sm" :style="{ color: product.stockQty <= 10 ? 'var(--bordeaux)' : 'var(--primary)' }">
-            {{ product.stockQty <= 10 ? t('product.left_in_stock', { count: Math.round(product.stockQty) }) : t('product.in_stock') }}
-          </p>
-          <p class="text-[11px] tabular" style="color: var(--text-tertiary)">{{ Math.round(product.stockQty) }} {{ t('ed.available') }}</p>
-        </div>
-        <div class="stock-bar">
-          <div class="stock-fill" :style="{
-            width: Math.min(100, (product.stockQty / 100) * 100) + '%',
-            background: product.stockQty <= 10 ? 'var(--bordeaux)' : 'var(--primary)',
-          }"></div>
-        </div>
-      </div>
-
-      <!-- Description with drop cap -->
-      <div v-if="desc" class="px-5 mt-8">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="num-label text-[11px] tabular">§</span>
-          <p class="eyebrow-sm">{{ t('ed.about_product') }}</p>
-        </div>
-        <p class="text-[14px] leading-relaxed drop-cap" style="color: var(--text-primary); letter-spacing: 0.005em; line-height: 1.7;">
-          {{ desc }}
-        </p>
-      </div>
-
-      <!-- Info chips (editorial) -->
-      <div v-if="(product.step && product.step !== 1) || (product.minQty && product.minQty !== 1)" class="px-5 mt-6">
-        <div class="hairline mb-4"></div>
-        <div class="grid grid-cols-2 gap-4">
-          <div v-if="product.step && product.step !== 1">
-            <p class="eyebrow mb-1">{{ t('ed.increment') }}</p>
-            <p class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500;">{{ formatQty(product.step, product.unit) }}</p>
+          <!-- Info chips -->
+          <div v-if="(product.step && product.step !== 1) || (product.minQty && product.minQty !== 1)" class="flex flex-wrap gap-2 mt-4">
+            <span v-if="product.step && product.step !== 1" class="info-chip">
+              {{ t('product.step') }}: {{ formatQty(product.step, product.unit) }}
+            </span>
+            <span v-if="product.minQty && product.minQty !== 1" class="info-chip">
+              {{ t('product.min') }}: {{ formatQty(product.minQty, product.unit) }}
+            </span>
           </div>
-          <div v-if="product.minQty && product.minQty !== 1">
-            <p class="eyebrow mb-1">{{ t('ed.minimum') }}</p>
-            <p class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500;">{{ formatQty(product.minQty, product.unit) }}</p>
-          </div>
-        </div>
-        <div class="hairline mt-4"></div>
-      </div>
-
-      <!-- Editorial signoff -->
-      <div class="px-5 mt-10">
-        <div class="rule-center">
-          <span class="num-label text-[10px]" style="color: var(--text-tertiary)">·  ·  ·</span>
         </div>
       </div>
     </template>
@@ -242,28 +203,23 @@ function adjustQtyModal(direction) {
         <div
           v-if="qtyModalOpen && product"
           class="fixed inset-0 z-[120] flex items-center justify-center p-5"
-          style="background: rgba(26, 38, 32, 0.55); backdrop-filter: blur(8px)"
+          style="background: rgba(0,0,0,0.5)"
           @click.self="closeQtyModal"
           @keydown.esc="closeQtyModal">
           <div class="qty-sheet" @click.stop>
             <div class="qty-sheet-header">
-              <div>
-                <p class="eyebrow-sm mb-1">{{ t('ed.quantity_word') }}</p>
-                <p class="serif text-[18px] leading-tight" style="color: var(--text-primary); font-weight: 500;">{{ getLocalizedName(product.name) }}</p>
-              </div>
+              <p class="qty-sheet-title">{{ t('product.enter_quantity') }}</p>
               <button @click="closeQtyModal" class="qty-sheet-close btn-press" :aria-label="t('profile.cancel')">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-                  <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/>
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6l12 12M18 6L6 18" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
               </button>
             </div>
 
-            <div class="hairline my-4"></div>
-
             <div class="qty-sheet-row">
               <button type="button" @click="adjustQtyModal(-1)" class="qty-sheet-step btn-press" aria-label="Decrease">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" style="color: var(--text-primary)">
-                  <path d="M5 12h14" stroke-linecap="round"/>
+                <svg width="22" height="22" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
               </button>
               <input
@@ -272,17 +228,17 @@ function adjustQtyModal(direction) {
                 @keyup.enter="confirmQtyModal"
                 type="text"
                 :inputmode="stepInfo.isFractional ? 'decimal' : 'numeric'"
-                class="qty-sheet-input serif tabular"
+                class="qty-sheet-input"
                 aria-label="Quantity" />
               <button type="button" @click="adjustQtyModal(1)" class="qty-sheet-step btn-press" aria-label="Increase">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" style="color: var(--text-primary)">
-                  <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
+                <svg width="22" height="22" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
               </button>
             </div>
 
             <p class="qty-sheet-unit">
-              {{ product.unit === 'kg' ? t('ed.kg_word') : product.unit === 'liter' ? t('ed.liter_word') : t('ed.piece_word') }}
+              {{ product.unit === 'kg' ? 'kg' : product.unit === 'liter' ? 'l' : t('product.piece') }}
             </p>
 
             <div class="qty-sheet-actions">
@@ -294,41 +250,36 @@ function adjustQtyModal(direction) {
       </Transition>
     </Teleport>
 
-    <!-- ── Bottom action bar (editorial) ── -->
+    <!-- ── Bottom action bar ── -->
     <div v-if="product" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 safe-bottom bottom-bar">
-      <div class="px-5 py-4">
-        <div v-if="qty === 0" class="flex items-center gap-4">
+      <div class="px-4 py-3">
+        <div v-if="qty === 0" class="flex items-center gap-3">
           <div class="flex-1">
-            <p class="eyebrow-sm">{{ t('ed.total_short') }}</p>
-            <p class="serif text-[22px] tabular" style="color: var(--text-primary); font-weight: 500; letter-spacing: -0.02em;">{{ formatPrice(hasDiscount ? product.discountedPrice : product.price) }}</p>
+            <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice(hasDiscount ? product.discountedPrice : product.price) }}</p>
           </div>
-          <button @click.stop="addToCart(product)" class="add-btn btn-press">
-            <span class="eyebrow-sm" style="color: var(--cream)">{{ t('ed.add_to_basket') }}</span>
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <button @click.stop="addToCart(product)" class="flex-1 add-btn btn-press">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+            {{ t('cart.add') }}
           </button>
         </div>
         <div v-else class="flex items-center gap-3">
           <div class="flex-1">
-            <p class="eyebrow-sm">{{ t('ed.in_basket') }} · {{ formatQty(qty, product.unit) }}</p>
-            <p class="serif text-[22px] tabular" style="color: var(--text-primary); font-weight: 500; letter-spacing: -0.02em;">{{ formatPrice((hasDiscount ? product.discountedPrice : product.price) * qty) }}</p>
+            <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice((hasDiscount ? product.discountedPrice : product.price) * qty) }}</p>
+            <p class="text-[10px] font-medium" style="color: var(--text-tertiary)">{{ formatQty(qty, product.unit) }} {{ t('cart.in_cart') }}</p>
           </div>
           <div class="qty-row">
-            <button @click.stop="decrement(product.id)" class="qty-btn-detail btn-press">
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" style="color: var(--text-primary)">
-                <path d="M5 12h14" stroke-linecap="round"/>
-              </svg>
+            <button @click.stop="decrement(product.id)" class="qty-btn btn-press">
+              <svg width="18" height="18" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
             <button
               type="button"
               @click.stop="openQtyModal"
-              class="qty-display btn-press"
+              class="qty-display text-[15px] font-bold text-center text-primary btn-press"
               :aria-label="t('product.enter_quantity')">
-              <span class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500;">{{ formatQty(qty, product.unit) }}</span>
+              {{ formatQty(qty, product.unit) }}
             </button>
-            <button @click.stop="addToCart(product)" class="qty-btn-detail btn-press">
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" style="color: var(--text-primary)">
-                <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
-              </svg>
+            <button @click.stop="addToCart(product)" class="qty-btn btn-press">
+              <svg width="18" height="18" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
           </div>
         </div>
@@ -338,238 +289,288 @@ function adjustQtyModal(direction) {
 </template>
 
 <style scoped>
-.detail-header {
-  background: var(--bg-app);
-  border-bottom: 1px solid var(--hairline);
+.img-area {
+  background: var(--surface);
+  border-radius: 0 0 28px 28px;
+  box-shadow: 0 4px 20px var(--shadow);
 }
 
-.fav-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+.img-stage {
+  height: 300px;
+  background: var(--img-bg);
+}
+
+.nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border);
 }
 .fav-active {
-  border-color: var(--terracotta);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.15);
 }
 
-.img-frame {
-  background: var(--img-bg);
-  border: 1px solid var(--hairline);
-  position: relative;
-}
-.img-stage {
-  position: relative;
-  height: 380px;
-  display: flex;
+.discount-tag {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 48px 36px;
-  overflow: hidden;
-}
-.img-frame-border {
-  position: absolute;
-  inset: 8px;
-  border: 1px solid rgba(26, 38, 32, 0.06);
-  pointer-events: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #F97316, #EA580C);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
 
-.discount-corner-detail {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: var(--bordeaux);
-  padding: 8px 14px 10px;
-  z-index: 10;
+.img-dot {
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.img-dot-active {
+  width: 20px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--primary);
+}
+.img-dot-idle {
+  width: 6px;
+  height: 6px;
+  background: var(--text-tertiary);
+  opacity: 0.4;
 }
 
-.img-dash {
-  width: 24px;
-  height: 1.5px;
-  background: var(--hairline);
-  transition: background 0.3s ease, height 0.3s ease;
+.info-card {
+  border-radius: 22px;
+  padding: 20px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px var(--shadow);
+  border: 1px solid var(--border);
 }
-.img-dash-active {
-  background: var(--text-primary);
-  height: 2px;
+
+.cat-tag {
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: var(--primary-light);
+  margin-bottom: 8px;
+}
+
+.unit-tag {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
 }
 
 .stock-bar {
   width: 100%;
-  height: 2px;
-  background: var(--hairline);
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-secondary);
   overflow: hidden;
 }
 .stock-fill {
   height: 100%;
+  border-radius: 2px;
   transition: width 0.6s ease;
 }
 
+.desc-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.info-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+}
+
 .bottom-bar {
-  background: var(--bg-app);
-  border-top: 1px solid var(--hairline);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px var(--shadow);
 }
 
 .add-btn {
-  padding: 14px 22px;
-  background: var(--surface-ink);
-  color: var(--cream);
+  padding: 14px 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  border: none;
-  border-radius: 2px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 0.2s ease;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px var(--primary-glow), 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 .add-btn:active {
-  transform: scale(0.96);
-  background: var(--primary-dark);
+  transform: scale(0.97);
 }
 
 .qty-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   padding: 4px;
-  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: var(--primary-light);
 }
 
-.qty-btn-detail {
-  width: 38px;
-  height: 38px;
-  background: var(--surface);
+.qty-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  border: none;
-  transition: background 0.2s ease;
 }
-.qty-btn-detail:active {
-  background: var(--surface-secondary);
+.qty-btn:active {
+  transform: scale(0.9);
 }
 
 .qty-display {
   min-width: 56px;
-  height: 38px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 10px;
   background: var(--surface);
   border: none;
+  border-radius: 10px;
   outline: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* ── Quantity modal ── */
+/* ── Custom quantity modal ── */
 .qty-sheet {
   width: 100%;
-  max-width: 360px;
+  max-width: 340px;
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: 4px;
-  padding: 22px 22px 20px;
-  box-shadow: var(--shadow-deep);
+  border-radius: 24px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 .qty-sheet-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  margin-bottom: 18px;
+}
+.qty-sheet-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 .qty-sheet-close {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--surface-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--hairline);
-  flex-shrink: 0;
+  color: var(--text-secondary);
+  border: none;
 }
 
 .qty-sheet-row {
   display: flex;
   align-items: center;
-  padding: 4px;
-  border: 1px solid var(--hairline);
+  gap: 12px;
+  padding: 8px;
+  border-radius: 18px;
+  background: var(--primary-light);
 }
 .qty-sheet-step {
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
-  background: var(--surface);
+  border-radius: 14px;
+  background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease;
-}
-.qty-sheet-step:active {
-  background: var(--surface-secondary);
+  -webkit-tap-highlight-color: transparent;
 }
 .qty-sheet-input {
   flex: 1;
   width: 100%;
   min-width: 0;
-  height: 50px;
+  height: 52px;
   text-align: center;
-  font-size: 28px;
-  font-weight: 500;
+  font-size: 24px;
+  font-weight: 800;
   color: var(--text-primary);
-  background: transparent;
+  background: var(--surface);
   border: none;
+  border-radius: 14px;
   outline: none;
   padding: 0 8px;
-  letter-spacing: -0.02em;
+  -moz-appearance: textfield;
+}
+.qty-sheet-input::-webkit-outer-spin-button,
+.qty-sheet-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .qty-sheet-unit {
   text-align: center;
-  font-family: 'Fraunces', Georgia, serif;
-  font-style: italic;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-tertiary);
-  margin-top: 10px;
-  margin-bottom: 18px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .qty-sheet-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 .qty-sheet-cancel,
 .qty-sheet-confirm {
   flex: 1;
-  height: 46px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  height: 50px;
+  border-radius: 14px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  border: 1px solid var(--hairline);
+  border: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  background: var(--surface);
+}
+.qty-sheet-cancel {
+  background: var(--surface-secondary);
   color: var(--text-primary);
 }
 .qty-sheet-confirm {
-  background: var(--surface-ink);
-  color: var(--cream);
-  border-color: var(--surface-ink);
+  background: linear-gradient(135deg, #059669, #047857);
+  color: white;
+  box-shadow: 0 4px 16px var(--primary-glow);
 }
 </style>

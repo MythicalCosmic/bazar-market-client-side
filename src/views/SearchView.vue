@@ -75,23 +75,19 @@ function discountPercent(p) {
 </script>
 
 <template>
-  <div class="min-h-screen pb-12" style="background: var(--bg-app)">
-    <!-- Editorial search bar -->
+  <div class="min-h-screen pb-8" style="background: var(--bg-app)">
+    <!-- ── Top search bar ── -->
     <div class="search-header safe-top">
-      <div class="px-5 pt-3 pb-2 flex items-center justify-between">
-        <button @click="goBack" class="flex items-center gap-2 btn-press">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+      <div class="flex items-center gap-2 px-3 py-3">
+        <button @click="goBack" class="back-btn btn-press" :aria-label="t('common.back')">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-primary)">
+            <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span class="eyebrow-sm">{{ t('ed.back_word') }}</span>
         </button>
-        <span class="num-label text-[11px] tabular">{{ t('ed.search_label') }}</span>
-      </div>
-      <div class="px-5 pb-3">
-        <form @submit.prevent="onSubmit">
+        <form @submit.prevent="onSubmit" class="flex-1">
           <div class="search-field">
-            <svg width="16" height="16" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+            <svg width="18" height="18" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
             </svg>
             <input
               ref="inputRef"
@@ -106,9 +102,9 @@ function discountPercent(p) {
               :placeholder="t('header.search_placeholder')"
               class="search-input"
             />
-            <button v-if="hasQuery" type="button" @click="clearQuery" class="btn-press" :aria-label="t('common.clear')">
-              <svg width="13" height="13" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
+            <button v-if="hasQuery" type="button" @click="clearQuery" class="clear-btn btn-press" :aria-label="t('common.clear')">
+              <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </button>
           </div>
@@ -116,95 +112,113 @@ function discountPercent(p) {
       </div>
     </div>
 
-    <!-- Recent searches -->
-    <div v-if="!hasQuery && history.length" class="px-5 pt-5">
+    <!-- ── Recent searches (no query) ── -->
+    <div v-if="!hasQuery && history.length" class="px-4 pt-4">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
-          <span class="num-label text-[11px] tabular">§</span>
-          <p class="eyebrow-sm">{{ t('search.recent') }}</p>
+          <div class="section-dot"></div>
+          <h2 class="section-title">{{ t('search.recent') }}</h2>
         </div>
-        <button @click="clearHistory" class="btn-press">
-          <span class="eyebrow-sm" style="color: var(--bordeaux)">{{ t('search.clear_all') }}</span>
+        <button @click="clearHistory" class="text-[12px] font-semibold btn-press" style="color: var(--primary)">
+          {{ t('search.clear_all') }}
         </button>
       </div>
-      <div class="hairline mb-3"></div>
-      <div class="flex flex-col">
-        <button v-for="entry in history" :key="entry" type="button" @click="selectHistory(entry)" class="history-row btn-press">
-          <svg width="13" height="13" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-            <circle cx="12" cy="12" r="9"/>
-            <path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="serif text-[15px] flex-1 text-left truncate" style="color: var(--text-primary); font-weight: 500">{{ entry }}</span>
-          <span class="history-remove btn-press" role="button" :aria-label="t('common.clear')" @click.stop="removeFromHistory(entry)">
-            <svg width="12" height="12" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-              <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
+      <div class="history-list">
+        <button
+          v-for="entry in history"
+          :key="entry"
+          type="button"
+          @click="selectHistory(entry)"
+          class="history-row btn-press"
+        >
+          <div class="history-icon">
+            <svg width="14" height="14" style="color: var(--text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke-width="2"/>
+              <path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="history-text">{{ entry }}</span>
+          <span
+            class="history-remove btn-press"
+            role="button"
+            :aria-label="t('common.clear')"
+            @click.stop="removeFromHistory(entry)"
+          >
+            <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </span>
         </button>
       </div>
     </div>
 
-    <!-- Empty hero (no query, no history) -->
-    <div v-else-if="!hasQuery" class="px-8 pt-20 text-center">
-      <p class="num-label text-[14px] mb-3">— {{ t('ed.discover_section') }} —</p>
-      <h2 class="display text-[28px] mb-3" style="color: var(--text-primary)">
-        {{ t('search.hero_title') }}
-      </h2>
-      <p class="serif-italic text-[14.5px] max-w-[280px] mx-auto leading-relaxed" style="color: var(--text-secondary)">
-        {{ t('search.hero_subtitle') }}
-      </p>
+    <!-- ── Empty hero (no query, no history) ── -->
+    <div v-else-if="!hasQuery" class="flex flex-col items-center justify-center pt-24 px-8 text-center">
+      <div class="empty-hero">
+        <svg width="32" height="32" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p class="text-[15px] font-bold mt-4" style="color: var(--text-primary)">{{ t('search.hero_title') }}</p>
+      <p class="text-[12px] font-medium mt-1.5" style="color: var(--text-tertiary)">{{ t('search.hero_subtitle') }}</p>
     </div>
 
-    <!-- Loading -->
-    <div v-else-if="isSearching && !results.length" class="px-5 pt-5">
-      <div v-for="i in 4" :key="i" class="flex items-center gap-3 py-3 border-b" :style="{ borderColor: 'var(--hairline)' }">
-        <div class="skeleton" style="width: 56px; height: 70px; flex-shrink: 0"></div>
+    <!-- ── Loading ── -->
+    <div v-else-if="isSearching && !results.length" class="px-4 pt-4">
+      <div v-for="i in 4" :key="i" class="skeleton-row">
+        <div class="skeleton skeleton-img"></div>
         <div class="flex-1">
-          <div class="skeleton h-3 mb-2" style="width: 70%"></div>
-          <div class="skeleton h-3" style="width: 40%"></div>
+          <div class="skeleton h-3.5 rounded-lg mb-2" style="width: 60%"></div>
+          <div class="skeleton h-3 rounded-lg" style="width: 35%"></div>
         </div>
       </div>
     </div>
 
-    <!-- No results -->
-    <div v-else-if="hasSearched && !results.length" class="px-8 pt-16 text-center">
-      <p class="num-label text-[14px] mb-3" style="color: var(--terracotta)">— {{ t('ed.empty_n') }} —</p>
-      <h2 class="display text-[24px] mb-2" style="color: var(--text-primary)">
-        {{ t('search.no_results') }}
-      </h2>
-      <p class="serif-italic text-[14px]" style="color: var(--text-secondary)">{{ t('search.try_different') }}</p>
+    <!-- ── No results ── -->
+    <div v-else-if="hasSearched && !results.length" class="flex flex-col items-center justify-center pt-20 px-8 text-center">
+      <div class="empty-hero" style="background: rgba(249, 115, 22, 0.08)">
+        <svg width="32" height="32" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" stroke-width="2"/>
+          <path d="M8 11h6M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p class="text-[15px] font-bold mt-4" style="color: var(--text-primary)">{{ t('search.no_results') }}</p>
+      <p class="text-[12px] font-medium mt-1.5" style="color: var(--text-tertiary)">{{ t('search.try_different') }}</p>
     </div>
 
-    <!-- Results -->
-    <div v-else-if="results.length" class="px-5 pt-5">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="num-label text-[11px] tabular">{{ String(results.length).padStart(2, '0') }}</span>
-        <span class="block w-4 h-px" style="background: var(--hairline)"></span>
-        <p class="eyebrow-sm">{{ t('search.results_count', { count: results.length }) }}</p>
-      </div>
-      <div class="hairline mb-2"></div>
-      <div class="flex flex-col">
-        <button v-for="product in results" :key="product.id" type="button" @click="openProduct(product)"
-          class="result-row btn-press">
+    <!-- ── Results ── -->
+    <div v-else-if="results.length" class="px-4 pt-3">
+      <p class="text-[11px] font-semibold uppercase tracking-wider mb-2.5 px-1" style="color: var(--text-tertiary)">
+        {{ t('search.results_count', { count: results.length }) }}
+      </p>
+      <div class="result-list">
+        <button
+          v-for="product in results"
+          :key="product.id"
+          type="button"
+          @click="openProduct(product)"
+          class="result-row btn-press"
+        >
           <div class="result-img-wrap">
             <img v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)" class="result-img" style="mix-blend-mode: multiply;" />
-            <svg v-else width="20" height="20" style="color: var(--text-tertiary); opacity: 0.4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.4">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <path d="M21 15l-5-5L5 21"/>
+            <svg v-else width="22" height="22" style="color: var(--text-tertiary); opacity: 0.4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
+              <path d="M21 15l-5-5L5 21" stroke-width="2"/>
             </svg>
-            <span v-if="discountPercent(product)" class="result-discount num-label text-[10px] tabular">−{{ discountPercent(product) }}%</span>
+            <span v-if="discountPercent(product)" class="result-badge">-{{ discountPercent(product) }}%</span>
           </div>
           <div class="flex-1 min-w-0 text-left">
-            <p class="result-name truncate">{{ getLocalizedName(product.name) }}</p>
-            <p v-if="product.categoryName" class="text-[11px] mt-0.5 truncate" style="color: var(--text-tertiary)">{{ product.categoryName }}</p>
-            <div class="flex items-baseline gap-2 mt-1">
-              <span class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500">{{ formatPrice(product.discountedPrice || product.price) }}</span>
-              <span v-if="product.discountedPrice" class="text-[11px] line-through tabular" style="color: var(--text-muted)">{{ formatPrice(product.price) }}</span>
+            <p class="result-name">{{ getLocalizedName(product.name) }}</p>
+            <p v-if="product.categoryName" class="result-cat">{{ product.categoryName }}</p>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span class="result-price">{{ formatPrice(product.discountedPrice || product.price) }}</span>
+              <span v-if="product.discountedPrice" class="result-price-old">{{ formatPrice(product.price) }}</span>
             </div>
           </div>
-          <svg width="12" height="12" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-            <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="14" height="14" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
       </div>
@@ -217,14 +231,26 @@ function discountPercent(p) {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(250, 247, 241, 0.92);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 1px solid var(--hairline);
+  background: rgba(245, 250, 247, 0.92);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
 }
 :root.dark .search-header,
 .dark .search-header {
-  background: rgba(14, 20, 17, 0.92);
+  background: rgba(10, 15, 12, 0.92);
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .search-field {
@@ -232,12 +258,15 @@ function discountPercent(p) {
   align-items: center;
   gap: 10px;
   padding: 11px 14px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  transition: border-color 0.2s ease;
+  border-radius: 14px;
+  background: var(--surface-secondary);
+  border: 1.5px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .search-field:focus-within {
-  border-color: var(--text-primary);
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
 }
 .search-input {
   flex: 1;
@@ -245,68 +274,154 @@ function discountPercent(p) {
   background: transparent;
   border: none;
   outline: none;
-  font-family: 'Fraunces', Georgia, serif;
-  font-style: italic;
-  font-size: 14.5px;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text-primary);
-}
-.search-input::placeholder {
-  color: var(--text-tertiary);
-  font-style: italic;
 }
 .search-input::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
 }
+.clear-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-tertiary);
+  border: none;
+  flex-shrink: 0;
+}
 
+/* ── Section header ── */
+.section-dot {
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+/* ── History rows ── */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .history-row {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px 0;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--hairline);
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.history-row:hover {
+  background: var(--surface-secondary);
+}
+.history-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-secondary);
+  flex-shrink: 0;
+}
+.history-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .history-remove {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
+  flex-shrink: 0;
   cursor: pointer;
+}
+.history-remove:hover {
+  background: var(--surface-secondary);
+}
+
+/* ── Empty hero ── */
+.empty-hero {
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Skeleton ── */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+.skeleton-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   flex-shrink: 0;
 }
 
-/* Results */
+/* ── Results ── */
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .result-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
-  padding: 14px 0;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--hairline);
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .result-img-wrap {
   position: relative;
-  width: 58px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  flex-shrink: 0;
   background: var(--img-bg);
-  border: 1px solid var(--hairline);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  flex-shrink: 0;
 }
 .result-img {
   width: 100%;
@@ -314,22 +429,41 @@ function discountPercent(p) {
   object-fit: contain;
   padding: 4px;
 }
-.result-discount {
+.result-badge {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 3px;
+  left: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  color: white;
   padding: 2px 5px;
-  background: var(--bordeaux);
-  color: var(--cream);
-  line-height: 1;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #F97316, #EA580C);
+  letter-spacing: 0.02em;
 }
 .result-name {
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-size: 14.5px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.result-cat {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.result-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.result-price-old {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-decoration: line-through;
 }
 </style>

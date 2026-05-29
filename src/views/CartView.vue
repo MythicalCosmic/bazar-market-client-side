@@ -56,10 +56,13 @@ function removePromo() {
 }
 
 const suggestions = computed(() =>
-  products.value.filter((p) => !cartItems.value.find((i) => i.id === p.id)).slice(0, 4)
+  products.value.filter((p) => !cartItems.value.find((i) => i.id === p.id)).slice(0, 3)
 )
 
-function handleClearCart() { showClearConfirm.value = true }
+function handleClearCart() {
+  showClearConfirm.value = true
+}
+
 function confirmClear() {
   clearCart()
   showClearConfirm.value = false
@@ -67,151 +70,133 @@ function confirmClear() {
 </script>
 
 <template>
-  <div class="relative min-h-screen" style="background: var(--bg-app)">
+  <div class="relative">
     <div class="pb-44">
-      <!-- Editorial header -->
-      <div class="px-5 py-4 sticky top-0 z-20 cart-header">
-        <div class="flex items-center justify-between">
-          <button @click="navigate('home')" class="flex items-center gap-2 btn-press">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="eyebrow-sm">{{ t('ed.continue_shopping') }}</span>
-          </button>
-          <button v-if="cartItems.length" @click="handleClearCart" class="btn-press">
-            <span class="eyebrow-sm" style="color: var(--bordeaux)">{{ t('ed.clear_all') }}</span>
-          </button>
+      <!-- Header -->
+      <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20 cart-header">
+        <button @click="navigate('home')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
+          <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="text-center">
+          <p class="text-base font-bold" style="color: var(--text-primary)">{{ t('cart.title') }}</p>
+          <p class="text-[11px] font-medium" style="color: var(--text-tertiary)">{{ cartItems.length }} {{ t('cart.items_count') }}</p>
         </div>
-      </div>
-
-      <!-- Editorial title -->
-      <div class="px-5 mt-4 mb-4">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="num-label text-[11px] tabular">№ {{ String(cartItems.length).padStart(2, '0') }}</span>
-          <span class="block w-4 h-px" style="background: var(--hairline)"></span>
-          <p class="eyebrow-sm">{{ cartItems.length }} {{ t('cart.items_count') }}</p>
-        </div>
-        <h1 class="display text-[34px]" style="color: var(--text-primary)">
-          {{ t('ed.your_basket_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.basket_italic') }}</span>
-        </h1>
-        <div class="hairline mt-4"></div>
-      </div>
-
-      <!-- Empty state -->
-      <div v-if="cartItems.length === 0" class="px-8 pt-10 pb-10 text-center">
-        <p class="num-label text-[14px] mb-3">— № 00 —</p>
-        <h2 class="display text-[24px] mb-2" style="color: var(--text-primary)">
-          {{ t('ed.basket_awaits') }}
-        </h2>
-        <p class="serif-italic text-[15px] leading-relaxed" style="color: var(--text-secondary)">
-          {{ t('ed.start_selection') }}
-        </p>
-        <button @click="navigate('home')" class="empty-cta btn-press mt-7">
-          <span class="eyebrow-sm" style="color: var(--cream)">{{ t('ed.browse_market') }}</span>
-          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--cream)">
-            <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+        <button @click="handleClearCart" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: rgba(239,68,68,0.08)">
+          <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
       </div>
 
-      <div v-else>
-        <!-- Cart items list -->
-        <div class="items-list">
-          <TransitionGroup name="list">
-            <CartItemRow v-for="item in cartItems" :key="item.id" :item="item" />
-          </TransitionGroup>
+      <!-- Empty state -->
+      <div v-if="cartItems.length === 0" class="flex flex-col items-center justify-center py-24 px-8">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-5" style="background: var(--surface-secondary)">
+          <svg width="36" height="36" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
+        <p class="text-xl font-bold" style="color: var(--text-primary)">{{ t('cart.empty_title') }}</p>
+        <p class="text-sm text-center mt-1.5 font-medium" style="color: var(--text-tertiary)">{{ t('cart.empty_subtitle') }}</p>
+        <button
+          @click="navigate('home')"
+          class="mt-6 bg-primary text-white font-bold px-8 py-3.5 rounded-2xl btn-press"
+          style="box-shadow: 0 4px 16px var(--primary-glow)"
+        >{{ t('cart.go_catalog') }}</button>
+      </div>
+
+      <div v-else class="px-4 mt-3 flex flex-col gap-3">
+        <!-- Cart items -->
+        <TransitionGroup name="list" tag="div" class="flex flex-col gap-3">
+          <CartItemRow v-for="item in cartItems" :key="item.id" :item="item" />
+        </TransitionGroup>
 
         <!-- Upsell suggestions -->
-        <div v-if="suggestions.length" class="mt-8 px-5">
-          <div class="flex items-end justify-between mb-3">
-            <div>
-              <p class="eyebrow-sm">{{ t('ed.worth_adding') }}</p>
-              <h3 class="display text-[20px] mt-1" style="color: var(--text-primary)">{{ t('ed.little_extra') }}</h3>
-            </div>
-          </div>
-          <div class="hairline mb-3"></div>
-          <div class="flex gap-3 scroll-x pb-1">
+        <div v-if="suggestions.length" class="mt-2">
+          <p class="text-sm font-bold mb-2.5" style="color: var(--text-primary)">{{ t('cart.add_more') }}</p>
+          <div class="flex gap-2.5 scroll-x pb-1">
             <div v-for="p in suggestions" :key="p.id" class="upsell-card">
-              <div class="upsell-img">
-                <img v-if="p.image" :src="p.image" :alt="getLocalizedName(p.name)" class="w-full h-full object-contain p-2" style="mix-blend-mode: multiply;" />
-              </div>
-              <p class="upsell-name line-clamp-2">{{ getLocalizedName(p.name) }}</p>
-              <p class="serif text-[13px] tabular" style="color: var(--text-primary); font-weight: 500">{{ formatPrice(p.discountedPrice || p.price) }}</p>
-              <button @click="addToCart(p)" class="upsell-add btn-press">
-                <span class="eyebrow-sm">{{ t('cart.add') }}</span>
+              <img :src="p.image" :alt="getLocalizedName(p.name)" class="w-12 h-12 object-contain" style="mix-blend-mode: multiply;" />
+              <p class="text-[10px] font-medium text-center line-clamp-2 leading-tight" style="color: var(--text-secondary)">
+                {{ getLocalizedName(p.name) }}
+              </p>
+              <button @click="addToCart(p)"
+                class="text-[10px] font-bold text-primary border border-primary rounded-lg px-2 py-0.5 btn-press">
+                {{ t('cart.add') }}
               </button>
             </div>
           </div>
         </div>
 
         <!-- Promo code -->
-        <div class="mt-8 px-5">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="num-label text-[11px] tabular">§</span>
-            <p class="eyebrow-sm">{{ t('cart.promo_code') }}</p>
-          </div>
-          <div class="hairline mb-3"></div>
+        <div class="promo-section mt-2" :class="{ 'promo-valid': promoStatus === 'valid' }">
+          <p class="text-xs font-bold mb-2.5" style="color: var(--text-primary)">{{ t('cart.promo_code') }}</p>
 
-          <!-- Applied -->
-          <div v-if="promoStatus === 'valid' && promoData" class="promo-applied">
-            <div class="flex items-center gap-3 flex-1 min-w-0">
-              <span class="num-label text-[14px]">✓</span>
-              <div class="min-w-0">
-                <p class="serif text-[15px]" style="color: var(--text-primary); font-weight: 500">{{ appliedCode }}</p>
-                <p class="text-[11px] tabular" style="color: var(--text-secondary)">
-                  −{{ formatNum(promoData.discount_amount) }} {{ t('currency') }}
+          <!-- Applied state -->
+          <div v-if="promoStatus === 'valid' && promoData" class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+                <svg width="16" height="16" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-primary">{{ appliedCode }}</p>
+                <p class="text-[10px] font-medium" style="color: var(--text-secondary)">
+                  {{ promoData.type === 'percent' ? promoData.value + '% ' + t('cart.discount').toLowerCase() : '' }}
+                  · -{{ formatNum(promoData.discount_amount) }} {{ t('currency') }}
                 </p>
               </div>
             </div>
-            <button @click="removePromo" class="btn-press">
-              <span class="eyebrow-sm" style="color: var(--bordeaux)">{{ t('ed.remove') }}</span>
+            <button @click="removePromo" class="w-8 h-8 rounded-xl flex items-center justify-center btn-press" style="background: rgba(239,68,68,0.08)">
+              <svg width="14" height="14" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </button>
           </div>
 
-          <!-- Input -->
+          <!-- Input state -->
           <div v-else>
-            <div class="flex items-center gap-0 promo-row" :class="{ 'promo-row-error': promoStatus === 'invalid' }">
+            <div class="flex gap-2">
               <input v-model="promoCode" :placeholder="t('coupons.enter_code')"
                 :disabled="promoStatus === 'loading'"
                 class="promo-input"
+                :class="{ 'promo-input-error': promoStatus === 'invalid' }"
                 @keyup.enter="applyPromo" />
               <button @click="applyPromo" :disabled="promoStatus === 'loading' || !promoCode.trim()"
-                class="promo-apply btn-press"
-                :class="{ 'promo-apply-disabled': promoStatus === 'loading' || !promoCode.trim() }">
-                <span class="eyebrow-sm" style="color: var(--cream)">{{ promoStatus === 'loading' ? '...' : t('coupons.apply') }}</span>
+                class="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold btn-press transition-opacity"
+                :class="{ 'opacity-50': promoStatus === 'loading' || !promoCode.trim() }">
+                {{ promoStatus === 'loading' ? '...' : t('coupons.apply') }}
               </button>
             </div>
-            <p v-if="promoStatus === 'invalid' && promoError" class="text-[11px] mt-2 serif-italic" style="color: var(--bordeaux)">
+            <p v-if="promoStatus === 'invalid' && promoError" class="text-[10px] font-semibold text-red-500 mt-2">
               {{ promoError }}
             </p>
           </div>
         </div>
 
         <!-- Order Summary -->
-        <div class="mt-8 px-5">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="num-label text-[11px] tabular">∑</span>
-            <p class="eyebrow-sm">{{ t('cart.your_order') }}</p>
-          </div>
-          <div class="hairline mb-4"></div>
-          <div class="flex flex-col gap-3">
-            <div class="flex justify-between items-baseline">
-              <span class="serif-italic text-[14px]" style="color: var(--text-secondary)">{{ t('cart.products') }} ({{ cartItems.length }})</span>
-              <span class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500">{{ formatNum(subtotal) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+        <div class="summary-card mt-2">
+          <p class="text-sm font-bold mb-3" style="color: var(--text-primary)">{{ t('cart.your_order') }}</p>
+          <div class="flex flex-col gap-2.5">
+            <div class="flex justify-between">
+              <span class="text-xs font-medium" style="color: var(--text-secondary)">{{ t('cart.products') }}({{ cartItems.length }})</span>
+              <span class="text-xs font-semibold" style="color: var(--text-primary)">{{ formatNum(subtotal) }} {{ t('currency') }}</span>
             </div>
-            <div v-if="discount > 0" class="flex justify-between items-baseline">
-              <span class="serif-italic text-[14px]" style="color: var(--text-secondary)">{{ t('cart.discount') }}</span>
-              <span class="serif text-[15px] tabular" style="color: var(--bordeaux); font-weight: 500">−{{ formatNum(discount) }} <span class="eyebrow-sm" style="color: var(--bordeaux); opacity: 0.7">{{ t('currency') }}</span></span>
+            <div class="flex justify-between">
+              <span class="text-xs font-medium" style="color: var(--text-secondary)">{{ t('cart.discount') }}</span>
+              <span class="text-xs font-semibold text-red-500">-{{ formatNum(discount) }} {{ t('currency') }}</span>
             </div>
-            <div class="flex justify-between items-baseline">
-              <span class="serif-italic text-[14px]" style="color: var(--text-secondary)">{{ t('cart.delivery') }}</span>
-              <span class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500">{{ formatNum(deliveryCost) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+            <div class="flex justify-between">
+              <span class="text-xs font-medium" style="color: var(--text-secondary)">{{ t('cart.delivery') }}</span>
+              <span class="text-xs font-semibold" style="color: var(--text-primary)">{{ formatNum(deliveryCost) }} {{ t('currency') }}</span>
             </div>
-            <div class="hairline-strong my-1"></div>
-            <div class="flex justify-between items-baseline">
-              <span class="eyebrow">{{ t('cart.total') }}</span>
-              <span class="serif text-[20px] tabular" style="color: var(--text-primary); font-weight: 600; letter-spacing: -0.02em">{{ formatNum(total) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+            <div class="h-px" style="background: var(--border)"></div>
+            <div class="flex justify-between">
+              <span class="text-[15px] font-bold" style="color: var(--text-primary)">{{ t('cart.total') }}</span>
+              <span class="text-[15px] font-bold" style="color: var(--text-primary)">{{ formatNum(total) }} {{ t('currency') }}</span>
             </div>
           </div>
         </div>
@@ -220,40 +205,38 @@ function confirmClear() {
 
     <!-- Checkout button -->
     <div v-if="cartItems.length > 0"
-      class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-5 pb-4 pt-3 z-30 checkout-fab-wrap">
+      class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pb-4 pt-3 z-30"
+      style="background: linear-gradient(to top, var(--bg-app) 70%, transparent)">
       <button
         @click="navigate('checkout', { couponCode: appliedCode })"
         class="checkout-btn btn-press">
-        <div class="flex items-center gap-3">
-          <span class="checkout-count tabular">{{ cartItems.length }}</span>
-          <div class="text-left">
-            <p class="eyebrow-sm" style="color: var(--cream); opacity: 0.6">{{ t('ed.proceed') }}</p>
-            <span class="serif text-[15px]" style="color: var(--cream); font-weight: 500">{{ t('cart.checkout') }}</span>
-          </div>
-        </div>
-        <div class="text-right">
-          <p class="eyebrow-sm" style="color: var(--cream); opacity: 0.6">{{ t('ed.total_short') }}</p>
-          <span class="serif text-[15px] tabular" style="color: var(--cream); font-weight: 500">{{ formatNum(total) }} {{ t('currency') }}</span>
-        </div>
+        <span class="checkout-count">{{ cartItems.length }}</span>
+        <span class="text-[15px] font-bold">{{ t('cart.checkout') }}</span>
+        <span class="text-sm font-semibold opacity-90">{{ formatNum(total) }} {{ t('currency') }}</span>
       </button>
     </div>
 
     <!-- Clear cart confirmation -->
     <Teleport to="#app">
       <Transition name="fade">
-        <div v-if="showClearConfirm" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(26, 38, 32, 0.55); backdrop-filter: blur(8px)" @click.self="showClearConfirm = false">
-          <div class="w-full max-w-[480px] confirm-sheet safe-bottom">
-            <div class="text-center mb-5">
-              <p class="num-label text-[12px] mb-2">— {{ t('ed.notice') }} —</p>
-              <h3 class="display text-[22px]" style="color: var(--text-primary)">{{ t('cart.clear_confirm') }}</h3>
-              <p class="serif-italic text-[13px] mt-2" style="color: var(--text-secondary)">{{ t('cart.clear_subtitle') }}</p>
+        <div v-if="showClearConfirm" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(0,0,0,0.4)" @click.self="showClearConfirm = false">
+          <div class="w-full max-w-[480px] rounded-t-[28px] p-6 safe-bottom" style="background: var(--surface);">
+            <div class="flex flex-col items-center mb-6">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3" style="background: rgba(239,68,68,0.08)">
+                <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('cart.clear_confirm') }}</h3>
+              <p class="text-sm font-medium mt-1" style="color: var(--text-tertiary)">{{ t('cart.clear_subtitle') }}</p>
             </div>
-            <div class="flex gap-2">
-              <button @click="showClearConfirm = false" class="confirm-cancel btn-press">
-                <span class="eyebrow-sm">{{ t('profile.cancel') }}</span>
+            <div class="flex flex-col gap-2">
+              <button @click="confirmClear" class="w-full bg-red-500 text-white font-bold py-3.5 rounded-2xl btn-press">
+                {{ t('cart.clear_yes') }}
               </button>
-              <button @click="confirmClear" class="confirm-action btn-press">
-                <span class="eyebrow-sm" style="color: var(--cream)">{{ t('cart.clear_yes') }}</span>
+              <button @click="showClearConfirm = false" class="w-full font-bold py-3.5 rounded-2xl btn-press"
+                style="background: var(--surface-secondary); color: var(--text-primary)">
+                {{ t('profile.cancel') }}
               </button>
             </div>
           </div>
@@ -265,123 +248,66 @@ function confirmClear() {
 
 <style scoped>
 .cart-header {
-  background: rgba(250, 247, 241, 0.86);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 1px solid var(--hairline);
+  background: rgba(245, 250, 247, 0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
 }
 :root.dark .cart-header, .dark .cart-header {
-  background: rgba(14, 20, 17, 0.86);
-}
-
-.items-list {
-  background: var(--surface);
-  border-top: 1px solid var(--hairline);
-  border-bottom: 1px solid var(--hairline);
-}
-
-.empty-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 24px;
-  background: var(--surface-ink);
-  border: none;
-  cursor: pointer;
-  border-radius: 2px;
+  background: rgba(10, 15, 12, 0.88);
 }
 
 .upsell-card {
   flex-shrink: 0;
-  width: 130px;
+  width: 88px;
+  border-radius: 16px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  padding: 10px;
-  border-radius: 2px;
-}
-.upsell-img {
-  width: 100%;
-  height: 90px;
-  background: var(--img-bg);
-  display: flex;
   align-items: center;
-  justify-content: center;
-}
-.upsell-name {
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
-  line-height: 1.2;
-  min-height: 30px;
-}
-.upsell-add {
-  margin-top: auto;
-  padding: 7px 0;
-  text-align: center;
-  border: 1px solid var(--border-strong);
-  background: transparent;
-  cursor: pointer;
+  gap: 6px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
 }
 
-/* Promo */
-.promo-applied {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--primary);
-  background: var(--primary-tint);
+.promo-section {
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
+  transition: all 0.3s ease;
+}
+.promo-valid {
+  background: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary), 0 4px 12px var(--shadow);
 }
 
-.promo-row {
-  display: flex;
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  transition: border-color 0.2s ease;
-}
-.promo-row:focus-within {
-  border-color: var(--text-primary);
-}
-.promo-row-error {
-  border-color: var(--bordeaux);
-}
 .promo-input {
   flex: 1;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 13px 14px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: transparent;
-  color: var(--text-primary);
-  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 12px;
   outline: none;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease;
 }
-.promo-apply {
-  padding: 0 22px;
-  background: var(--surface-ink);
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  min-width: 92px;
+.promo-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.08);
 }
-.promo-apply:active {
-  background: var(--primary-dark);
-}
-.promo-apply-disabled {
-  background: var(--text-muted);
-  cursor: not-allowed;
+.promo-input-error {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
-.checkout-fab-wrap {
-  background: linear-gradient(to top, var(--bg-app) 60%, transparent);
+.summary-card {
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
 }
 
 .checkout-btn {
@@ -389,45 +315,17 @@ function confirmClear() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
-  background: var(--surface-ink);
-  border: none;
-  border-radius: 2px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: var(--shadow-lg);
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%);
+  color: white;
+  box-shadow: 0 4px 16px var(--primary-glow), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .checkout-count {
-  background: var(--terracotta);
-  color: var(--cream);
-  padding: 8px 12px;
-  font-size: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 14px;
   font-weight: 700;
-  border-radius: 2px;
-  min-width: 36px;
-  text-align: center;
-}
-
-/* Confirm sheet */
-.confirm-sheet {
-  background: var(--surface);
-  padding: 28px 22px 24px;
-  border-top: 1px solid var(--hairline);
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-.confirm-cancel,
-.confirm-action {
-  flex: 1;
-  padding: 14px 0;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  cursor: pointer;
-  text-align: center;
-}
-.confirm-action {
-  background: var(--bordeaux);
-  border-color: var(--bordeaux);
 }
 </style>

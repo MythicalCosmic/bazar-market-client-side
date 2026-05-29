@@ -1,4 +1,5 @@
 <script setup>
+
 import { useCartStore } from '../stores/cartStore.js'
 import { useFormat } from '../composables/useFormat.js'
 import { useI18n } from '../i18n/index.js'
@@ -15,40 +16,35 @@ const { getLocalizedName } = useI18n()
 <template>
   <div class="cart-row">
     <!-- Image -->
-    <div class="cart-img">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden" style="background: var(--img-bg);">
       <img v-if="item.image" :src="item.image" :alt="getLocalizedName(item.name)" class="w-full h-full object-contain p-1" style="mix-blend-mode: multiply;" />
-      <svg v-else width="22" height="22" style="color: var(--text-tertiary); opacity: 0.4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+      <svg v-else width="24" height="24" style="color: var(--text-tertiary); opacity: 0.4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/><path d="M21 15l-5-5L5 21" stroke-width="2"/>
       </svg>
     </div>
 
     <!-- Info -->
-    <div class="flex-1 min-w-0 flex flex-col justify-center">
-      <p class="cart-name truncate">{{ getLocalizedName(item.name) }}</p>
-      <p v-if="parseFloat(item.quantity) !== (item.step || 1)" class="text-[10.5px] mt-0.5 tabular" style="color: var(--text-tertiary)">
+    <div class="flex-1 min-w-0">
+      <p class="text-[13px] font-semibold truncate" style="color: var(--text-primary)">{{ getLocalizedName(item.name) }}</p>
+      <p class="text-[13px] font-bold mt-0.5" style="color: var(--text-primary)">{{ formatPrice(item.price) }}</p>
+      <p v-if="parseFloat(item.quantity) !== (item.step || 1)" class="text-[10px] font-medium" style="color: var(--text-tertiary)">
         {{ formatPrice(item.price) }} × {{ formatQty(item.quantity, item.unit) }}
-      </p>
-      <p v-else class="text-[10.5px] mt-0.5 tabular" style="color: var(--text-tertiary)">
-        {{ formatQty(item.quantity, item.unit) }}
       </p>
     </div>
 
-    <!-- Price + Qty -->
-    <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
-      <p class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500; letter-spacing: -0.01em;">{{ formatPrice(item.price * parseFloat(item.quantity)) }}</p>
-      <div class="cart-qty">
-        <button @click="decrement(item.id)" class="cart-qty-btn btn-press" aria-label="decrement">
-          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" style="color: var(--text-primary)">
-            <path d="M5 12h14" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <span class="text-[11px] font-semibold text-center min-w-[26px] tabular" style="color: var(--text-primary)">{{ formatQty(item.quantity, item.unit) }}</span>
-        <button @click="addToCart(item)" class="cart-qty-btn btn-press" aria-label="increment">
-          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" style="color: var(--text-primary)">
-            <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
+    <!-- Qty controls -->
+    <div class="flex items-center gap-1.5 flex-shrink-0 cart-qty">
+      <button @click="decrement(item.id)" class="cart-qty-btn btn-press">
+        <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <span class="text-xs font-bold text-center min-w-[28px] text-primary">{{ formatQty(item.quantity, item.unit) }}</span>
+      <button @click="addToCart(item)" class="cart-qty-btn btn-press">
+        <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
   </div>
 </template>
@@ -56,63 +52,29 @@ const { getLocalizedName } = useI18n()
 <style scoped>
 .cart-row {
   display: flex;
-  align-items: stretch;
-  gap: 14px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--hairline);
-}
-.cart-row:last-child {
-  border-bottom: none;
-}
-
-.cart-img {
-  width: 62px;
-  height: 76px;
-  background: var(--img-bg);
-  border: 1px solid var(--hairline);
-  border-radius: 2px;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.cart-name {
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-size: 14.5px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
-  line-height: 1.2;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px var(--shadow);
 }
 
 .cart-qty {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: transparent;
-  border: 1px solid var(--hairline);
-  border-radius: 2px;
-  padding: 2px;
+  background: var(--primary-light);
+  border-radius: 12px;
+  padding: 3px;
 }
 
 .cart-qty-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 1px;
-  background: var(--surface);
-  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s ease;
-}
-.cart-qty-btn:active {
-  background: var(--surface-secondary);
 }
 </style>

@@ -1,428 +1,346 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from '../router/index.js'
-import { useI18n } from '../i18n/index.js'
 
 const { navigate } = useRouter()
-const { t } = useI18n()
 const stage = ref(0)
 const timers = []
+
+const fruits = [
+  { name: 'apple',  color: '#10B981', delay: 0,    sx: -120, sy: -80,  ex: -58, ey: -52 },
+  { name: 'pear',   color: '#34D399', delay: 0.35,  sx: 120,  sy: -80,  ex: 58,  ey: -48 },
+  { name: 'citrus', color: '#6EE7B7', delay: 0.70,  sx: -120, sy: 80,   ex: -54, ey: 52  },
+  { name: 'leaf',   color: '#059669', delay: 1.05,  sx: 120,  sy: 80,   ex: 54,  ey: 48  },
+]
 
 function sched(fn, ms) { timers.push(setTimeout(fn, ms)) }
 
 onMounted(() => {
-  sched(() => stage.value = 1, 150)
-  sched(() => stage.value = 2, 900)
-  sched(() => stage.value = 3, 1600)
-  sched(() => stage.value = 4, 2300)
-  sched(() => stage.value = 5, 2900)
-  sched(() => { stage.value = 6; sched(() => navigate('home'), 650) }, 3600)
+  sched(() => stage.value = 1, 100)
+  sched(() => stage.value = 2, 2500)
+  sched(() => stage.value = 3, 3100)
+  sched(() => stage.value = 4, 3900)
+  sched(() => stage.value = 5, 4700)
+  sched(() => { stage.value = 6; sched(() => navigate('home'), 650) }, 5600)
 })
 
 onUnmounted(() => timers.forEach(t => clearTimeout(t)))
-
-const today = new Date()
-const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()
 </script>
 
 <template>
   <div class="splash" :class="{ exit: stage >= 6 }">
-    <!-- Soft gradient orbs (warm depth) -->
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
 
-    <!-- Floating fireflies -->
-    <div class="fireflies">
-      <span v-for="n in 14" :key="n" class="firefly" :style="{ '--n': n, '--delay': (n * 0.7) + 's', '--dur': (8 + (n % 5) * 2) + 's', '--x': ((n * 37) % 100) + '%', '--size': (2 + (n % 3)) + 'px' }"></span>
+    <!-- ── Ambient background ── -->
+    <div class="bg">
+      <div class="bg-o o1"></div>
+      <div class="bg-o o2"></div>
+      <div class="bg-o o3"></div>
     </div>
 
-    <!-- Paper texture overlay -->
-    <div class="paper-tex"></div>
-
-    <!-- Frame border -->
-    <div class="frame" :class="{ show: stage >= 1 }">
-      <div class="corner corner-tl"></div>
-      <div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div>
-      <div class="corner corner-br"></div>
-    </div>
-
-    <!-- Top masthead -->
-    <div class="top-row">
-      <div class="rule-frag" :class="{ show: stage >= 1 }"></div>
-      <span class="eyebrow-sm est" :class="{ show: stage >= 1 }">EST · MMXXV</span>
-      <div class="rule-frag" :class="{ show: stage >= 1 }"></div>
-    </div>
-
-    <!-- Brand wordmark -->
-    <div class="brand">
-      <!-- "Bazar" - the italic display word -->
-      <h1 class="brand-name" :class="{ show: stage >= 2 }">
-        <span class="brand-italic">{{ t('brand.bazar') }}</span>
-      </h1>
-
-      <!-- Decorative center line + "Market" -->
-      <div class="mid-row" :class="{ show: stage >= 3 }">
-        <span class="mid-line"></span>
-        <span class="mid-word">{{ t('brand.market') }}</span>
-        <span class="mid-line"></span>
-      </div>
-
-      <!-- "Go" — the play action -->
-      <div class="go-wrap" :class="{ show: stage >= 4 }">
-        <span class="go-bracket">[</span>
-        <span class="go-word">{{ t('brand.go') }}</span>
-        <span class="go-arrow">→</span>
-        <span class="go-bracket">]</span>
-      </div>
-
-      <!-- Tagline -->
-      <p class="tagline" :class="{ show: stage >= 5 }">
-        {{ t('brand.tagline') }}
-      </p>
-
-      <!-- Ornament cluster -->
-      <div class="ornament-cluster" :class="{ show: stage >= 5 }">
-        <span class="orn-star orn-1">✦</span>
-        <span class="orn-star orn-2">✧</span>
-        <span class="orn-star orn-3">✦</span>
+    <!-- ── Fruit stage ── -->
+    <div class="fstage">
+      <div v-for="f in fruits" :key="f.name"
+        class="fi"
+        :class="{ enter: stage >= 1, detail: stage >= 2, converge: stage >= 3 }"
+        :style="{
+          '--d': f.delay + 's',
+          '--c': f.color,
+          '--sx': f.sx + 'px', '--sy': f.sy + 'px',
+          '--ex': f.ex + 'px', '--ey': f.ey + 'px',
+        }">
+        <!-- Apple (red) -->
+        <svg v-if="f.name === 'apple'" viewBox="0 0 64 64" width="64" height="64" fill="none">
+          <path d="M33 10c1-4 5-6 7-4" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M36 12c2-1 4 0 5 2" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M32 16c-11 0-20 10-18 22 2 12 10 18 18 18s16-6 18-18c2-12-7-22-18-22z" fill="#EF4444"/>
+          <path d="M32 16c-3 0-6 1-8 3 4-1 8 0 11 3 3-4 7-5 11-4-3-2-8-2-14-2z" fill="#F87171" opacity="0.6"/>
+          <path class="fd" d="M32 22v26M26 34q6-6 12 0" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+        </svg>
+        <!-- Pear (yellow-green) -->
+        <svg v-else-if="f.name === 'pear'" viewBox="0 0 64 64" width="60" height="60" fill="none">
+          <path d="M33 9c0-3 3-5 4-3" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M32 14c-4 0-7 6-9 14s-6 16-2 22c4 6 16 6 20 0 4-6 0-14-2-22s-5-14-7-14z" fill="#A3E635"/>
+          <path d="M32 14c-2 0-4 2-5 6 3-2 6-2 9 0-1-4-3-6-4-6z" fill="#BEF264" opacity="0.5"/>
+          <path class="fd" d="M32 20v30" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+        </svg>
+        <!-- Orange (citrus cross-section) -->
+        <svg v-else-if="f.name === 'citrus'" viewBox="0 0 64 64" width="60" height="60" fill="none">
+          <circle cx="32" cy="32" r="22" fill="#FB923C"/>
+          <circle cx="32" cy="32" r="19" fill="#FDBA74" opacity="0.5"/>
+          <circle cx="32" cy="32" r="17" fill="#FED7AA" opacity="0.3"/>
+          <g class="fd" opacity="0">
+            <line x1="32" y1="13" x2="32" y2="51" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="15" y1="32" x2="49" y2="32" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="19" y1="19" x2="45" y2="45" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="45" y1="19" x2="19" y2="45" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+          </g>
+        </svg>
+        <!-- Leaf (green) -->
+        <svg v-else-if="f.name === 'leaf'" viewBox="0 0 64 64" width="56" height="56" fill="none">
+          <path d="M32 8c-16 8-22 24-16 40 4 8 12 10 16 8s12-10 16-24c4-12 0-22-16-24z" fill="#22C55E"/>
+          <path d="M32 8c-8 4-14 12-16 22 6-6 14-10 22-10-1-5-3-9-6-12z" fill="#4ADE80" opacity="0.4"/>
+          <g class="fd" opacity="0">
+            <path d="M32 14c-4 14-6 26-4 38" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M28 26l-6 5M35 34l5-3M29 42l-5 3" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          </g>
+        </svg>
       </div>
     </div>
 
-    <!-- Bottom date -->
-    <div class="bottom-row">
-      <div class="rule-frag" :class="{ show: stage >= 5 }"></div>
-      <span class="eyebrow-sm date" :class="{ show: stage >= 5 }">{{ dateStr }}</span>
-      <div class="rule-frag" :class="{ show: stage >= 5 }"></div>
+    <!-- ── Light sweep ── -->
+    <div v-if="stage >= 2" class="sweep"></div>
+
+    <!-- ── Convergence pulse ── -->
+    <div v-if="stage >= 3" class="cpulse"></div>
+
+    <!-- ── Logo ── -->
+    <div class="lw" :class="{ show: stage >= 4 }">
+      <div class="lglow"></div>
+      <div class="lbox">
+        <img src="/logo.png" alt="Bazar Market" class="limg" />
+      </div>
     </div>
+
+    <!-- ── Brand text ── -->
+    <div class="brow">
+      <span class="bb" :class="{ show: stage >= 5 }">BAZAR</span>
+      <span class="bdot" :class="{ show: stage >= 5 }"></span>
+      <span class="bm" :class="{ show: stage >= 5 }">MARKET</span>
+    </div>
+
+    <!-- ── Tagline (Uzbek) ── -->
+    <p class="tl" :class="{ show: stage >= 5 }">Sifat · Tezlik · Qulay narx.</p>
+
+    <!-- ── Final shimmer ── -->
+    <div v-if="stage >= 5" class="shm"></div>
   </div>
 </template>
 
 <style scoped>
+/* ════════════════════════════════════
+   Premium Splash — Fruit Silhouettes
+   ════════════════════════════════════ */
+
 .splash {
-  width: 100%;
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 60px 32px;
-  background:
-    radial-gradient(ellipse at 78% 12%, rgba(201, 150, 98, 0.32), transparent 45%),
-    radial-gradient(ellipse at 18% 75%, rgba(60, 175, 125, 0.45), transparent 55%),
-    radial-gradient(ellipse at 55% 50%, rgba(245, 239, 227, 0.10), transparent 55%),
-    linear-gradient(165deg, #3D8F66 0%, #2F7A53 30%, #246144 60%, #194B37 100%);
-  color: var(--cream);
+  width: 100%; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+  gap: 22px;
+  background: linear-gradient(155deg, #6EE7B7 0%, #34D399 25%, #10B981 55%, #059669 100%);
 }
 
-.exit {
-  animation: exit-fade .65s cubic-bezier(.4,0,.2,1) forwards;
-}
-@keyframes exit-fade {
-  to { opacity: 0; transform: scale(1.02); filter: blur(2px); }
+.exit { animation: _exit .65s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes _exit {
+  to { opacity: 0; transform: scale(1.05); filter: blur(8px); }
 }
 
-/* Floating orbs */
-.orb {
+/* ── AMBIENT BG ── */
+.bg { position: absolute; inset: 0; pointer-events: none; }
+.bg-o { position: absolute; border-radius: 50%; will-change: transform; }
+.o1 { width: 320px; height: 320px; background: radial-gradient(circle,rgba(167,243,208,.22),transparent 65%); top: -16%; left: -22%; animation: _bd 9s ease-in-out infinite alternate; }
+.o2 { width: 270px; height: 270px; background: radial-gradient(circle,rgba(52,211,153,.18),transparent 65%); bottom: -12%; right: -16%; animation: _bd 10s ease-in-out infinite alternate-reverse; }
+.o3 { width: 200px; height: 200px; background: radial-gradient(circle,rgba(110,231,183,.15),transparent 65%); top: 42%; left: 55%; animation: _bd 8s ease-in-out infinite alternate 2s; }
+@keyframes _bd { to { transform: translate(18px,-14px) scale(1.08); } }
+
+/* ══ FRUITS ══ */
+.fstage {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; pointer-events: none;
+}
+
+.fi {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.35;
-  pointer-events: none;
-}
-.orb-1 { width: 340px; height: 340px; background: #5DBF8A; top: -14%; right: -14%; opacity: 0.45; animation: float-1 12s ease-in-out infinite; }
-.orb-2 { width: 280px; height: 280px; background: #3D8F66; bottom: -12%; left: -12%; opacity: 0.55; animation: float-2 14s ease-in-out infinite; }
-.orb-3 { width: 220px; height: 220px; background: #E8B585; top: 52%; left: 62%; opacity: 0.32; animation: float-3 10s ease-in-out infinite; }
-@keyframes float-1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-20px, 30px); } }
-@keyframes float-2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px, -20px); } }
-@keyframes float-3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-15px, -25px); } }
-
-.paper-tex {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(245, 239, 227, 0.014) 2px, rgba(245, 239, 227, 0.014) 3px),
-    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(245, 239, 227, 0.014) 2px, rgba(245, 239, 227, 0.014) 3px);
-}
-
-/* Floating fireflies — magical depth */
-.fireflies {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.firefly {
-  position: absolute;
-  bottom: -10px;
-  left: var(--x);
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
-  background: #FFEFC2;
-  box-shadow: 0 0 8px 2px rgba(255, 239, 194, 0.7), 0 0 16px 4px rgba(255, 239, 194, 0.35);
   opacity: 0;
-  animation: firefly-rise var(--dur) ease-in var(--delay) infinite;
-}
-@keyframes firefly-rise {
-  0%   { transform: translate3d(0, 0, 0) scale(0.6); opacity: 0; }
-  10%  { opacity: 0.9; }
-  30%  { transform: translate3d(8px, -20vh, 0) scale(1); }
-  50%  { opacity: 0.7; }
-  60%  { transform: translate3d(-6px, -50vh, 0) scale(0.9); }
-  80%  { transform: translate3d(10px, -85vh, 0) scale(1.05); opacity: 0.6; }
-  100% { transform: translate3d(0, -110vh, 0) scale(0.5); opacity: 0; }
+  transform: translate(var(--sx), var(--sy)) scale(.5);
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,.12)) drop-shadow(0 2px 6px rgba(0,0,0,.08));
+  will-change: transform, opacity;
 }
 
-/* Ornament cluster (3 stars) below tagline */
-.ornament-cluster {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 18px;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.8s ease 0.7s, transform 0.8s ease 0.7s;
+/* Stage 1 — enter & settle */
+.fi.enter {
+  animation: _fe .85s cubic-bezier(.22,1,.36,1) var(--d) forwards;
 }
-.ornament-cluster.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-.orn-star {
-  font-family: 'Fraunces', Georgia, serif;
-  color: rgba(245, 239, 227, 0.55);
-  text-shadow: 0 0 12px rgba(201, 150, 98, 0.4);
-}
-.orn-1 { font-size: 12px; animation: orn-twinkle 3s ease-in-out infinite 0s; }
-.orn-2 { font-size: 16px; color: var(--saffron); opacity: 0.85; animation: orn-twinkle 3s ease-in-out infinite 1s; text-shadow: 0 0 12px rgba(201, 150, 98, 0.65); }
-.orn-3 { font-size: 12px; animation: orn-twinkle 3s ease-in-out infinite 2s; }
-@keyframes orn-twinkle {
-  0%, 100% { opacity: 0.4; transform: scale(0.92); }
-  50%      { opacity: 1;   transform: scale(1.1); }
+@keyframes _fe {
+  0%   { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(.5) rotate(-8deg); }
+  55%  { opacity: 1; transform: translate(var(--ex), var(--ey)) scale(1.06) rotate(2deg); }
+  100% { opacity: 1; transform: translate(var(--ex), var(--ey)) scale(1) rotate(0deg); }
 }
 
-/* Editorial frame with corner marks */
-.frame {
-  position: absolute;
-  inset: 22px;
-  border: 1px solid rgba(245, 239, 227, 0.10);
-  opacity: 0;
-  transform: scale(0.96);
-  transition: opacity 0.9s ease, transform 0.9s ease;
-  pointer-events: none;
+/* Stage 2 — inner detail reveal */
+.fi.detail :deep(.fd) {
+  animation: _dr .7s ease .35s forwards;
 }
-.frame.show {
-  opacity: 1;
-  transform: scale(1);
-}
-.corner {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-color: rgba(245, 239, 227, 0.55);
-  border-style: solid;
-  border-width: 0;
-}
-.corner-tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
-.corner-tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
-.corner-bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
-.corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+@keyframes _dr { to { opacity: 1; } }
 
-/* Top / bottom rows */
-.top-row,
-.bottom-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  z-index: 5;
+/* Stage 3 — converge to center */
+.fi.converge {
+  animation:
+    _fe .85s cubic-bezier(.22,1,.36,1) var(--d) forwards,
+    _fc .75s cubic-bezier(.4,0,.2,1) forwards;
 }
-.rule-frag {
-  width: 0;
-  height: 1px;
-  background: rgba(245, 239, 227, 0.4);
-  transition: width 0.8s cubic-bezier(.22,1,.36,1);
-}
-.rule-frag.show { width: 42px; }
-.est,
-.date {
-  opacity: 0;
-  transition: opacity 0.7s ease 0.2s;
-  color: var(--cream);
-  letter-spacing: 0.32em;
-}
-.est.show,
-.date.show { opacity: 0.6; }
-.date { letter-spacing: 0.22em; }
-
-/* Brand wrapper */
-.brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 5;
+@keyframes _fc {
+  0%   { opacity: 1; transform: translate(var(--ex), var(--ey)) scale(1); }
+  100% { opacity: 0; transform: translate(0,0) scale(.25) rotate(12deg); }
 }
 
-/* "Bazar" — huge italic serif display */
-.brand-name {
-  margin: 0;
-  line-height: 0.9;
-  opacity: 0;
-  transform: scale(0.92) translateY(20px);
-  transition: opacity 1.1s cubic-bezier(.22,1,.36,1), transform 1.1s cubic-bezier(.22,1,.36,1);
+/* ── LIGHT SWEEP ── */
+.sweep {
+  position: absolute; inset: 0;
+  z-index: 12; pointer-events: none; overflow: hidden;
 }
-.brand-name.show {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-}
-.brand-italic {
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 144, 'SOFT' 60, 'WONK' 1;
-  font-style: italic;
-  font-size: 120px;
-  font-weight: 500;
-  letter-spacing: -0.05em;
-  color: #FFFAEC;
-  text-shadow:
-    0 0 30px rgba(245, 239, 227, 0.35),
-    0 0 60px rgba(201, 150, 98, 0.20),
-    0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-/* "— Market —" row */
-.mid-row {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-top: -10px;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.8s cubic-bezier(.22,1,.36,1) 0.1s, transform 0.8s cubic-bezier(.22,1,.36,1) 0.1s;
-}
-.mid-row.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-.mid-line {
-  display: block;
-  width: 36px;
-  height: 1px;
-  background: rgba(245, 239, 227, 0.6);
-}
-.mid-word {
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 144, 'SOFT' 20;
-  font-size: 32px;
-  font-weight: 500;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: #FFFAEC;
-  padding-right: 0;
-  padding-left: 0.15em;
-  text-shadow: 0 0 20px rgba(245, 239, 227, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* "Go" pill */
-.go-wrap {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 32px;
-  padding: 12px 26px 13px 22px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #D17A56 0%, #B85C3A 60%, #8F4226 100%);
-  box-shadow:
-    0 0 40px rgba(184, 92, 58, 0.45),
-    0 0 80px rgba(184, 92, 58, 0.25),
-    0 8px 24px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
-  opacity: 0;
-  transform: translateY(14px) scale(0.92);
-  transition: opacity 0.8s cubic-bezier(.34,1.56,.64,1) 0.1s, transform 0.8s cubic-bezier(.34,1.56,.64,1) 0.1s;
-  position: relative;
-  overflow: hidden;
-}
-.go-wrap.show {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  animation: go-pulse-glow 3s ease-in-out infinite 0.8s;
-}
-@keyframes go-pulse-glow {
-  0%, 100% { box-shadow: 0 0 40px rgba(184, 92, 58, 0.45), 0 0 80px rgba(184, 92, 58, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 0 rgba(0, 0, 0, 0.15); }
-  50%      { box-shadow: 0 0 50px rgba(184, 92, 58, 0.65), 0 0 100px rgba(184, 92, 58, 0.35), 0 8px 28px rgba(0, 0, 0, 0.4),  inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.18); }
-}
-
-/* Sheen sweep across the Go pill */
-.go-wrap::after {
+.sweep::after {
   content: '';
-  position: absolute;
-  top: -50%;
-  left: -30%;
-  width: 40%;
-  height: 200%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
-  transform: rotate(20deg);
-  animation: go-sheen 4s ease-in-out infinite;
-  animation-delay: 1.2s;
+  position: absolute; top: -60%; left: -140%;
+  width: 90px; height: 280%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.02) 15%,
+    rgba(255,255,255,.12) 42%,
+    rgba(255,255,255,.22) 50%,
+    rgba(255,255,255,.12) 58%,
+    rgba(255,255,255,.02) 85%,
+    transparent
+  );
+  transform: rotate(28deg);
+  animation: _sw .9s cubic-bezier(.4,0,.2,1) forwards;
 }
-@keyframes go-sheen {
-  0%   { left: -30%; opacity: 0; }
-  20%  { opacity: 1; }
-  60%  { left: 130%; opacity: 1; }
-  100% { left: 130%; opacity: 0; }
-}
-
-.go-bracket {
-  display: none;
-}
-.go-word {
-  font-family: 'Fraunces', Georgia, serif;
-  font-style: italic;
-  font-variation-settings: 'opsz' 144, 'SOFT' 60, 'WONK' 1;
-  font-size: 26px;
-  font-weight: 600;
-  color: #FFFAEC;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  position: relative;
-  z-index: 2;
-}
-.go-arrow {
-  font-size: 18px;
-  color: #FFFAEC;
-  font-weight: 700;
-  line-height: 1;
-  animation: arrow-pulse 1.6s ease-in-out infinite;
-  position: relative;
-  z-index: 2;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-}
-@keyframes arrow-pulse {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(5px); }
+@keyframes _sw {
+  0%   { translate: 0 0; }
+  100% { translate: calc(100vw + 240px) 0; }
 }
 
-.tagline {
-  font-family: 'Fraunces', Georgia, serif;
-  font-style: italic;
-  font-variation-settings: 'opsz' 144, 'SOFT' 60, 'WONK' 1;
-  font-size: 14px;
-  color: rgba(245, 239, 227, 0.6);
-  margin-top: 28px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
-  letter-spacing: 0.01em;
-  text-align: center;
+/* ── CONVERGENCE PULSE ── */
+.cpulse {
+  position: absolute; top: 50%; left: 50%;
+  width: 140px; height: 140px;
+  margin: -70px 0 0 -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.28), transparent 65%);
+  z-index: 14;
+  animation: _cp .85s ease-out forwards;
 }
-.tagline.show {
-  opacity: 1;
-  transform: translateY(0);
+@keyframes _cp {
+  0%   { transform: scale(0); opacity: 1; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
+/* ══ LOGO ══ */
+.lw {
+  position: relative; z-index: 20;
+  opacity: 0; transform: scale(0);
+}
+.lw.show {
+  animation: _li .8s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes _li {
+  0%   { opacity: 0; transform: scale(0); }
+  48%  { opacity: 1; transform: scale(1.1); }
+  72%  { transform: scale(.96); }
+  88%  { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.lglow {
+  position: absolute; inset: -44px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(167,243,208,.38), transparent 60%);
+  animation: _gp 3s ease-in-out infinite; z-index: -1;
+}
+@keyframes _gp {
+  0%,100% { transform: scale(.88); opacity: .3; }
+  50%     { transform: scale(1.18); opacity: .55; }
+}
+
+.lbox {
+  width: 112px; height: 112px; border-radius: 30px;
+  background: rgba(255,255,255,.14);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1.5px solid rgba(255,255,255,.18);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1), inset 0 -1px 0 rgba(255,255,255,.08);
+}
+.limg {
+  width: 72px; height: 72px; object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,.1));
+}
+
+/* ══ BRAND TEXT ══ */
+.brow {
+  display: flex; align-items: center; gap: 12px;
+  z-index: 20; overflow: hidden;
+}
+
+.bb, .bm { letter-spacing: 5px; opacity: 0; }
+.bb {
+  font-size: 28px; font-weight: 800; color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,.1);
+  transform: translateX(-28px);
+}
+.bm {
+  font-size: 28px; font-weight: 300;
+  color: rgba(255,255,255,.75);
+  transform: translateX(28px);
+}
+
+.bb.show { animation: _sl .6s cubic-bezier(.22,1,.36,1) forwards; }
+.bm.show { animation: _sr .6s cubic-bezier(.22,1,.36,1) .1s forwards; }
+
+@keyframes _sl {
+  0%   { opacity: 0; transform: translateX(-28px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes _sr {
+  0%   { opacity: 0; transform: translateX(28px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.bdot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,.4);
+  transform: scale(0); opacity: 0;
+}
+.bdot.show {
+  animation: _dp .35s cubic-bezier(.34,1.56,.64,1) .14s forwards;
+}
+@keyframes _dp {
+  0%   { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ══ TAGLINE ══ */
+.tl {
+  font-size: 11px; font-weight: 500;
+  color: rgba(255,255,255,0);
+  letter-spacing: 4px; text-transform: uppercase;
+  z-index: 20; transform: translateY(8px);
+}
+.tl.show { animation: _tl .75s ease .18s forwards; }
+@keyframes _tl {
+  to { color: rgba(255,255,255,.48); transform: translateY(0); }
+}
+
+/* ══ SHIMMER ══ */
+.shm {
+  position: absolute; inset: 0; z-index: 25;
+  pointer-events: none; overflow: hidden;
+}
+.shm::after {
+  content: ''; position: absolute;
+  top: -50%; left: -80%; width: 50%; height: 200%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.03) 35%,
+    rgba(255,255,255,.1) 50%,
+    rgba(255,255,255,.03) 65%,
+    transparent
+  );
+  transform: rotate(25deg);
+  animation: _sh .9s ease-in-out .12s both;
+}
+@keyframes _sh {
+  0%   { translate: -50% 0; }
+  100% { translate: 250% 0; }
 }
 </style>

@@ -44,46 +44,55 @@ async function confirmDelete() {
 
 <template>
   <div class="min-h-screen pb-10" style="background: var(--bg-app)">
-    <!-- Editorial header -->
-    <div class="px-5 pt-5 pb-3">
-      <button @click="navigate('profile')" class="flex items-center gap-2 btn-press mb-3">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20"
+      style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+      <button @click="navigate('profile')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" :aria-label="t('common.back')" style="background: var(--surface-secondary)">
+        <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="eyebrow-sm">{{ t('ed.profile_word') }}</span>
       </button>
-      <div class="flex items-center gap-2 mb-2">
-        <span class="num-label text-[11px] tabular">§</span>
-        <p class="eyebrow-sm">{{ t('ed.preferences') }}</p>
-      </div>
-      <h1 class="display text-[34px]" style="color: var(--text-primary)">
-        {{ t('ed.your_settings_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.settings_italic') }}</span>
-      </h1>
-      <div class="hairline mt-4"></div>
+      <p class="text-base font-black" style="color: var(--text-primary)">{{ t('profile.settings') }}</p>
+      <div class="w-9"></div>
     </div>
 
-    <div class="px-5 mt-5 flex flex-col gap-7">
+    <div class="px-4 mt-4 flex flex-col gap-4">
+
       <!-- Language -->
-      <section>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="num-label text-[11px] tabular">01</span>
-          <p class="eyebrow-sm">{{ t('profile.language') }}</p>
+      <div class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke-width="2"/>
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke-width="2"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-black" style="color: var(--text-primary)">{{ t('profile.language') }}</p>
+            <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('settings.language_desc') }}</p>
+          </div>
         </div>
-        <p class="serif-italic text-[13px] mb-3" style="color: var(--text-tertiary)">{{ t('settings.language_desc') }}</p>
         <SegmentedControl
           :options="LOCALES.map(l => ({ value: l.code, label: l.label }))"
           :modelValue="locale"
           @update:modelValue="setLocale"
         />
-      </section>
+      </div>
 
       <!-- Theme -->
-      <section>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="num-label text-[11px] tabular">02</span>
-          <p class="eyebrow-sm">{{ t('profile.theme') }}</p>
+      <div class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center">
+            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-black" style="color: var(--text-primary)">{{ t('profile.theme') }}</p>
+            <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('settings.theme_desc') }}</p>
+          </div>
         </div>
-        <p class="serif-italic text-[13px] mb-3" style="color: var(--text-tertiary)">{{ t('settings.theme_desc') }}</p>
         <SegmentedControl
           :options="[
             { value: 'light', label: t('profile.theme_light') },
@@ -93,55 +102,67 @@ async function confirmDelete() {
           :modelValue="mode"
           @update:modelValue="setTheme"
         />
-      </section>
+      </div>
 
-      <!-- Account -->
-      <section v-if="isLoggedIn">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="num-label text-[11px] tabular">03</span>
-          <p class="eyebrow-sm">{{ t('ed.account_section') }}</p>
-        </div>
-        <div class="hairline mb-1"></div>
-
-        <button @click="showLogoutAll = true" class="settings-row btn-press">
-          <div class="text-left">
-            <p class="serif text-[15px]" style="color: var(--text-primary); font-weight: 500">{{ t('settings.logout_all') }}</p>
-            <p class="text-[11px]" style="color: var(--text-tertiary)">{{ t('settings.logout_all_desc') }}</p>
+      <!-- Account actions -->
+      <div v-if="isLoggedIn" class="rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <button @click="showLogoutAll = true" class="w-full flex items-center justify-between px-4 py-3.5 btn-press border-b" style="border-color: var(--border)">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(239,68,68,0.08)">
+              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-width="2" stroke-linecap="round"/>
+                <polyline points="16 17 21 12 16 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="21" y1="12" x2="9" y2="12" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-bold" style="color: var(--text-primary)">{{ t('settings.logout_all') }}</p>
+              <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('settings.logout_all_desc') }}</p>
+            </div>
           </div>
-          <svg width="11" height="11" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-            <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg class="w-4 h-4" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
         </button>
-
-        <button @click="showDelete = true" class="settings-row btn-press">
-          <div class="text-left">
-            <p class="serif text-[15px]" style="color: var(--bordeaux); font-weight: 500">{{ t('settings.delete_account') }}</p>
-            <p class="text-[11px]" style="color: var(--text-tertiary)">{{ t('settings.delete_account_desc') }}</p>
+        <button @click="showDelete = true" class="w-full flex items-center justify-between px-4 py-3.5 btn-press">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(239,68,68,0.08)">
+              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-bold text-red-500">{{ t('settings.delete_account') }}</p>
+              <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('settings.delete_account_desc') }}</p>
+            </div>
           </div>
-          <svg width="11" height="11" style="color: var(--bordeaux)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-            <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg class="w-4 h-4" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
         </button>
-      </section>
+      </div>
+
     </div>
 
     <!-- Logout-all confirmation -->
     <Teleport to="#app">
       <Transition name="fade">
-        <div v-if="showLogoutAll" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(26, 38, 32, 0.55); backdrop-filter: blur(8px)" @click.self="showLogoutAll = false">
-          <div class="w-full max-w-[480px] confirm-sheet safe-bottom">
-            <div class="text-center mb-5">
-              <p class="num-label text-[12px] mb-2">— {{ t('ed.confirm_word') }} —</p>
-              <h3 class="display text-[22px]" style="color: var(--text-primary)">{{ t('settings.logout_all_confirm_title') }}</h3>
-              <p class="serif-italic text-[13px] mt-2" style="color: var(--text-secondary)">{{ t('settings.logout_all_confirm_subtitle') }}</p>
+        <div v-if="showLogoutAll" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(0,0,0,0.4)" @click.self="showLogoutAll = false">
+          <div class="w-full max-w-[480px] rounded-t-[28px] p-6 safe-bottom" style="background: var(--surface)">
+            <div class="flex flex-col items-center mb-5">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3" style="background: rgba(239,68,68,0.08)">
+                <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-width="2" stroke-linecap="round"/>
+                  <polyline points="16 17 21 12 16 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="21" y1="12" x2="9" y2="12" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('settings.logout_all_confirm_title') }}</h3>
+              <p class="text-sm font-medium mt-1 text-center" style="color: var(--text-tertiary)">{{ t('settings.logout_all_confirm_subtitle') }}</p>
             </div>
-            <div class="flex gap-2">
-              <button @click="showLogoutAll = false" :disabled="isWorking" class="confirm-cancel btn-press">
-                <span class="eyebrow-sm">{{ t('profile.cancel') }}</span>
-              </button>
-              <button @click="confirmLogoutAll" :disabled="isWorking" class="confirm-action btn-press">
-                <span class="eyebrow-sm" style="color: var(--cream)">{{ isWorking ? t('common.loading') : t('settings.logout_all_yes') }}</span>
-              </button>
+            <div class="flex flex-col gap-2">
+              <button @click="confirmLogoutAll" :disabled="isWorking" class="w-full bg-red-500 text-white font-bold py-3.5 rounded-2xl btn-press transition-opacity" :class="{ 'opacity-60': isWorking }">{{ isWorking ? t('common.loading') : t('settings.logout_all_yes') }}</button>
+              <button @click="showLogoutAll = false" :disabled="isWorking" class="w-full font-bold py-3.5 rounded-2xl btn-press" style="background: var(--surface-secondary); color: var(--text-primary)">{{ t('profile.cancel') }}</button>
             </div>
           </div>
         </div>
@@ -151,20 +172,20 @@ async function confirmDelete() {
     <!-- Delete account confirmation -->
     <Teleport to="#app">
       <Transition name="fade">
-        <div v-if="showDelete" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(26, 38, 32, 0.55); backdrop-filter: blur(8px)" @click.self="showDelete = false">
-          <div class="w-full max-w-[480px] confirm-sheet safe-bottom">
-            <div class="text-center mb-5">
-              <p class="num-label text-[12px] mb-2" style="color: var(--bordeaux)">— {{ t('ed.irreversible') }} —</p>
-              <h3 class="display text-[22px]" style="color: var(--text-primary)">{{ t('settings.delete_confirm_title') }}</h3>
-              <p class="serif-italic text-[13px] mt-2" style="color: var(--text-secondary)">{{ t('settings.delete_confirm_subtitle') }}</p>
+        <div v-if="showDelete" class="fixed inset-0 z-[100] flex items-end justify-center" style="background: rgba(0,0,0,0.4)" @click.self="showDelete = false">
+          <div class="w-full max-w-[480px] rounded-t-[28px] p-6 safe-bottom" style="background: var(--surface)">
+            <div class="flex flex-col items-center mb-5">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3" style="background: rgba(239,68,68,0.08)">
+                <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('settings.delete_confirm_title') }}</h3>
+              <p class="text-sm font-medium mt-1 text-center" style="color: var(--text-tertiary)">{{ t('settings.delete_confirm_subtitle') }}</p>
             </div>
-            <div class="flex gap-2">
-              <button @click="showDelete = false" :disabled="isWorking" class="confirm-cancel btn-press">
-                <span class="eyebrow-sm">{{ t('profile.cancel') }}</span>
-              </button>
-              <button @click="confirmDelete" :disabled="isWorking" class="confirm-action btn-press">
-                <span class="eyebrow-sm" style="color: var(--cream)">{{ isWorking ? t('common.loading') : t('settings.delete_yes') }}</span>
-              </button>
+            <div class="flex flex-col gap-2">
+              <button @click="confirmDelete" :disabled="isWorking" class="w-full bg-red-500 text-white font-bold py-3.5 rounded-2xl btn-press transition-opacity" :class="{ 'opacity-60': isWorking }">{{ isWorking ? t('common.loading') : t('settings.delete_yes') }}</button>
+              <button @click="showDelete = false" :disabled="isWorking" class="w-full font-bold py-3.5 rounded-2xl btn-press" style="background: var(--surface-secondary); color: var(--text-primary)">{{ t('profile.cancel') }}</button>
             </div>
           </div>
         </div>
@@ -172,37 +193,3 @@ async function confirmDelete() {
     </Teleport>
   </div>
 </template>
-
-<style scoped>
-.settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 16px 0;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--hairline);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.confirm-sheet {
-  background: var(--surface);
-  padding: 28px 22px 24px;
-  border-top: 1px solid var(--hairline);
-}
-.confirm-cancel,
-.confirm-action {
-  flex: 1;
-  padding: 14px 0;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  cursor: pointer;
-  text-align: center;
-}
-.confirm-action {
-  background: var(--bordeaux);
-  border-color: var(--bordeaux);
-}
-</style>

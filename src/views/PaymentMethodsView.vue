@@ -14,68 +14,75 @@ function selectMethod(id) {
 }
 
 const methods = [
-  { id: 'card', labelKey: 'payment.card_title', descKey: 'payment.card_desc' },
-  { id: 'cash', labelKey: 'payment.cash_title', descKey: 'payment.cash_desc' },
+  {
+    id: 'card',
+    emoji: '💳',
+    labelKey: 'payment.card_title',
+    descKey: 'payment.card_desc',
+    color: 'bg-blue-500/10',
+    iconColor: 'text-blue-500',
+  },
+  {
+    id: 'cash',
+    emoji: '💵',
+    labelKey: 'payment.cash_title',
+    descKey: 'payment.cash_desc',
+    color: 'bg-green-500/10',
+    iconColor: 'text-green-500',
+  },
 ]
 </script>
 
 <template>
   <div class="min-h-screen pb-10" style="background: var(--bg-app)">
-    <!-- Editorial header -->
-    <div class="px-5 pt-5 pb-3">
-      <button @click="navigate('profile')" class="flex items-center gap-2 btn-press mb-3">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20"
+      style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+      <button @click="navigate('profile')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
+        <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="eyebrow-sm">{{ t('ed.profile_word') }}</span>
       </button>
-      <div class="flex items-center gap-2 mb-2">
-        <span class="num-label text-[11px] tabular">§</span>
-        <p class="eyebrow-sm">{{ t('ed.payment_section') }}</p>
-      </div>
-      <h1 class="display text-[34px]" style="color: var(--text-primary)">
-        {{ t('ed.your_methods_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.methods_italic') }}</span>
-      </h1>
-      <div class="hairline mt-4"></div>
+      <p class="text-base font-black" style="color: var(--text-primary)">{{ t('profile.payment_methods') }}</p>
+      <div class="w-9"></div>
     </div>
 
-    <div class="px-5 mt-5">
-      <div class="flex flex-col">
-        <button v-for="method in methods" :key="method.id" @click="selectMethod(method.id)"
-          class="method-row btn-press">
+    <div class="px-4 mt-4 flex flex-col gap-3">
+      <div
+        v-for="method in methods"
+        :key="method.id"
+        @click="selectMethod(method.id)"
+        class="rounded-2xl p-4 btn-press transition-all"
+        :style="{
+          background: 'var(--surface)',
+          boxShadow: selectedMethod === method.id ? '0 0 0 2px var(--primary), 0 2px 12px var(--shadow)' : '0 2px 12px var(--shadow)',
+        }"
+      >
+        <div class="flex items-center gap-3">
+          <div :class="['w-12 h-12 rounded-xl flex items-center justify-center', method.color]">
+            <span class="text-2xl">{{ method.emoji }}</span>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-black" style="color: var(--text-primary)">{{ t(method.labelKey) }}</p>
+            <p class="text-xs font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ t(method.descKey) }}</p>
+          </div>
           <div class="radio-outer" :class="{ active: selectedMethod === method.id }">
             <div v-if="selectedMethod === method.id" class="radio-inner"></div>
           </div>
-          <div class="flex-1 text-left">
-            <p class="serif text-[17px]" style="color: var(--text-primary); font-weight: 500">{{ t(method.labelKey) }}</p>
-            <p class="text-[12px] mt-0.5" style="color: var(--text-tertiary)">{{ t(method.descKey) }}</p>
-          </div>
-        </button>
+        </div>
       </div>
 
-      <div class="mt-10 rule-center">
-        <span class="num-label text-[10px]">·  ·  ·</span>
+      <!-- Info -->
+      <div class="rounded-2xl p-4 mt-2" style="background: var(--primary-light)">
+        <div class="flex gap-3">
+          <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <path d="M12 16v-4M12 8h.01" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <p class="text-xs font-semibold leading-relaxed" style="color: var(--text-primary)">{{ t('payment.info') }}</p>
+        </div>
       </div>
-      <p class="mt-4 serif-italic text-[13px] text-center" style="color: var(--text-tertiary); line-height: 1.6">
-        {{ t('payment.info') }}
-      </p>
     </div>
   </div>
 </template>
-
-<style scoped>
-.method-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 0;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--hairline);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.method-row:first-child {
-  border-top: 1px solid var(--hairline);
-}
-</style>

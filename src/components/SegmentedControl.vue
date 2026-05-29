@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 
 const props = defineProps({
   options: { type: Array, required: true },
@@ -8,64 +8,48 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const containerRef = ref(null)
-const underlineStyle = ref({})
+const pillStyle = ref({})
 
-function updateUnderline() {
+function updatePill() {
   nextTick(() => {
     const container = containerRef.value
     if (!container) return
     const idx = props.options.findIndex((o) => o.value === props.modelValue)
-    const btn = container.children[idx]
+    const btn = container.children[idx + 1]
     if (!btn) return
-    underlineStyle.value = {
+    pillStyle.value = {
       width: `${btn.offsetWidth}px`,
       transform: `translateX(${btn.offsetLeft}px)`,
     }
   })
 }
 
-onMounted(updateUnderline)
-watch(() => props.modelValue, updateUnderline)
+onMounted(updatePill)
+watch(() => props.modelValue, updatePill)
 </script>
 
 <template>
-  <div class="relative">
+  <div
+    ref="containerRef"
+    class="relative flex rounded-xl p-1 gap-0.5"
+    style="background: var(--surface-secondary)"
+  >
+    <!-- Sliding pill -->
     <div
-      ref="containerRef"
-      class="relative flex gap-1 pb-2 segmented-container"
-    >
-      <button
-        v-for="opt in options"
-        :key="opt.value"
-        @click="emit('update:modelValue', opt.value)"
-        class="relative z-10 flex-1 py-2 px-3 transition-colors duration-200 btn-press segmented-btn"
-        :class="modelValue === opt.value ? 'segmented-btn-active' : ''"
-      >
-        {{ opt.label }}
-      </button>
+      class="absolute top-1 bottom-1 rounded-lg transition-all duration-300 ease-out"
+      style="background: var(--surface); box-shadow: 0 1px 4px var(--shadow)"
+      :style="pillStyle"
+    ></div>
 
-      <!-- Underline -->
-      <div
-        class="absolute bottom-0 h-[2px] transition-all duration-300 ease-out"
-        style="background: var(--text-primary);"
-        :style="underlineStyle"
-      ></div>
-    </div>
-    <div class="hairline"></div>
+    <!-- Buttons -->
+    <button
+      v-for="opt in options"
+      :key="opt.value"
+      @click="emit('update:modelValue', opt.value)"
+      class="relative z-10 flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-colors duration-200 btn-press"
+      :style="{ color: modelValue === opt.value ? 'var(--text-primary)' : 'var(--text-tertiary)' }"
+    >
+      {{ opt.label }}
+    </button>
   </div>
 </template>
-
-<style scoped>
-.segmented-btn {
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  background: transparent;
-}
-.segmented-btn-active {
-  color: var(--text-primary);
-}
-</style>

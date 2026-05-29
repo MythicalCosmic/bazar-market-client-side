@@ -21,17 +21,17 @@ const pickingStatus = ref('')
 const selectedLabel = ref('home')
 const customLabel = ref('')
 const comment = ref('')
-const editingId = ref(null)
+const editingId = ref(null) // null = adding new, number = editing existing
 const isSaving = ref(false)
 const mapError = ref('')
 
-const deleteTarget = ref(null)
+const deleteTarget = ref(null) // address pending deletion confirmation
 const isDeleting = ref(false)
 
 const labels = [
-  { id: 'home', nameKey: 'addresses.label_home' },
-  { id: 'work', nameKey: 'addresses.label_work' },
-  { id: 'other', nameKey: 'addresses.label_other' },
+  { id: 'home', emoji: '🏠', nameKey: 'addresses.label_home' },
+  { id: 'work', emoji: '💼', nameKey: 'addresses.label_work' },
+  { id: 'other', emoji: '📍', nameKey: 'addresses.label_other' },
 ]
 
 let map = null
@@ -76,8 +76,8 @@ async function setupMap(lat, lng) {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
   const icon = L.divIcon({
     className: '',
-    html: `<div style="width:32px;height:32px;background:#0F5132;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(15,81,50,0.5);border:2px solid #F5EFE3"></div>`,
-    iconSize: [32, 32], iconAnchor: [16, 32],
+    html: `<div style="width:36px;height:36px;background:#059669;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:3px solid white"></div>`,
+    iconSize: [36, 36], iconAnchor: [18, 36],
   })
   marker = L.marker([lat, lng], { icon, draggable: true }).addTo(map)
   map.on('click', (e) => { marker.setLatLng(e.latlng); debouncedGeo(e.latlng.lat, e.latlng.lng) })
@@ -90,6 +90,7 @@ function openMapPicker(addr = null) {
   pickingStatus.value = ''
   comment.value = addr ? (addr.comment || '') : ''
 
+  // Set label
   if (addr) {
     const match = labels.find(l => t(l.nameKey) === addr.label)
     selectedLabel.value = match ? match.id : 'other'
@@ -106,7 +107,7 @@ function openMapPicker(addr = null) {
     const startLat = addr?.lat || DEFAULT_LAT
     const startLng = addr?.lng || DEFAULT_LNG
     await setupMap(startLat, startLng)
-    if (!map) return
+    if (!map) return // Leaflet failed to load
 
     if (addr?.lat && addr?.lng) {
       map.setView([startLat, startLng], 16)
@@ -159,7 +160,9 @@ async function saveAddress() {
   }
 }
 
-function askDelete(addr) { deleteTarget.value = addr }
+function askDelete(addr) {
+  deleteTarget.value = addr
+}
 
 async function confirmDelete() {
   if (isDeleting.value || !deleteTarget.value) return
@@ -183,85 +186,76 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-screen pb-10" style="background: var(--bg-app)">
-    <!-- Editorial header -->
-    <div class="px-5 pt-5 pb-3">
-      <div class="flex items-center justify-between mb-3">
-        <button @click="navigate('profile')" class="flex items-center gap-2 btn-press">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="eyebrow-sm">{{ t('ed.profile_word') }}</span>
-        </button>
-        <button @click="openMapPicker()" class="add-btn btn-press">
-          <span class="eyebrow-sm" style="color: var(--cream)">{{ t('ed.add_new_short') }}</span>
-        </button>
-      </div>
-      <div class="flex items-center gap-2 mb-2">
-        <span class="num-label text-[11px] tabular">№ {{ String(addresses.length || 0).padStart(2, '0') }}</span>
-        <span class="block w-4 h-px" style="background: var(--hairline)"></span>
-        <p class="eyebrow-sm">{{ t('ed.delivery_label') }}</p>
-      </div>
-      <h1 class="display text-[34px]" style="color: var(--text-primary)">
-        {{ t('ed.your_addr_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.addr_italic') }}</span>
-      </h1>
-      <div class="hairline mt-4"></div>
+    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+      <button @click="navigate('profile')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
+        <svg width="20" height="20" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <p class="text-base font-black" style="color: var(--text-primary)">{{ t('addresses.title') }}</p>
+      <button @click="openMapPicker()" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press bg-primary">
+        <svg width="20" height="20" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
     </div>
 
-    <div class="px-5 mt-5">
-      <div v-if="addresses.length" class="flex flex-col">
-        <div v-for="(addr, idx) in addresses" :key="addr.id" class="address-card" :class="{ 'address-card-default': addr.isDefault }">
-          <div class="flex items-start gap-3">
-            <span class="num-label text-[13px] flex-shrink-0 mt-0.5">0{{ idx + 1 }}</span>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-baseline gap-2 mb-1">
-                <p class="serif text-[17px]" style="color: var(--text-primary); font-weight: 500">{{ addr.label }}</p>
-                <span v-if="addr.isDefault" class="eyebrow-sm" style="color: var(--primary)">{{ t('ed.default_word') }}</span>
-              </div>
-              <p class="text-[13px] truncate" style="color: var(--text-secondary)">{{ addr.address }}</p>
-              <p v-if="addr.comment" class="serif-italic text-[11.5px] mt-1" style="color: var(--text-tertiary)">"{{ addr.comment }}"</p>
+    <div class="px-4 mt-4 flex flex-col gap-3">
+      <div v-for="addr in addresses" :key="addr.id"
+        class="rounded-2xl p-4"
+        :style="{ background: 'var(--surface)', boxShadow: addr.isDefault ? '0 0 0 2px var(--primary), 0 2px 12px var(--shadow)' : '0 2px 12px var(--shadow)' }">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
+            <svg width="20" height="20" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-black" style="color: var(--text-primary)">{{ addr.label }}</p>
+              <span v-if="addr.isDefault" class="text-[9px] font-black text-primary px-1.5 py-0.5 rounded-md" style="background: var(--primary-light)">{{ t('addresses.default') }}</span>
             </div>
+            <p class="text-xs font-semibold truncate mt-0.5" style="color: var(--text-tertiary)">{{ addr.address }}</p>
+            <p v-if="addr.comment" class="text-[10px] font-semibold truncate mt-0.5" style="color: var(--text-tertiary)">{{ addr.comment }}</p>
           </div>
-          <div class="flex gap-2 mt-3 pt-3 hairline-top">
-            <button v-if="!addr.isDefault" @click="setDefault(addr.id)" class="action-pill btn-press">
-              <span class="eyebrow-sm">{{ t('addresses.set_default') }}</span>
-            </button>
-            <button @click="openMapPicker(addr)" class="action-pill btn-press">
-              <span class="eyebrow-sm">{{ t('profile.edit') }}</span>
-            </button>
-            <button @click="askDelete(addr)" :aria-label="t('addresses.delete')" class="action-pill-danger btn-press">
-              <span class="eyebrow-sm" style="color: var(--bordeaux)">{{ t('addresses.delete') }}</span>
-            </button>
-          </div>
+        </div>
+        <!-- Action buttons -->
+        <div class="flex gap-2 mt-3 pt-3 border-t" style="border-color: var(--border)">
+          <button v-if="!addr.isDefault" @click="setDefault(addr.id)" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl btn-press" style="background: var(--surface-secondary)">
+            <svg width="14" height="14" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="text-[10px] font-bold" style="color: var(--text-secondary)">{{ t('addresses.set_default') }}</span>
+          </button>
+          <button @click="openMapPicker(addr)" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl btn-press" style="background: var(--surface-secondary)">
+            <svg width="14" height="14" style="color: var(--text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" stroke-width="2"/></svg>
+            <span class="text-[10px] font-bold" style="color: var(--text-secondary)">{{ t('profile.edit') }}</span>
+          </button>
+          <button @click="askDelete(addr)" :aria-label="t('addresses.delete')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl btn-press bg-red-500/10">
+            <svg width="14" height="14" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
         </div>
       </div>
 
-      <div v-else class="px-3 pt-12 text-center">
-        <p class="num-label text-[14px] mb-3">— № 00 —</p>
-        <h2 class="display text-[24px] mb-2" style="color: var(--text-primary)">{{ t('addresses.empty_title') }}</h2>
-        <p class="serif-italic text-[14px] leading-relaxed mb-6" style="color: var(--text-secondary)">{{ t('addresses.empty_subtitle') }}</p>
-        <button @click="openMapPicker()" class="empty-cta btn-press">
-          <span class="eyebrow-sm" style="color: var(--cream)">{{ t('addresses.add_new') }}</span>
-        </button>
+      <div v-if="!addresses.length" class="flex flex-col items-center py-20">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-4" style="background: var(--primary-light)">
+          <svg width="40" height="40" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
+        </div>
+        <p class="text-lg font-black" style="color: var(--text-primary)">{{ t('addresses.empty_title') }}</p>
+        <p class="text-sm font-semibold mt-1 text-center" style="color: var(--text-tertiary)">{{ t('addresses.empty_subtitle') }}</p>
+        <button @click="openMapPicker()" class="mt-5 bg-primary text-white font-black px-6 py-3 rounded-2xl btn-press" style="box-shadow: 0 4px 16px var(--primary-glow)">{{ t('addresses.add_new') }}</button>
       </div>
     </div>
 
     <!-- Delete confirmation -->
     <Teleport to="#app">
       <Transition name="fade">
-        <div v-if="deleteTarget" class="fixed inset-0 z-[120] flex items-end justify-center" style="background: rgba(26, 38, 32, 0.55); backdrop-filter: blur(8px)" @click.self="deleteTarget = null">
-          <div class="w-full max-w-[480px] confirm-sheet safe-bottom">
-            <div class="text-center mb-5">
-              <p class="num-label text-[12px] mb-2" style="color: var(--bordeaux)">— {{ t('ed.confirm_word') }} —</p>
-              <h3 class="display text-[22px]" style="color: var(--text-primary)">{{ t('addresses.delete_confirm_title') }}</h3>
-              <p class="serif-italic text-[13px] mt-2" style="color: var(--text-secondary)">{{ deleteTarget?.label }} — {{ deleteTarget?.address }}</p>
+        <div v-if="deleteTarget" class="fixed inset-0 z-[120] flex items-end justify-center" style="background: rgba(0,0,0,0.4)" @click.self="deleteTarget = null">
+          <div class="w-full max-w-[480px] rounded-t-[28px] p-6 safe-bottom" style="background: var(--surface)">
+            <div class="flex flex-col items-center mb-5">
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3" style="background: rgba(239,68,68,0.08)">
+                <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold" style="color: var(--text-primary)">{{ t('addresses.delete_confirm_title') }}</h3>
+              <p class="text-sm font-medium mt-1 text-center" style="color: var(--text-tertiary)">{{ deleteTarget?.label }} — {{ deleteTarget?.address }}</p>
             </div>
-            <div class="flex gap-2">
-              <button @click="deleteTarget = null" :disabled="isDeleting" class="confirm-cancel btn-press">
-                <span class="eyebrow-sm">{{ t('profile.cancel') }}</span>
-              </button>
-              <button @click="confirmDelete" :disabled="isDeleting" class="confirm-action btn-press">
-                <span class="eyebrow-sm" style="color: var(--cream)">{{ isDeleting ? t('common.loading') : t('addresses.delete_yes') }}</span>
-              </button>
+            <div class="flex flex-col gap-2">
+              <button @click="confirmDelete" :disabled="isDeleting" class="w-full bg-red-500 text-white font-bold py-3.5 rounded-2xl btn-press transition-opacity" :class="{ 'opacity-60': isDeleting }">{{ isDeleting ? t('common.loading') : t('addresses.delete_yes') }}</button>
+              <button @click="deleteTarget = null" :disabled="isDeleting" class="w-full font-bold py-3.5 rounded-2xl btn-press" style="background: var(--surface-secondary); color: var(--text-primary)">{{ t('profile.cancel') }}</button>
             </div>
           </div>
         </div>
@@ -272,45 +266,54 @@ onUnmounted(() => {
     <Teleport to="#app">
       <Transition name="fade">
         <div v-if="showMapPicker" class="fixed inset-0 z-[100] flex flex-col" style="background: var(--bg-app)">
-          <div class="px-5 py-4 flex items-center justify-between" style="background: var(--surface); border-bottom: 1px solid var(--hairline)">
-            <button @click="closeMapPicker" class="flex items-center gap-2 btn-press">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-                <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span class="eyebrow-sm">{{ t('ed.back_word') }}</span>
+          <div class="flex items-center justify-between px-4 py-3" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+            <button @click="closeMapPicker" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
+              <svg width="20" height="20" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-            <p class="eyebrow">{{ editingId ? t('profile.edit') : t('addresses.pick_on_map') }}</p>
+            <p class="text-base font-black" style="color: var(--text-primary)">{{ editingId ? t('profile.edit') : t('addresses.pick_on_map') }}</p>
+            <div class="w-9"></div>
           </div>
 
           <div class="flex-1 relative" style="min-height: 200px">
             <div id="address-map" style="width: 100%; height: 100%;"></div>
-            <div v-if="mapError" class="absolute inset-0 flex items-center justify-center px-6 text-center serif-italic" style="background: var(--surface); color: var(--text-secondary)">
+            <div v-if="mapError" class="absolute inset-0 flex items-center justify-center px-6 text-center text-xs font-semibold" style="background: var(--surface); color: var(--text-secondary)">
               {{ mapError }}
             </div>
           </div>
 
-          <div class="px-5 pt-5 pb-6 safe-bottom overflow-y-auto" style="background: var(--surface); border-top: 1px solid var(--hairline); max-height: 55vh;">
-            <p class="eyebrow-sm mb-1">{{ t('addresses.selected_address') }}</p>
-            <p class="serif text-[15px] mb-4 truncate" style="color: var(--text-primary); font-weight: 500">{{ pickingStatus || pickedAddress || t('addresses.tap_map') }}</p>
+          <div class="px-4 pt-4 pb-6 safe-bottom overflow-y-auto" style="background: var(--surface); box-shadow: 0 -4px 20px var(--shadow); max-height: 55vh;">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
+                <svg width="20" height="20" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('addresses.selected_address') }}</p>
+                <p class="text-sm font-bold truncate" style="color: var(--text-primary)">{{ pickingStatus || pickedAddress || t('addresses.tap_map') }}</p>
+              </div>
+            </div>
 
-            <p class="eyebrow-sm mb-2">{{ t('addresses.choose_label') }}</p>
-            <div class="flex gap-2 mb-4">
+            <p class="text-xs font-bold mb-2" style="color: var(--text-secondary)">{{ t('addresses.choose_label') }}</p>
+            <div class="flex gap-2 mb-3">
               <button v-for="lbl in labels" :key="lbl.id" @click="selectedLabel = lbl.id"
-                class="label-chip btn-press"
-                :class="{ 'label-chip-active': selectedLabel === lbl.id }">
-                <span class="eyebrow-sm" :style="{ color: selectedLabel === lbl.id ? 'var(--cream)' : 'var(--text-primary)' }">{{ t(lbl.nameKey) }}</span>
+                class="flex items-center gap-1.5 px-3 py-2 rounded-xl btn-press transition-all text-sm font-bold"
+                :style="{ background: selectedLabel === lbl.id ? 'var(--primary)' : 'var(--surface-secondary)', color: selectedLabel === lbl.id ? 'white' : 'var(--text-primary)' }">
+                <span>{{ lbl.emoji }}</span><span>{{ t(lbl.nameKey) }}</span>
               </button>
             </div>
 
-            <input v-if="selectedLabel === 'other'" v-model="customLabel" :placeholder="t('addresses.custom_label')" class="form-input mb-4" />
+            <input v-if="selectedLabel === 'other'" v-model="customLabel" :placeholder="t('addresses.custom_label')"
+              class="w-full text-sm font-bold px-4 py-2.5 rounded-xl outline-none mb-3" style="background: var(--surface-secondary); color: var(--text-primary)" />
 
-            <p class="eyebrow-sm mb-2">{{ t('addresses.comment') }}</p>
-            <textarea v-model="comment" :placeholder="t('addresses.comment_placeholder')" rows="2" class="form-input mb-5"></textarea>
+            <p class="text-xs font-bold mb-2" style="color: var(--text-secondary)">{{ t('addresses.comment') }}</p>
+            <textarea v-model="comment" :placeholder="t('addresses.comment_placeholder')" rows="2"
+              class="w-full text-sm font-semibold px-4 py-2.5 rounded-xl outline-none resize-none mb-3"
+              style="background: var(--surface-secondary); color: var(--text-primary)"></textarea>
 
             <button @click="saveAddress" :disabled="!pickedAddress || !!pickingStatus || isSaving"
-              class="save-btn btn-press"
-              :class="{ 'opacity-50': !pickedAddress || !!pickingStatus || isSaving }">
-              <span class="eyebrow-sm" style="color: var(--cream)">{{ isSaving ? t('common.loading') : (editingId ? t('profile.save') : t('addresses.save_address')) }}</span>
+              class="w-full bg-primary text-white font-black py-4 rounded-2xl btn-press transition-opacity"
+              :class="{ 'opacity-50': !pickedAddress || !!pickingStatus || isSaving }"
+              style="box-shadow: 0 6px 24px var(--primary-glow)">
+              {{ isSaving ? t('common.loading') : (editingId ? t('profile.save') : t('addresses.save_address')) }}
             </button>
           </div>
         </div>
@@ -318,109 +321,3 @@ onUnmounted(() => {
     </Teleport>
   </div>
 </template>
-
-<style scoped>
-.add-btn {
-  padding: 8px 14px;
-  background: var(--surface-ink);
-  border: none;
-  cursor: pointer;
-}
-
-.address-card {
-  padding: 16px 18px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-bottom: none;
-}
-.address-card:last-child {
-  border-bottom: 1px solid var(--hairline);
-}
-.address-card-default {
-  border-left: 2px solid var(--primary);
-}
-.hairline-top {
-  border-top: 1px solid var(--hairline);
-}
-
-.action-pill {
-  padding: 7px 12px;
-  background: transparent;
-  border: 1px solid var(--hairline);
-  cursor: pointer;
-}
-.action-pill-danger {
-  padding: 7px 12px;
-  background: transparent;
-  border: 1px solid var(--bordeaux-light);
-  cursor: pointer;
-  margin-left: auto;
-}
-
-.empty-cta {
-  display: inline-flex;
-  align-items: center;
-  padding: 14px 24px;
-  background: var(--surface-ink);
-  border: none;
-  cursor: pointer;
-}
-
-.label-chip {
-  padding: 8px 14px;
-  background: transparent;
-  border: 1px solid var(--hairline);
-  cursor: pointer;
-}
-.label-chip-active {
-  background: var(--surface-ink);
-  border-color: var(--surface-ink);
-}
-
-.form-input {
-  width: 100%;
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-style: italic;
-  font-size: 14px;
-  padding: 12px 14px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  outline: none;
-  color: var(--text-primary);
-  resize: none;
-  transition: border-color 0.2s ease;
-}
-.form-input:focus {
-  border-color: var(--text-primary);
-}
-
-.save-btn {
-  width: 100%;
-  padding: 16px 0;
-  background: var(--surface-ink);
-  border: none;
-  cursor: pointer;
-  text-align: center;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.confirm-sheet {
-  background: var(--surface);
-  padding: 28px 22px 24px;
-  border-top: 1px solid var(--hairline);
-}
-.confirm-cancel,
-.confirm-action {
-  flex: 1;
-  padding: 14px 0;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  cursor: pointer;
-  text-align: center;
-}
-.confirm-action {
-  background: var(--bordeaux);
-  border-color: var(--bordeaux);
-}
-</style>

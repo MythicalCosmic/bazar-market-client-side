@@ -127,197 +127,86 @@ onUnmounted(() => clearInterval(countdownTimer))
 
 <template>
   <div class="min-h-screen flex flex-col" style="background: var(--bg-app)">
-    <!-- Editorial top bar -->
-    <div class="px-5 pt-6 pb-3 flex items-center justify-between">
-      <button @click="step === 2 ? step = 1 : navigate('home')" class="flex items-center gap-2 btn-press">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+    <div class="relative pt-12 pb-8 flex flex-col items-center" style="background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 0 0 32px 32px;">
+      <div class="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-4 backdrop-blur-sm" style="box-shadow: 0 8px 32px rgba(0,0,0,0.15)">
+        <svg width="32" height="32" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round"/><circle cx="8.5" cy="7" r="4" stroke-width="2"/><path d="M20 8v6M23 11h-6" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <span class="eyebrow-sm">{{ t('ed.back_word') }}</span>
-      </button>
-      <span class="num-label text-[11px] tabular">{{ t('ed.step_n_of') }} 0{{ step }} / 02</span>
+      </div>
+      <h1 class="text-white text-2xl font-black">{{ step === 1 ? t('register.title') : t('register.verify_title') }}</h1>
+      <p class="text-white/70 text-xs font-semibold mt-1 text-center max-w-[260px]">{{ step === 1 ? t('register.subtitle') : t('register.verify_subtitle') }}</p>
     </div>
 
-    <!-- Editorial masthead -->
-    <div class="px-5 pt-4 pb-6">
-      <div class="rule mb-3">
-        <span class="eyebrow">{{ step === 1 ? t('ed.join_label') : t('ed.verify_label') }}</span>
-      </div>
-      <h1 class="display text-[40px]" style="color: var(--text-primary); line-height: 0.95;">
-        <template v-if="step === 1">
-          {{ t('ed.become_pre') }}<br/>
-          <span class="serif-italic" style="color: var(--terracotta);">{{ t('ed.become_italic') }}</span>.
-        </template>
-        <template v-else>
-          {{ t('ed.last_pre') }}<br/>
-          <span class="serif-italic" style="color: var(--terracotta);">{{ t('ed.last_italic') }}</span>.
-        </template>
-      </h1>
-      <p class="serif-italic text-[14.5px] mt-3" style="color: var(--text-secondary)">
-        {{ step === 1 ? t('register.subtitle') : t('register.verify_subtitle') }}
-      </p>
-    </div>
-
-    <!-- Form -->
-    <div class="flex-1 px-5">
-      <div v-if="step === 1" class="flex flex-col gap-5">
-        <div>
-          <label class="eyebrow-sm block mb-2">{{ t('register.first_name') }}</label>
-          <div class="input-frame">
-            <input v-model="firstName" autocomplete="given-name" :placeholder="t('register.first_name_placeholder')" class="form-input" />
+    <div class="flex-1 px-4 -mt-4">
+      <!-- Step 1: Register form -->
+      <div v-if="step === 1">
+        <div class="rounded-2xl p-5" style="background: var(--surface); box-shadow: 0 4px 24px var(--shadow-lg)">
+          <div class="flex flex-col gap-3.5">
+            <div>
+              <label class="text-[10px] font-bold block mb-1.5" style="color: var(--text-tertiary)">{{ t('register.first_name') }}</label>
+              <div class="flex items-center rounded-xl px-4 py-3 gap-3" style="background: var(--surface-secondary)">
+                <svg width="18" height="18" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke-width="2"/></svg>
+                <input v-model="firstName" autocomplete="given-name" :placeholder="t('register.first_name_placeholder')" class="bg-transparent outline-none text-sm font-bold flex-1 min-w-0" style="color: var(--text-primary)" />
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold block mb-1.5" style="color: var(--text-tertiary)">{{ t('register.last_name') }} <span class="font-semibold opacity-60">{{ t('register.optional') }}</span></label>
+              <div class="flex items-center rounded-xl px-4 py-3 gap-3" style="background: var(--surface-secondary)">
+                <svg width="18" height="18" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke-width="2"/></svg>
+                <input v-model="lastName" autocomplete="family-name" :placeholder="t('register.last_name_placeholder')" class="bg-transparent outline-none text-sm font-bold flex-1 min-w-0" style="color: var(--text-primary)" />
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold block mb-1.5" style="color: var(--text-tertiary)">{{ t('register.phone') }}</label>
+              <div class="flex items-center rounded-xl px-4 py-3 gap-3" style="background: var(--surface-secondary)">
+                <svg width="18" height="18" class="flex-shrink-0" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/></svg>
+                <input :value="phone" @input="onPhoneInput" @keyup.enter="handleRegister" type="tel" autocomplete="tel" inputmode="tel" placeholder="+998 90 123 45 67" class="bg-transparent outline-none text-sm font-bold flex-1 min-w-0" style="color: var(--text-primary)" />
+              </div>
+            </div>
           </div>
+          <p v-if="error" class="text-xs font-bold text-red-500 text-center mt-3">{{ error }}</p>
+          <button @click="handleRegister" :disabled="isLoading" type="button" class="w-full bg-primary text-white font-black py-4 rounded-2xl btn-press mt-5 transition-opacity" :class="{ 'opacity-60': isLoading }" style="box-shadow: 0 6px 24px var(--primary-glow)">{{ isLoading ? t('common.loading') : t('register.send_code') }}</button>
         </div>
-        <div>
-          <label class="eyebrow-sm block mb-2">{{ t('register.last_name') }} <span class="serif-italic text-[10.5px]" style="color: var(--text-tertiary); text-transform: none; letter-spacing: 0">{{ t('register.optional') }}</span></label>
-          <div class="input-frame">
-            <input v-model="lastName" autocomplete="family-name" :placeholder="t('register.last_name_placeholder')" class="form-input" />
-          </div>
+        <div class="flex items-center gap-3 my-5 px-4">
+          <div class="flex-1 h-px" style="background: var(--border)"></div>
+          <span class="text-[10px] font-bold" style="color: var(--text-tertiary)">{{ t('login.or') }}</span>
+          <div class="flex-1 h-px" style="background: var(--border)"></div>
         </div>
-        <div>
-          <label class="eyebrow-sm block mb-2">{{ t('register.phone') }}</label>
-          <div class="input-frame">
-            <input :value="phone" @input="onPhoneInput" @keyup.enter="handleRegister" type="tel" autocomplete="tel" inputmode="tel" placeholder="+998 90 123 45 67" class="form-input" />
-          </div>
-        </div>
-
-        <p v-if="error" class="serif-italic text-[13px] text-center" style="color: var(--bordeaux)">{{ error }}</p>
-
-        <button @click="handleRegister" :disabled="isLoading" type="button"
-          class="primary-btn btn-press mt-2"
-          :class="{ 'opacity-50': isLoading }">
-          <span class="eyebrow-sm" style="color: var(--cream)">{{ isLoading ? t('common.loading') : t('register.send_code') }}</span>
-          <svg v-if="!isLoading" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--cream)">
-            <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
-        <div class="rule-center mt-2 mb-1">
-          <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('login.or') }}</span>
-        </div>
-
-        <button @click="navigate('login')" type="button" class="ghost-btn btn-press">
-          <span class="eyebrow-sm">{{ t('login.have_account') }}</span>
-        </button>
-        <button @click="navigate('home')" type="button" class="text-btn btn-press">
-          <span class="serif-italic text-[13.5px]" style="color: var(--text-tertiary)">{{ t('register.skip') }} →</span>
-        </button>
+        <button @click="navigate('login')" type="button" class="w-full py-4 rounded-2xl font-black text-sm btn-press" style="background: var(--surface); color: var(--text-primary); box-shadow: 0 2px 12px var(--shadow)">{{ t('login.have_account') }}</button>
+        <button @click="navigate('home')" type="button" class="w-full text-sm font-bold py-3 mt-2 btn-press" style="color: var(--text-tertiary)">{{ t('register.skip') }}</button>
       </div>
 
-      <!-- Step 2 -->
+      <!-- Step 2: OTP Verify -->
       <div v-else>
-        <p class="serif-italic text-[14px] mb-1" style="color: var(--text-secondary)">{{ t('register.code_sent_to') }}</p>
-        <p class="serif text-[18px] tabular mb-6" style="color: var(--text-primary); font-weight: 500">{{ phone }}</p>
-
-        <div class="flex gap-2 justify-center mb-5">
-          <input
-            v-for="(d, i) in codeInputs"
-            :key="i"
-            :ref="setCodeRef(i)"
-            :value="codeInputs[i]"
-            @input="onCodeInput(i, $event)"
-            @keydown="onCodeKeydown(i, $event)"
-            @paste="onCodePaste"
-            type="text"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            maxlength="6"
-            class="otp-input"
-            :class="{ 'otp-input-filled': codeInputs[i] }"
-          />
+        <div class="rounded-2xl p-6" style="background: var(--surface); box-shadow: 0 4px 24px var(--shadow-lg)">
+          <p class="text-xs font-bold text-center mb-1" style="color: var(--text-secondary)">{{ t('register.code_sent_to') }}</p>
+          <p class="text-sm font-black text-center mb-5" style="color: var(--text-primary)">{{ phone }}</p>
+          <div class="flex gap-2 justify-center mb-4">
+            <input
+              v-for="(d, i) in codeInputs"
+              :key="i"
+              :ref="setCodeRef(i)"
+              :value="codeInputs[i]"
+              @input="onCodeInput(i, $event)"
+              @keydown="onCodeKeydown(i, $event)"
+              @paste="onCodePaste"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+              class="w-12 h-14 text-center text-xl font-black rounded-xl outline-none transition-all border-2"
+              :style="{ background: 'var(--surface-secondary)', color: 'var(--text-primary)', borderColor: codeInputs[i] ? 'var(--primary)' : 'var(--border)' }"
+            />
+          </div>
+          <div class="text-center">
+            <button v-if="countdown <= 0" @click="resendCode" type="button" class="text-xs font-bold text-primary btn-press">{{ t('register.resend') }}</button>
+            <p v-else class="text-xs font-semibold" style="color: var(--text-tertiary)">{{ t('register.resend_in', { sec: countdown }) }}</p>
+          </div>
         </div>
-
-        <div class="text-center mb-4">
-          <button v-if="countdown <= 0" @click="resendCode" type="button" class="btn-press">
-            <span class="eyebrow-sm" style="color: var(--terracotta)">{{ t('register.resend') }}</span>
-          </button>
-          <p v-else class="serif-italic text-[12.5px] tabular" style="color: var(--text-tertiary)">{{ t('register.resend_in', { sec: countdown }) }}</p>
-        </div>
-
-        <p v-if="error" class="serif-italic text-[13px] text-center" style="color: var(--bordeaux)">{{ error }}</p>
-
-        <button @click="handleVerify" :disabled="isLoading || code.length !== 6" type="button"
-          class="primary-btn btn-press mt-4"
-          :class="{ 'opacity-50': isLoading || code.length !== 6 }">
-          <span class="eyebrow-sm" style="color: var(--cream)">{{ isLoading ? t('common.loading') : t('register.verify') }}</span>
-        </button>
-
-        <button @click="step = 1" type="button" class="text-btn btn-press mt-3">
-          <span class="serif-italic text-[13.5px]" style="color: var(--text-tertiary)">{{ t('common.back') }}</span>
-        </button>
+        <p v-if="error" class="text-xs font-bold text-red-500 text-center mt-3">{{ error }}</p>
+        <button @click="handleVerify" :disabled="isLoading || code.length !== 6" type="button" class="w-full bg-primary text-white font-black py-4 rounded-2xl btn-press mt-4 transition-opacity" :class="{ 'opacity-60': isLoading || code.length !== 6 }" style="box-shadow: 0 6px 24px var(--primary-glow)">{{ isLoading ? t('common.loading') : t('register.verify') }}</button>
+        <button @click="step = 1" type="button" class="w-full text-sm font-bold py-3 mt-2 btn-press" style="color: var(--text-tertiary)">{{ t('common.back') }}</button>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.input-frame {
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  transition: border-color 0.2s ease;
-}
-.input-frame:focus-within {
-  border-color: var(--text-primary);
-}
-.form-input {
-  width: 100%;
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-size: 16px;
-  font-weight: 500;
-  padding: 14px 18px;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  letter-spacing: 0.01em;
-}
-
-.primary-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px 0;
-  background: var(--surface-ink);
-  border: none;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.ghost-btn {
-  width: 100%;
-  padding: 16px 0;
-  background: transparent;
-  border: 1px solid var(--hairline);
-  cursor: pointer;
-  text-align: center;
-}
-
-.text-btn {
-  width: 100%;
-  padding: 10px 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-}
-
-.otp-input {
-  width: 46px;
-  height: 56px;
-  text-align: center;
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: 24px;
-  font-weight: 500;
-  background: var(--surface);
-  color: var(--text-primary);
-  border: 1px solid var(--hairline);
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-.otp-input:focus,
-.otp-input-filled {
-  border-color: var(--text-primary);
-}
-</style>

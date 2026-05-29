@@ -29,8 +29,8 @@ const isPlacing = ref(false)
 const orderError = ref('')
 
 const paymentMethods = [
-  { id: 'card', labelKey: 'checkout.card', descKey: 'payment.card_desc' },
-  { id: 'cash', labelKey: 'checkout.cash', descKey: 'ed.settle_arrival' },
+  { id: 'card', labelKey: 'checkout.card', emoji: '💳' },
+  { id: 'cash', labelKey: 'checkout.cash', emoji: '💵' },
 ]
 
 const DEFAULT_LAT = 40.5553
@@ -70,15 +70,15 @@ async function initMap(lat, lng) {
   try {
     L = await ensureLeaflet()
   } catch {
-    locationStatus.value = t('checkout.map_unavailable')
+    locationStatus.value = '⚠️ ' + t('checkout.map_unavailable')
     return
   }
   map = L.map('leaflet-map', { zoomControl: true }).setView([lat, lng], 16)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '', maxZoom: 19 }).addTo(map)
   const icon = L.divIcon({
     className: '',
-    html: `<div style="width:32px;height:32px;background:#0F5132;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(15,81,50,0.5);border:2px solid #F5EFE3"></div>`,
-    iconSize: [32, 32], iconAnchor: [16, 32],
+    html: `<div style="width:36px;height:36px;background:#059669;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:3px solid white"></div>`,
+    iconSize: [36, 36], iconAnchor: [18, 36],
   })
   marker = L.marker([lat, lng], { icon, draggable: true }).addTo(map)
   map.on('click', (e) => { marker.setLatLng(e.latlng); debouncedGetAddress(e.latlng.lat, e.latlng.lng) })
@@ -116,16 +116,16 @@ onMounted(async () => {
   const startLng = defaultAddr?.lng || DEFAULT_LNG
 
   if (defaultAddr?.lat && defaultAddr?.lng) {
-    locationStatus.value = t('checkout.location_detected')
+    locationStatus.value = '✅ ' + t('checkout.location_detected')
     initMap(startLat, startLng)
   } else if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (pos) => { locationStatus.value = t('checkout.location_detected'); initMap(pos.coords.latitude, pos.coords.longitude) },
-      () => { locationStatus.value = t('checkout.location_default'); initMap(DEFAULT_LAT, DEFAULT_LNG) },
+      (pos) => { locationStatus.value = '✅ ' + t('checkout.location_detected'); initMap(pos.coords.latitude, pos.coords.longitude) },
+      () => { locationStatus.value = '📍 ' + t('checkout.location_default'); initMap(DEFAULT_LAT, DEFAULT_LNG) },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     )
   } else {
-    locationStatus.value = t('checkout.location_unavailable')
+    locationStatus.value = '❌ ' + t('checkout.location_unavailable')
     initMap(DEFAULT_LAT, DEFAULT_LNG)
   }
 })
@@ -137,6 +137,7 @@ onUnmounted(() => {
 })
 
 async function handlePlaceOrder() {
+  // Re-entrancy guard at function entry — :disabled alone races with rapid taps.
   if (isPlacing.value) return
   if (!isAuthenticated.value) { navigate('login'); return }
   const addrId = selectedAddressId.value || addresses.value.find(a => a.isDefault)?.id
@@ -167,300 +168,160 @@ async function handlePlaceOrder() {
 
 <template>
   <div class="min-h-screen" style="background: var(--bg-app)">
-    <!-- Editorial header -->
-    <div class="px-5 py-4 sticky top-0 z-20 checkout-header">
-      <div class="flex items-center justify-between">
-        <button @click="navigate('cart')" class="flex items-center gap-2 btn-press">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="eyebrow-sm">{{ t('ed.back_to_basket') }}</span>
-        </button>
-        <span class="num-label text-[11px] tabular">{{ t('ed.step_n_of') }} 02 / 02</span>
-      </div>
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+      <button @click="navigate('cart')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
+        <svg width="20" height="20" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <p class="text-base font-black" style="color: var(--text-primary)">{{ t('checkout.title') }}</p>
+      <div class="w-9"></div>
     </div>
 
-    <!-- Editorial title -->
-    <div class="px-5 mt-4 mb-5">
-      <div class="flex items-center gap-2 mb-2">
-        <span class="num-label text-[11px] tabular">§</span>
-        <p class="eyebrow-sm">{{ t('ed.checkout_word') }}</p>
-      </div>
-      <h1 class="display text-[34px]" style="color: var(--text-primary)">
-        {{ t('ed.place_order_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.place_order_italic') }}</span>
-      </h1>
-      <div class="hairline mt-4"></div>
-    </div>
-
-    <div class="px-5 pb-36 flex flex-col gap-6">
+    <div class="px-4 mt-3 pb-32 flex flex-col gap-3">
       <!-- Map -->
-      <div>
-        <div class="flex items-center gap-2 mb-2">
-          <span class="num-label text-[11px] tabular">01</span>
-          <p class="eyebrow-sm">{{ t('ed.delivery_to') }}</p>
-        </div>
-        <div class="map-frame">
-          <div id="leaflet-map" style="width: 100%; height: 100%; z-index: 1;"></div>
-          <div class="map-frame-border"></div>
-        </div>
-        <p v-if="locationStatus" class="text-[11px] mt-2 serif-italic" style="color: var(--text-tertiary)">{{ locationStatus }}</p>
+      <div class="rounded-2xl overflow-hidden relative" style="height: 200px; box-shadow: 0 2px 12px var(--shadow)">
+        <div id="leaflet-map" style="width: 100%; height: 100%; z-index: 1;"></div>
+        <div class="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-1 rounded-lg" style="z-index: 999; background: var(--surface); color: var(--text-secondary); box-shadow: 0 2px 6px var(--shadow-lg)">{{ locationStatus }}</div>
       </div>
 
       <!-- Address selector -->
-      <div>
-        <!-- Current address -->
-        <button @click="showAddressPicker = !showAddressPicker" class="address-card btn-press">
+      <div class="rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <!-- Current address (tappable) -->
+        <button @click="showAddressPicker = !showAddressPicker" class="w-full flex items-center justify-between px-4 py-3.5 btn-press text-left">
           <div class="flex items-center gap-3 flex-1 min-w-0">
-            <svg width="14" height="14" style="color: var(--terracotta)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-            <div class="flex-1 min-w-0 text-left">
-              <p class="eyebrow-sm mb-0.5">{{ t('checkout.home') }}</p>
-              <p class="serif text-[14.5px] truncate" style="color: var(--text-primary); font-weight: 500">{{ addressText }}</p>
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
+              <svg width="16" height="16" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('checkout.home') }}</p>
+              <p class="text-xs font-bold truncate" style="color: var(--text-primary)">{{ addressText }}</p>
             </div>
           </div>
-          <svg width="11" height="11" :style="{ color: 'var(--text-tertiary)', transform: showAddressPicker ? 'rotate(180deg)' : '', transition: 'transform 0.3s' }" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          <svg width="16" height="16" class="flex-shrink-0 transition-transform" :style="{ color: 'var(--text-tertiary)', transform: showAddressPicker ? 'rotate(180deg)' : '' }" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
         </button>
 
-        <!-- Dropdown -->
-        <div v-if="showAddressPicker" class="address-dropdown">
+        <!-- Address dropdown -->
+        <div v-if="showAddressPicker && addresses.length" class="border-t" style="border-color: var(--border)">
           <button
-            v-for="(addr, idx) in addresses"
+            v-for="addr in addresses"
             :key="addr.id"
             @click="selectAddress(addr)"
-            class="address-item btn-press"
-            :class="[selectedAddressId === addr.id ? 'address-item-active' : '', idx !== 0 ? 'border-t' : '']"
-            :style="{ borderColor: 'var(--hairline)' }"
+            class="w-full flex items-center gap-3 px-4 py-3 btn-press text-left border-b"
+            :style="{ borderColor: 'var(--border)', background: selectedAddressId === addr.id ? 'var(--primary-light)' : '' }"
           >
-            <span class="num-label text-[12px] flex-shrink-0">0{{ idx + 1 }}</span>
-            <div class="flex-1 min-w-0 text-left">
-              <p class="serif text-[14px]" style="color: var(--text-primary); font-weight: 500">{{ addr.label }}</p>
-              <p class="text-[11px] truncate" style="color: var(--text-tertiary)">{{ addr.address }}</p>
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" :style="{ background: selectedAddressId === addr.id ? 'var(--primary)' : 'var(--surface-secondary)' }">
+              <svg width="14" height="14" :class="selectedAddressId === addr.id ? 'text-white' : ''" :style="selectedAddressId !== addr.id ? 'color: var(--text-tertiary)' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
             </div>
-            <svg v-if="selectedAddressId === addr.id" width="13" height="13" style="color: var(--primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-black" style="color: var(--text-primary)">{{ addr.label }}</p>
+              <p class="text-[10px] font-semibold truncate" style="color: var(--text-tertiary)">{{ addr.address }}</p>
+            </div>
+            <svg v-if="selectedAddressId === addr.id" width="16" height="16" class="text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-          <button @click="navigate('addresses')" class="address-item btn-press" :class="addresses.length ? 'border-t' : ''" :style="{ borderColor: 'var(--hairline)' }">
-            <span class="text-[14px] font-light" style="color: var(--primary)">+</span>
-            <span class="eyebrow-sm" style="color: var(--primary)">{{ t('addresses.add_new') }}</span>
+          <button @click="navigate('addresses')" class="w-full flex items-center gap-3 px-4 py-3 btn-press text-left">
+            <div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+              <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <span class="text-xs font-black text-primary">{{ t('addresses.add_new') }}</span>
           </button>
         </div>
-      </div>
 
-      <!-- Contact + Time -->
-      <div>
-        <div class="flex items-center gap-2 mb-3">
-          <span class="num-label text-[11px] tabular">02</span>
-          <p class="eyebrow-sm">{{ t('ed.contact_arrival') }}</p>
+        <!-- No addresses -->
+        <div v-if="showAddressPicker && !addresses.length" class="border-t px-4 py-3" style="border-color: var(--border)">
+          <button @click="navigate('addresses')" class="w-full flex items-center gap-3 btn-press text-left">
+            <div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+              <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <span class="text-xs font-black text-primary">{{ t('addresses.add_new') }}</span>
+          </button>
         </div>
-        <div class="hairline mb-4"></div>
-        <div class="grid grid-cols-2 gap-5">
-          <div>
-            <p class="eyebrow-sm mb-1">{{ t('checkout.phone') }}</p>
-            <p class="serif text-[14.5px] tabular" style="color: var(--text-primary); font-weight: 500">{{ user?.phone || '—' }}</p>
+
+        <!-- Phone -->
+        <div class="flex items-center px-4 py-3.5 border-t" style="border-color: var(--border)">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
+              <svg width="16" height="16" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/></svg>
+            </div>
+            <div>
+              <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('checkout.phone') }}</p>
+              <p class="text-xs font-bold" style="color: var(--text-primary)">{{ user?.phone || '' }}</p>
+            </div>
           </div>
-          <div>
-            <p class="eyebrow-sm mb-1">{{ t('checkout.delivery_time') }}</p>
-            <p class="serif text-[14.5px]" style="color: var(--text-primary); font-weight: 500">{{ t('checkout.delivery_minutes') }}</p>
+        </div>
+
+        <!-- Time -->
+        <div class="flex items-center px-4 py-3.5 border-t" style="border-color: var(--border)">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
+              <svg width="16" height="16" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('checkout.delivery_time') }}</p>
+              <p class="text-xs font-bold" style="color: var(--text-primary)">{{ t('checkout.delivery_minutes') }}</p>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Note -->
-      <div>
-        <div class="flex items-center gap-2 mb-3">
-          <span class="num-label text-[11px] tabular">03</span>
-          <p class="eyebrow-sm">{{ t('checkout.note') }}</p>
-        </div>
-        <div class="hairline mb-3"></div>
+      <div class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <p class="text-xs font-black mb-2" style="color: var(--text-primary)">{{ t('checkout.note') }}</p>
         <textarea v-model="userNote" :placeholder="t('checkout.note_placeholder')" rows="2"
-          class="note-input"></textarea>
+          class="w-full text-sm font-semibold px-3 py-2.5 rounded-xl outline-none resize-none"
+          style="background: var(--surface-secondary); color: var(--text-primary)"></textarea>
       </div>
 
       <!-- Payment -->
-      <div>
-        <div class="flex items-center gap-2 mb-3">
-          <span class="num-label text-[11px] tabular">04</span>
-          <p class="eyebrow-sm">{{ t('checkout.payment') }}</p>
-        </div>
-        <div class="hairline mb-3"></div>
-        <div class="flex flex-col">
-          <button v-for="method in paymentMethods" :key="method.id" @click="selectedPayment = method.id"
-            class="payment-method btn-press">
-            <div class="radio-outer" :class="{ active: selectedPayment === method.id }">
-              <div v-if="selectedPayment === method.id" class="radio-inner"></div>
-            </div>
-            <div class="text-left flex-1">
-              <p class="serif text-[15px]" style="color: var(--text-primary); font-weight: 500">{{ t(method.labelKey) }}</p>
-              <p class="text-[11.5px]" style="color: var(--text-tertiary)">{{ t(method.descKey) }}</p>
-            </div>
-          </button>
+      <div class="rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <p class="px-4 pt-3.5 pb-1 text-xs font-black" style="color: var(--text-primary)">{{ t('checkout.payment') }}</p>
+        <div v-for="(method, idx) in paymentMethods" :key="method.id" @click="selectedPayment = method.id"
+          :class="['flex items-center justify-between px-4 py-3.5 btn-press', idx < paymentMethods.length - 1 ? 'border-b' : '']"
+          :style="{ borderColor: 'var(--border)' }">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">{{ method.emoji }}</span>
+            <span class="text-sm font-bold" style="color: var(--text-primary)">{{ t(method.labelKey) }}</span>
+          </div>
+          <div class="radio-outer" :class="{ active: selectedPayment === method.id }">
+            <div v-if="selectedPayment === method.id" class="radio-inner"></div>
+          </div>
         </div>
       </div>
 
       <!-- Order summary -->
-      <div>
-        <div class="flex items-center gap-2 mb-3">
-          <span class="num-label text-[11px] tabular">∑</span>
-          <p class="eyebrow-sm">{{ t('cart.your_order') }}</p>
-        </div>
-        <div class="hairline mb-4"></div>
-        <div class="flex flex-col gap-3">
-          <div class="flex justify-between items-baseline">
-            <span class="serif-italic text-[14px]" style="color: var(--text-secondary)">{{ t('cart.products') }}</span>
-            <span class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500">{{ formatNum(subtotal) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+      <div class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <p class="text-sm font-black mb-3" style="color: var(--text-primary)">{{ t('cart.your_order') }}</p>
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-between">
+            <span class="text-xs font-semibold" style="color: var(--text-secondary)">{{ t('cart.products') }}</span>
+            <span class="text-xs font-bold" style="color: var(--text-primary)">{{ formatNum(subtotal) }} {{ t('currency') }}</span>
           </div>
-          <div v-if="discount > 0" class="flex justify-between items-baseline">
-            <span class="serif-italic text-[14px]" style="color: var(--text-secondary)">{{ t('cart.discount') }}</span>
-            <span class="serif text-[15px] tabular" style="color: var(--bordeaux); font-weight: 500">−{{ formatNum(discount) }} <span class="eyebrow-sm" style="color: var(--bordeaux); opacity: 0.7">{{ t('currency') }}</span></span>
+          <div class="flex justify-between">
+            <span class="text-xs font-semibold" style="color: var(--text-secondary)">{{ t('cart.delivery') }}</span>
+            <span class="text-xs font-bold" style="color: var(--text-primary)">{{ formatNum(deliveryCost) }} {{ t('currency') }}</span>
           </div>
-          <div class="flex justify-between items-baseline">
-            <span class="serif-italic text-[14px]" style="color: var(--text-secondary)">{{ t('cart.delivery') }}</span>
-            <span class="serif text-[15px] tabular" style="color: var(--text-primary); font-weight: 500">{{ formatNum(deliveryCost) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+          <div v-if="discount > 0" class="flex justify-between">
+            <span class="text-xs font-semibold" style="color: var(--text-secondary)">{{ t('cart.discount') }}</span>
+            <span class="text-xs font-bold text-red-500">-{{ formatNum(discount) }} {{ t('currency') }}</span>
           </div>
-          <div class="hairline-strong my-1"></div>
-          <div class="flex justify-between items-baseline">
-            <span class="eyebrow">{{ t('checkout.total') }}</span>
-            <span class="serif text-[20px] tabular" style="color: var(--text-primary); font-weight: 600; letter-spacing: -0.02em">{{ formatNum(total) }} <span class="eyebrow-sm" style="color: var(--text-tertiary)">{{ t('currency') }}</span></span>
+          <div class="h-px" style="background: var(--border)"></div>
+          <div class="flex justify-between">
+            <span class="text-sm font-black" style="color: var(--text-primary)">{{ t('checkout.total') }}</span>
+            <span class="text-sm font-black" style="color: var(--text-primary)">{{ formatNum(total) }} {{ t('currency') }}</span>
           </div>
         </div>
       </div>
 
-      <p v-if="orderError" class="serif-italic text-[13px] text-center" style="color: var(--bordeaux)">{{ orderError }}</p>
+      <p v-if="orderError" class="text-xs font-bold text-red-500 text-center">{{ orderError }}</p>
     </div>
 
-    <!-- Place order button -->
-    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-5 pb-5 pt-3 z-30 safe-bottom checkout-fab-wrap">
+    <!-- Order button -->
+    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pb-6 pt-3 z-30 safe-bottom" style="background: var(--surface); box-shadow: 0 -4px 20px var(--shadow)">
       <button @click="handlePlaceOrder" :disabled="isPlacing"
-        class="place-order-btn btn-press"
-        :class="{ 'opacity-60': isPlacing }">
-        <span class="eyebrow-sm" style="color: var(--cream)">{{ isPlacing ? t('common.loading') : t('checkout.place_order') }}</span>
-        <svg v-if="!isPlacing" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--cream)">
-          <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        class="w-full banner-bg text-white font-black text-base py-4 rounded-2xl btn-press transition-opacity"
+        :class="{ 'opacity-60': isPlacing }"
+        style="box-shadow: 0 6px 24px var(--primary-glow)">
+        {{ isPlacing ? t('common.loading') : t('checkout.place_order') }}
       </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.checkout-header {
-  background: rgba(250, 247, 241, 0.86);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 1px solid var(--hairline);
-}
-:root.dark .checkout-header, .dark .checkout-header {
-  background: rgba(14, 20, 17, 0.86);
-}
-
-.map-frame {
-  position: relative;
-  height: 200px;
-  border: 1px solid var(--hairline);
-  background: var(--surface-secondary);
-  overflow: hidden;
-}
-.map-frame-border {
-  position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(245, 239, 227, 0.4);
-  pointer-events: none;
-  z-index: 10;
-}
-
-.address-card {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.2s ease;
-}
-.address-card:active {
-  border-color: var(--text-primary);
-}
-
-.address-dropdown {
-  margin-top: 2px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-top: none;
-}
-.address-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-.address-item.border-t {
-  border-top: 1px solid var(--hairline);
-}
-.address-item-active {
-  background: var(--primary-tint);
-}
-
-.note-input {
-  width: 100%;
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-style: italic;
-  font-size: 14px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  color: var(--text-primary);
-  resize: none;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-.note-input:focus {
-  border-color: var(--text-primary);
-}
-.note-input::placeholder {
-  color: var(--text-tertiary);
-  font-style: italic;
-}
-
-.payment-method {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 0;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--hairline);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.payment-method:last-child {
-  border-bottom: none;
-}
-
-.checkout-fab-wrap {
-  background: linear-gradient(to top, var(--bg-app) 65%, transparent);
-}
-
-.place-order-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px 20px;
-  background: var(--surface-ink);
-  border: none;
-  border-radius: 2px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: var(--shadow-lg);
-  transition: opacity 0.2s ease;
-}
-</style>

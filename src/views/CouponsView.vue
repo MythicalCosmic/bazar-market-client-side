@@ -30,95 +30,57 @@ async function handleValidate() {
 
 <template>
   <div class="min-h-screen pb-10" style="background: var(--bg-app)">
-    <!-- Editorial header -->
-    <div class="px-5 pt-5 pb-3">
-      <button @click="navigate('profile')" class="flex items-center gap-2 btn-press mb-3">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--text-primary)">
-          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="eyebrow-sm">{{ t('ed.profile_word') }}</span>
+    <div class="flex items-center justify-between px-4 py-3 sticky top-0 z-20" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+      <button @click="navigate('profile')" class="w-9 h-9 rounded-xl flex items-center justify-center btn-press" style="background: var(--surface-secondary)">
+        <svg class="w-5 h-5" style="color: var(--text-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <div class="flex items-center gap-2 mb-2">
-        <span class="num-label text-[11px] tabular">§</span>
-        <p class="eyebrow-sm">{{ t('ed.discounts_label') }}</p>
-      </div>
-      <h1 class="display text-[34px]" style="color: var(--text-primary)">
-        {{ t('ed.your_coupons_pre') }} <span class="serif-italic" style="color: var(--terracotta)">{{ t('ed.coupons_italic') }}</span>
-      </h1>
-      <div class="hairline mt-4"></div>
+      <p class="text-base font-black" style="color: var(--text-primary)">{{ t('coupons.title') }}</p>
+      <div class="w-9"></div>
     </div>
 
-    <div class="px-5 mt-5">
+    <div class="px-4 mt-4 flex flex-col gap-3">
       <!-- Enter promo code -->
-      <div class="flex items-center gap-2 mb-3">
-        <span class="num-label text-[11px] tabular">01</span>
-        <p class="eyebrow-sm">{{ t('coupons.have_code') }}</p>
-      </div>
-      <div class="hairline mb-3"></div>
+      <div class="rounded-2xl p-4" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
+        <p class="text-sm font-black mb-2" style="color: var(--text-primary)">{{ t('coupons.have_code') }}</p>
+        <div class="flex gap-2">
+          <input v-model="promoCode" :placeholder="t('coupons.enter_code')"
+            class="flex-1 text-sm font-bold px-4 py-2.5 rounded-xl outline-none"
+            style="background: var(--surface-secondary); color: var(--text-primary)"
+            @keyup.enter="handleValidate" />
+          <button @click="handleValidate" :disabled="isValidating"
+            class="px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-black btn-press transition-opacity"
+            :class="{ 'opacity-60': isValidating }">
+            {{ isValidating ? '...' : t('coupons.apply') }}
+          </button>
+        </div>
 
-      <div class="flex border" :style="{ borderColor: 'var(--hairline)' }">
-        <input v-model="promoCode" :placeholder="t('coupons.enter_code')"
-          class="flex-1 promo-input"
-          @keyup.enter="handleValidate" />
-        <button @click="handleValidate" :disabled="isValidating"
-          class="promo-apply btn-press"
-          :class="{ 'opacity-50': isValidating }">
-          <span class="eyebrow-sm" style="color: var(--cream)">{{ isValidating ? '...' : t('coupons.apply') }}</span>
-        </button>
-      </div>
-
-      <!-- Result -->
-      <div v-if="validationResult" class="mt-4 result-card">
-        <div class="flex items-center gap-3">
-          <span class="num-label text-[18px]">✓</span>
-          <div>
-            <p class="serif text-[18px]" style="color: var(--text-primary); font-weight: 500">
-              {{ validationResult.type === 'percent' ? validationResult.value + '%' : validationResult.value }} {{ t('cart.discount') }}
-            </p>
-            <p class="serif-italic text-[12.5px] mt-0.5" style="color: var(--text-secondary)">
-              {{ t('coupons.saves') }} {{ validationResult.discount_amount }} {{ t('currency') }}
-            </p>
+        <!-- Validation result -->
+        <div v-if="validationResult" class="mt-3 p-3 rounded-xl" style="background: var(--primary-light)">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">✅</span>
+            <div>
+              <p class="text-sm font-black text-primary">
+                {{ validationResult.type === 'percent' ? validationResult.value + '%' : validationResult.value }} {{ t('cart.discount') }}
+              </p>
+              <p class="text-[10px] font-semibold" style="color: var(--text-secondary)">
+                {{ t('coupons.saves') }} {{ validationResult.discount_amount }} {{ t('currency') }}
+              </p>
+            </div>
           </div>
         </div>
+
+        <p v-if="validationError" class="text-xs font-bold text-red-500 mt-2">{{ validationError }}</p>
       </div>
 
-      <p v-if="validationError" class="serif-italic text-[13px] mt-3" style="color: var(--bordeaux)">{{ validationError }}</p>
-
-      <!-- Editorial note -->
-      <div class="mt-10 rule-center">
-        <span class="num-label text-[10px]">·  ·  ·</span>
+      <!-- Info -->
+      <div class="rounded-2xl p-4" style="background: var(--primary-light)">
+        <div class="flex gap-3">
+          <svg width="20" height="20" class="text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <p class="text-xs font-semibold leading-relaxed" style="color: var(--text-primary)">{{ t('payment.info') }}</p>
+        </div>
       </div>
-      <p class="mt-4 serif-italic text-[13px] text-center" style="color: var(--text-tertiary); line-height: 1.6">
-        {{ t('payment.info') }}
-      </p>
     </div>
   </div>
 </template>
-
-<style scoped>
-.promo-input {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 13px 14px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: var(--surface);
-  color: var(--text-primary);
-  border: none;
-  outline: none;
-}
-
-.promo-apply {
-  padding: 0 18px;
-  background: var(--surface-ink);
-  border: none;
-  cursor: pointer;
-}
-
-.result-card {
-  padding: 18px 20px;
-  background: var(--primary-tint);
-  border: 1px solid var(--primary);
-}
-</style>

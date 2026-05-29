@@ -7,10 +7,7 @@ import { useFavorites } from '../stores/favoritesStore.js'
 import { useAuth } from '../stores/authStore.js'
 import { useRouter } from '../router/index.js'
 
-const props = defineProps({
-  product: { type: Object, required: true },
-  variant: { type: String, default: 'default' }, // default | editorial | minimal
-})
+const props = defineProps({ product: { type: Object, required: true } })
 
 const { addToCart, decrement, getQty } = useCartStore()
 const { formatPrice, formatQty } = useFormat()
@@ -35,68 +32,62 @@ async function handleFav() {
     class="product-card-wrap">
 
     <!-- Image area -->
-    <div class="product-img-area">
-      <div class="w-full flex items-center justify-center p-4 relative" style="height: 156px;">
+    <div class="relative overflow-hidden" style="background: var(--img-bg); border-radius: 18px 18px 0 0;">
+      <div class="w-full flex items-center justify-center p-4" style="height: 152px;">
         <img v-if="product.image" :src="product.image" :alt="getLocalizedName(product.name)"
-          class="max-w-full max-h-full object-contain transition-transform duration-500 product-img" style="mix-blend-mode: multiply;" />
-        <svg v-else width="36" height="36" style="color: var(--text-tertiary); opacity: 0.4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.2">
+          class="max-w-full max-h-full object-contain transition-transform duration-300" style="mix-blend-mode: multiply;" />
+        <svg v-else width="36" height="36" style="color: var(--text-tertiary); opacity: 0.4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
           <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
         </svg>
       </div>
 
-      <!-- Editorial discount badge (corner-cut style) -->
-      <div v-if="hasDiscount" class="discount-corner">
-        <span class="num-label text-[10px] leading-none">−{{ discountPercent }}<span class="text-[8px] align-top">%</span></span>
+      <!-- Discount badge -->
+      <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
+        <span v-if="hasDiscount" class="discount-badge">-{{ discountPercent }}%</span>
       </div>
 
-      <!-- Favorite (hairline-bordered) -->
+      <!-- Favorite -->
       <button @click.stop="handleFav"
-        class="fav-btn btn-press"
+        class="absolute top-2.5 right-2.5 z-10 fav-btn btn-press"
         :class="{ 'fav-active': fav }">
-        <svg width="13" height="13"
-          :style="{ color: fav ? 'var(--terracotta)' : 'var(--text-tertiary)' }"
-          :fill="fav ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+        <svg width="15" height="15" :class="fav ? 'text-red-500' : ''" :style="!fav ? 'color: var(--text-tertiary)' : ''"
+          :fill="fav ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
       </button>
 
       <!-- Out of stock overlay -->
-      <div v-if="product.inStock === false" class="absolute inset-0 flex items-center justify-center" style="background: rgba(26,38,32,0.55); backdrop-filter: blur(3px)">
-        <span class="eyebrow text-[9px] px-3 py-1" style="color: var(--cream); background: rgba(26,38,32,0.7); border: 1px solid rgba(245,239,227,0.3); border-radius: 2px">{{ t('product.out_of_stock') }}</span>
+      <div v-if="product.inStock === false" class="absolute inset-0 flex items-center justify-center" style="background: rgba(0,0,0,0.35); backdrop-filter: blur(2px)">
+        <span class="text-white text-[11px] font-semibold px-3 py-1.5 rounded-full" style="background: rgba(0,0,0,0.5)">{{ t('product.out_of_stock') }}</span>
       </div>
     </div>
 
-    <!-- Editorial hairline divider -->
-    <div class="hairline mx-3"></div>
-
     <!-- Info -->
-    <div class="px-3 py-3 flex flex-col flex-1">
-      <p class="product-name line-clamp-2 mb-auto">{{ getLocalizedName(product.name) }}</p>
+    <div class="p-3 flex flex-col flex-1">
+      <p class="text-[12px] font-medium leading-snug line-clamp-2 mb-auto" style="color: var(--text-secondary)">{{ getLocalizedName(product.name) }}</p>
 
       <!-- Price row -->
-      <div class="flex items-baseline justify-between gap-2 mt-2 mb-2.5">
-        <div class="flex items-baseline gap-1.5">
-          <p v-if="hasDiscount" class="serif text-[16px] tabular" style="color: var(--text-primary); font-weight: 500; letter-spacing: -0.02em;">{{ formatPrice(product.discountedPrice) }}</p>
-          <p :class="[hasDiscount ? 'text-[10px] line-through tabular' : 'serif text-[16px] tabular']"
-            :style="{ color: hasDiscount ? 'var(--text-muted)' : 'var(--text-primary)', fontWeight: hasDiscount ? '500' : '500', letterSpacing: '-0.02em' }">
-            {{ formatPrice(product.price) }}
-          </p>
-        </div>
+      <div class="flex items-baseline gap-1.5 mt-2 mb-2.5">
+        <p v-if="hasDiscount" class="text-[15px] font-bold text-primary">{{ formatPrice(product.discountedPrice) }}</p>
+        <p :class="[hasDiscount ? 'text-[10px] line-through' : 'text-[15px] font-bold']"
+          :style="{ color: hasDiscount ? 'var(--text-tertiary)' : 'var(--text-primary)' }">
+          {{ formatPrice(product.price) }}
+        </p>
       </div>
 
       <!-- Add / Qty -->
       <button v-if="product.inStock !== false && qty === 0" @click.stop="addToCart(product)"
         class="add-btn btn-press">
-        <span class="eyebrow-sm" style="color: inherit;">{{ t('cart.add') }}</span>
-        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+        {{ t('cart.add') }}
       </button>
       <div v-else-if="qty > 0" class="qty-controls" @click.stop>
-        <button @click.stop="decrement(product.id)" class="qty-btn-edit btn-press" aria-label="decrement">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="2" stroke-linecap="round"/></svg>
+        <button @click.stop="decrement(product.id)" class="qty-btn btn-press">
+          <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
         </button>
-        <span class="text-[12px] font-semibold tabular" style="color: var(--text-primary)">{{ formatQty(qty, product.unit) }}</span>
-        <button @click.stop="addToCart(product)" class="qty-btn-edit btn-press" aria-label="increment">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="text-xs font-bold text-primary">{{ formatQty(qty, product.unit) }}</span>
+        <button @click.stop="addToCart(product)" class="qty-btn btn-press">
+          <svg width="14" height="14" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
         </button>
       </div>
     </div>
@@ -107,122 +98,89 @@ async function handleFav() {
 .product-card-wrap {
   display: flex;
   flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: 4px;
+  border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px var(--shadow);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
   -webkit-tap-highlight-color: transparent;
 }
 .product-card-wrap:active {
-  transform: scale(0.98) translateY(2px);
-  box-shadow: var(--shadow);
-}
-.product-card-wrap:hover .product-img {
-  transform: scale(1.04);
+  transform: scale(0.97);
 }
 
-.product-img-area {
-  position: relative;
-  overflow: hidden;
-  background: var(--img-bg);
-}
-
-.discount-corner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: var(--bordeaux);
-  color: var(--cream);
-  padding: 5px 10px 6px 10px;
-  border-bottom-right-radius: 4px;
-  z-index: 10;
-}
-.discount-corner .num-label {
-  color: var(--cream);
+.discount-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #F97316, #EA580C);
 }
 
 .fav-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
-  z-index: 10;
 }
 .fav-active {
-  border-color: var(--terracotta);
+  background: rgba(239, 68, 68, 0.1);
 }
-
-.product-name {
-  font-family: 'Fraunces', Georgia, serif;
-  font-variation-settings: 'opsz' 96, 'SOFT' 40;
-  font-size: 13.5px;
-  font-weight: 450;
-  line-height: 1.22;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+.dark .fav-btn:not(.fav-active) {
+  background: rgba(41, 37, 36, 0.9);
 }
 
 .add-btn {
   width: 100%;
   padding: 9px 0;
-  border-radius: 2px;
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 5px;
+  box-shadow: 0 2px 8px var(--primary-glow);
   transition: all 0.2s ease;
 }
 .add-btn:active {
-  background: var(--surface-ink);
-  color: var(--cream);
-  border-color: var(--surface-ink);
-}
-.add-btn:hover {
-  background: var(--surface-ink);
-  color: var(--cream);
-  border-color: var(--surface-ink);
+  transform: scale(0.96);
+  box-shadow: 0 1px 4px var(--primary-glow);
 }
 
 .qty-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px;
-  background: var(--surface-secondary);
-  border: 1px solid var(--hairline);
-  border-radius: 2px;
+  border-radius: 12px;
+  padding: 3px;
+  background: var(--primary-light);
 }
 
-.qty-btn-edit {
-  width: 26px;
-  height: 26px;
-  border-radius: 2px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  color: var(--text-primary);
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease;
 }
-.qty-btn-edit:active {
-  background: var(--surface-ink);
-  color: var(--cream);
-  transform: scale(0.92);
+.qty-btn:active {
+  transform: scale(0.9);
 }
 </style>
