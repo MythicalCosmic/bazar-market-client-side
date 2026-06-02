@@ -106,8 +106,12 @@ export function useCartStore() {
   async function loadDeliveryInfo() {
     try {
       const data = await getDeliveryInfo()
-      state.deliveryCost = parseFloat(data.default_delivery_fee) || DEFAULT_DELIVERY
-      state.minOrderTotal = parseFloat(data.min_order_total) || DEFAULT_MIN_ORDER
+      // Use the API value when present — including a legitimate 0 (free
+      // delivery). Only fall back to the default when it's missing/non-numeric.
+      const fee = parseFloat(data.default_delivery_fee)
+      state.deliveryCost = Number.isFinite(fee) ? fee : DEFAULT_DELIVERY
+      const min = parseFloat(data.min_order_total)
+      state.minOrderTotal = Number.isFinite(min) ? min : DEFAULT_MIN_ORDER
     } catch {}
   }
 

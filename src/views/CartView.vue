@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import CartItemRow from '../components/CartItemRow.vue'
 import { useCartStore } from '../stores/cartStore.js'
 import { useFormat } from '../composables/useFormat.js'
@@ -8,7 +8,10 @@ import { useI18n } from '../i18n/index.js'
 import { products } from '../stores/productsStore.js'
 import { validateCoupon } from '../services/api.js'
 
-const { cartItems, subtotal, total, deliveryCost, discount, addToCart, clearCart, setDiscount } = useCartStore()
+const { cartItems, subtotal, total, deliveryCost, discount, addToCart, clearCart, setDiscount, loadDeliveryInfo } = useCartStore()
+
+// Keep the delivery fee fresh — the one-shot startup fetch can miss.
+onMounted(() => loadDeliveryInfo())
 const { formatPrice, formatNum } = useFormat()
 const { navigate } = useRouter()
 const { t, getLocalizedName } = useI18n()

@@ -7,10 +7,10 @@ import { useI18n } from '../i18n/index.js'
 import { useAuth } from '../stores/authStore.js'
 import { useAddresses } from '../stores/addressStore.js'
 import { placeOrder as placeOrderAPI } from '../services/api.js'
-import { ensureYmaps, reverseGeocode, DEFAULT_LAT, DEFAULT_LNG } from '../composables/useYandexMaps.js'
+import { ensureYmaps, reverseGeocode, locateMe, DEFAULT_LAT, DEFAULT_LNG } from '../composables/useYandexMaps.js'
 import { useToast } from '../composables/useToast.js'
 
-const { total, subtotal, deliveryCost, discount, clearCart } = useCartStore()
+const { total, subtotal, deliveryCost, discount, clearCart, loadDeliveryInfo } = useCartStore()
 const { formatNum } = useFormat()
 const { navigate, routeParams } = useRouter()
 const { t } = useI18n()
@@ -28,10 +28,12 @@ const userNote = ref('')
 const isPlacing = ref(false)
 const orderError = ref('')
 
-// Marker position — the live delivery point. When the user taps/drags the map
-// this holds a custom location with no saved address behind it.
+// Live delivery point — tracks the map centre. When the user pans the map this
+// becomes a custom location with no saved address behind it.
 const pickedLat = ref(null)
 const pickedLng = ref(null)
+const mapMoving = ref(false) // map is being panned → lift the centre pin
+const locating = ref(false)  // "find my location" in flight
 
 // Post-order "save this address?" prompt (only for freshly-picked locations).
 const showSavePrompt = ref(false)
@@ -45,35 +47,28 @@ const paymentMethods = [
 
 let ymaps = null
 let map = null
-let marker = null
 let debounceTimer = null
 let geoSeq = 0
 
+// Resolve the map centre to an address. Never lands on a dead-end "not found":
+// falls back to a "selected point" label so the order can still go through.
 async function geocodeAt(lat, lng) {
   const seq = ++geoSeq
   addressText.value = t('checkout.detecting_address')
   try {
     const line = await reverseGeocode(ymaps, [lat, lng])
     if (seq !== geoSeq) return
-    addressText.value = line || t('checkout.address_unknown')
+    addressText.value = line || t('maps.point_selected')
   } catch {
     if (seq !== geoSeq) return
-    addressText.value = t('checkout.address_unknown')
+    addressText.value = t('maps.point_selected')
   }
 }
 
 function debouncedGeocode(lat, lng) {
   addressText.value = t('checkout.detecting_address')
   clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => geocodeAt(lat, lng), 300)
-}
-
-// User picked a custom point on the map — detach from any saved address.
-function onMapPick(coords) {
-  pickedLat.value = coords[0]
-  pickedLng.value = coords[1]
-  selectedAddressId.value = null
-  debouncedGeocode(coords[0], coords[1])
+  debounceTimer = setTimeout(() => geocodeAt(lat, lng), 350)
 }
 
 async function initMap(lat, lng, { geocode } = {}) {
@@ -86,12 +81,13 @@ async function initMap(lat, lng, { geocode } = {}) {
   pickedLat.value = lat
   pickedLng.value = lng
   map = new ymaps.Map('checkout-map',
-    { center: [lat, lng], zoom: 16, controls: ['zoomControl', 'geolocationControl'] },
+    { center: [lat, lng], zoom: 16, controls: ['zoomControl'] },
     { suppressMapOpenBlock: true })
-  marker = new ymaps.Placemark([lat, lng], {}, { draggable: true, preset: 'islands#greenDotIcon' })
-  map.geoObjects.add(marker)
-  map.events.add('click', (e) => { const c = e.get('coords'); marker.geometry.setCoordinates(c); onMapPick(c) })
-  marker.events.add('dragend', () => onMapPick(marker.geometry.getCoordinates()))
+  // Centre-pin: the pin is a fixed overlay, the user pans the map under it.
+  // A user-driven pan detaches any saved address and re-geocodes on settle.
+  map.events.add('actionbegin', () => { mapMoving.value = true; selectedAddressId.value = null })
+  map.events.add('boundschange', () => { const c = map.getCenter(); pickedLat.value = c[0]; pickedLng.value = c[1] })
+  map.events.add('actionend', () => { mapMoving.value = false; const c = map.getCenter(); debouncedGeocode(c[0], c[1]) })
   if (geocode) geocodeAt(lat, lng)
 }
 
@@ -102,15 +98,34 @@ function selectAddress(addr) {
   if (addr.lat && addr.lng) {
     pickedLat.value = addr.lat
     pickedLng.value = addr.lng
-    if (map && marker) {
-      map.setCenter([addr.lat, addr.lng], 16)
-      marker.geometry.setCoordinates([addr.lat, addr.lng])
-    }
+    // Programmatic recentre — no actionend fires, so the saved address text stays.
+    if (map) map.setCenter([addr.lat, addr.lng], 16)
+  }
+}
+
+async function useMyLocation() {
+  if (locating.value || !map) return
+  locating.value = true
+  try {
+    const c = await locateMe()
+    pickedLat.value = c[0]
+    pickedLng.value = c[1]
+    selectedAddressId.value = null
+    map.setCenter(c, 17)
+    geocodeAt(c[0], c[1])
+  } catch {
+    toastError(t('maps.locate_failed'))
+  } finally {
+    locating.value = false
   }
 }
 
 onMounted(async () => {
   if (!isAuthenticated.value) { navigate('login'); return }
+
+  // Refresh the delivery fee / minimum on entry — the startup fetch may have
+  // failed or run before this build was current.
+  loadDeliveryInfo()
 
   await loadAddresses()
 
@@ -120,15 +135,14 @@ onMounted(async () => {
     addressText.value = defaultAddr.address
   }
 
-  locationStatus.value = t('checkout.detecting_location')
   if (!addressText.value) addressText.value = t('checkout.detecting_address')
+  // Persistent hint under the map; only swapped out if the map fails to load.
+  locationStatus.value = t('maps.move_hint')
 
   if (defaultAddr?.lat && defaultAddr?.lng) {
-    locationStatus.value = '✅ ' + t('checkout.location_detected')
     initMap(defaultAddr.lat, defaultAddr.lng, { geocode: false })
   } else {
-    // Always open on Marhamat (Andijon) — no device geolocation.
-    locationStatus.value = '📍 ' + t('checkout.location_default')
+    // Open on Marhamat (Andijon) and resolve that point's address.
     initMap(DEFAULT_LAT, DEFAULT_LNG, { geocode: true })
   }
 })
@@ -233,9 +247,25 @@ async function discardPickedAddress() {
 
     <div class="px-4 mt-3 pb-32 flex flex-col gap-3">
       <!-- Map -->
-      <div class="rounded-2xl overflow-hidden relative" style="height: 200px; box-shadow: 0 2px 12px var(--shadow)">
+      <div class="rounded-2xl overflow-hidden relative" style="height: 220px; box-shadow: 0 2px 12px var(--shadow)">
         <div id="checkout-map" style="width: 100%; height: 100%; z-index: 1;"></div>
-        <div class="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-1 rounded-lg" style="z-index: 999; background: var(--surface); color: var(--text-secondary); box-shadow: 0 2px 6px var(--shadow-lg)">{{ locationStatus }}</div>
+
+        <!-- Fixed centre pin: pan the map underneath it -->
+        <div class="map-pin" :class="{ lifted: mapMoving }">
+          <svg width="36" height="44" viewBox="0 0 40 48" fill="none">
+            <path d="M20 47C20 47 36 30.5 36 18C36 8.6 28.8 1 20 1C11.2 1 4 8.6 4 18C4 30.5 20 47 20 47Z" fill="var(--primary)" stroke="white" stroke-width="2"/>
+            <circle cx="20" cy="18" r="6.5" fill="white"/>
+          </svg>
+        </div>
+        <div class="map-pin-dot"></div>
+
+        <!-- Find my location -->
+        <button @click="useMyLocation" :class="['map-fab btn-press', { busy: locating }]" :aria-label="t('maps.my_location')">
+          <svg v-if="!locating" width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5" stroke-width="2"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg v-else width="22" height="22" viewBox="0 0 24 24" class="animate-spin"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="44" stroke-dashoffset="14" opacity="0.9"/></svg>
+        </button>
+
+        <div class="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-1 rounded-lg" style="z-index: 6; background: var(--surface); color: var(--text-secondary); box-shadow: 0 2px 6px var(--shadow-lg)">{{ locationStatus }}</div>
       </div>
 
       <!-- Address selector -->

@@ -5,7 +5,7 @@ import { useI18n } from '../i18n/index.js'
 import { useAddresses } from '../stores/addressStore.js'
 import { updateAddressAPI } from '../services/api.js'
 import { useToast } from '../composables/useToast.js'
-import { ensureYmaps, reverseGeocode, DEFAULT_LAT, DEFAULT_LNG } from '../composables/useYandexMaps.js'
+import { ensureYmaps, reverseGeocode, locateMe, DEFAULT_LAT, DEFAULT_LNG } from '../composables/useYandexMaps.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
@@ -21,6 +21,12 @@ const comment = ref('')
 const editingId = ref(null) // null = adding new, number = editing existing
 const isSaving = ref(false)
 const mapError = ref('')
+const mapMoving = ref(false) // map is being panned → lift the centre pin
+const locating = ref(false)  // "find my location" in flight
+
+// Live delivery point — the map centre, kept in sync as the user pans.
+const pickedLat = ref(DEFAULT_LAT)
+const pickedLng = ref(DEFAULT_LNG)
 
 const deleteTarget = ref(null) // address pending deletion confirmation
 const isDeleting = ref(false)
@@ -33,29 +39,32 @@ const labels = [
 
 let ymaps = null
 let map = null
-let marker = null
 let debounce = null
 let geoSeq = 0
 
 onMounted(() => loadAddresses())
 
+// Resolve the address for a point. Always leaves pickedAddress non-empty so the
+// Save button never gets stuck — falls back to "selected point" or the last
+// good address rather than a dead-end "not found".
 async function geocodeAt(lat, lng) {
   const seq = ++geoSeq
   pickingStatus.value = t('checkout.detecting_address')
   try {
     const line = await reverseGeocode(ymaps, [lat, lng])
     if (seq !== geoSeq) return
-    pickedAddress.value = line || t('checkout.address_unknown')
-    pickingStatus.value = ''
+    pickedAddress.value = line || pickedAddress.value || t('maps.point_selected')
   } catch {
     if (seq !== geoSeq) return
-    pickedAddress.value = t('checkout.address_unknown')
-    pickingStatus.value = ''
+    pickedAddress.value = pickedAddress.value || t('maps.point_selected')
   }
+  if (seq === geoSeq) pickingStatus.value = ''
 }
 
-function debouncedGeo(lat, lng) { clearTimeout(debounce); debounce = setTimeout(() => geocodeAt(lat, lng), 300) }
+function debouncedGeo(lat, lng) { clearTimeout(debounce); debounce = setTimeout(() => geocodeAt(lat, lng), 350) }
 
+// Centre-pin map: the pin is a fixed HTML overlay, the user pans the map under
+// it, and we geocode the map centre on every settle.
 async function setupMap(lat, lng) {
   try {
     ymaps = await ensureYmaps()
@@ -64,13 +73,39 @@ async function setupMap(lat, lng) {
     return
   }
   mapError.value = ''
+  pickedLat.value = lat
+  pickedLng.value = lng
   map = new ymaps.Map('address-map',
-    { center: [lat, lng], zoom: 16, controls: ['zoomControl', 'geolocationControl'] },
+    { center: [lat, lng], zoom: 17, controls: ['zoomControl'] },
     { suppressMapOpenBlock: true })
-  marker = new ymaps.Placemark([lat, lng], {}, { draggable: true, preset: 'islands#greenDotIcon' })
-  map.geoObjects.add(marker)
-  map.events.add('click', (e) => { const c = e.get('coords'); marker.geometry.setCoordinates(c); debouncedGeo(c[0], c[1]) })
-  marker.events.add('dragend', () => { const c = marker.geometry.getCoordinates(); debouncedGeo(c[0], c[1]) })
+  map.events.add('actionbegin', () => { mapMoving.value = true })
+  map.events.add('boundschange', () => {
+    const c = map.getCenter()
+    pickedLat.value = c[0]
+    pickedLng.value = c[1]
+  })
+  // Geocode once the pan/zoom settles, not on every intermediate frame.
+  map.events.add('actionend', () => {
+    mapMoving.value = false
+    const c = map.getCenter()
+    debouncedGeo(c[0], c[1])
+  })
+}
+
+async function useMyLocation() {
+  if (locating.value || !map) return
+  locating.value = true
+  try {
+    const c = await locateMe()
+    pickedLat.value = c[0]
+    pickedLng.value = c[1]
+    map.setCenter(c, 17)
+    geocodeAt(c[0], c[1])
+  } catch {
+    toastError(t('maps.locate_failed'))
+  } finally {
+    locating.value = false
+  }
 }
 
 function openMapPicker(addr = null) {
@@ -112,13 +147,14 @@ function closeMapPicker() {
 
 async function saveAddress() {
   if (isSaving.value) return
-  if (!pickedAddress.value || pickingStatus.value || !marker) return
+  if (!pickedAddress.value || pickingStatus.value || !map) return
   const labelObj = labels.find(l => l.id === selectedLabel.value)
   if (!labelObj) return
   const label = selectedLabel.value === 'other' && customLabel.value.trim()
     ? customLabel.value.trim()
     : t(labelObj.nameKey)
-  const [lat, lng] = marker.geometry.getCoordinates()
+  const lat = pickedLat.value
+  const lng = pickedLng.value
   isSaving.value = true
   try {
     if (editingId.value) {
@@ -254,6 +290,22 @@ onUnmounted(() => {
 
           <div class="flex-1 relative" style="min-height: 200px">
             <div id="address-map" style="width: 100%; height: 100%;"></div>
+
+            <!-- Fixed centre pin: pan the map underneath it -->
+            <div v-if="!mapError" class="map-pin" :class="{ lifted: mapMoving }">
+              <svg width="40" height="48" viewBox="0 0 40 48" fill="none">
+                <path d="M20 47C20 47 36 30.5 36 18C36 8.6 28.8 1 20 1C11.2 1 4 8.6 4 18C4 30.5 20 47 20 47Z" fill="var(--primary)" stroke="white" stroke-width="2"/>
+                <circle cx="20" cy="18" r="6.5" fill="white"/>
+              </svg>
+            </div>
+            <div v-if="!mapError" class="map-pin-dot"></div>
+
+            <!-- Find my location -->
+            <button v-if="!mapError" @click="useMyLocation" :class="['map-fab btn-press', { busy: locating }]" :aria-label="t('maps.my_location')">
+              <svg v-if="!locating" width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5" stroke-width="2"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg v-else width="22" height="22" viewBox="0 0 24 24" class="animate-spin"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="44" stroke-dashoffset="14" opacity="0.9"/></svg>
+            </button>
+
             <div v-if="mapError" class="absolute inset-0 flex items-center justify-center px-6 text-center text-xs font-semibold" style="background: var(--surface); color: var(--text-secondary)">
               {{ mapError }}
             </div>
