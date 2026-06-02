@@ -91,8 +91,6 @@ function rememberGeo(key, value) {
   if (geoCache.size > GEO_CACHE_MAX) geoCache.delete(geoCache.keys().next().value)
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-
 // Dedicated Geocoder API key. The map (JS API) and the geocoder are billed as
 // separate Yandex services with separate keys, so the map key alone can't
 // resolve addresses. When this is set we call the HTTP Geocoder directly (CORS
@@ -114,7 +112,7 @@ async function httpReverseGeocode(coords, lang) {
   return obj.metaDataProperty?.GeocoderMetaData?.text || obj.name || ''
 }
 
-// JS API geocoder (uses the map key). Backup path when no geocoder key is set.
+// JS API geocoder (uses the map key). Used when no dedicated geocoder key is set.
 async function ymapsReverseGeocode(ymaps, coords) {
   const res = await ymaps.geocode(coords, { results: 1 })
   const obj = res.geoObjects.get(0)
@@ -122,41 +120,67 @@ async function ymapsReverseGeocode(ymaps, coords) {
   return obj.getAddressLine() || assembleAddress(obj)
 }
 
-// Reverse-geocode coordinates → human-readable address line. Prefers the HTTP
-// Geocoder (dedicated key) and falls back to the JS API. Retries with a short
-// backoff, caches results, and returns '' only when Yandex truly has nothing.
-// Logs the underlying error (key/quota/referrer issues surface here) so a blank
-// result can actually be diagnosed from the console.
+// Build a concise line from Photon (OSM) reverse-geocode properties.
+function photonLine(props) {
+  if (!props) return ''
+  const street = props.street || props.name || ''
+  const streetLine = [street, props.housenumber].filter(Boolean).join(' ')
+  const area = props.city || props.district || props.county || props.state || ''
+  const parts = [streetLine || props.name, area].filter(Boolean)
+  const seen = new Set()
+  const out = []
+  for (const p of parts) {
+    const k = p.toLowerCase()
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push(p)
+  }
+  return out.join(', ')
+}
+
+// Free OSM-based reverse geocoder (Komoot Photon). No key, CORS-enabled, and
+// has street-level coverage for Uzbekistan — our safety net so addresses
+// resolve even without a paid/provisioned Yandex Geocoder key.
+async function photonReverseGeocode(coords) {
+  const [lat, lng] = coords
+  const res = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`)
+  if (!res.ok) throw new Error(`photon HTTP ${res.status}`)
+  const data = await res.json()
+  return photonLine(data?.features?.[0]?.properties)
+}
+
+// Reverse-geocode coordinates → human-readable address line. Tries Yandex first
+// (HTTP Geocoder key if set, else the JS API map key) and falls back to the free
+// Photon/OSM geocoder when Yandex returns nothing or errors. Caches results and
+// logs failures so a blank result is diagnosable from the console.
 export async function reverseGeocode(ymaps, coords, lang = 'ru_RU') {
   const key = cacheKey(coords)
   if (geoCache.has(key)) return geoCache.get(key)
 
-  let lastErr = null
-  for (let attempt = 0; attempt < 3; attempt++) {
+  let line = ''
+  // 1) Yandex — consistent with the map, when its geocoder is authorised.
+  try {
+    line = GEOCODER_KEY
+      ? await httpReverseGeocode(coords, lang)
+      : await ymapsReverseGeocode(ymaps, coords)
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[geocode] Yandex failed', e?.message || e)
+  }
+
+  // 2) Free OSM fallback — covers the case where the Yandex key can show the
+  //    map but isn't enabled for geocoding (returns '' / 403).
+  if (!line) {
     try {
-      let line = ''
-      if (GEOCODER_KEY) {
-        try {
-          line = await httpReverseGeocode(coords, lang)
-        } catch (httpErr) {
-          // eslint-disable-next-line no-console
-          console.warn('[geocode] HTTP geocoder failed, trying JS API', httpErr?.message || httpErr)
-          line = await ymapsReverseGeocode(ymaps, coords)
-        }
-      } else {
-        line = await ymapsReverseGeocode(ymaps, coords)
-      }
-      rememberGeo(key, line || '')
-      return line || ''
+      line = await photonReverseGeocode(coords)
     } catch (e) {
-      lastErr = e
       // eslint-disable-next-line no-console
-      console.warn(`[geocode] attempt ${attempt + 1} failed`, e?.message || e)
-      if (attempt < 2) await sleep(400 * (attempt + 1))
+      console.warn('[geocode] Photon fallback failed', e?.message || e)
     }
   }
-  if (lastErr) throw lastErr
-  return ''
+
+  rememberGeo(key, line || '')
+  return line || ''
 }
 
 // Get the device's current position via the browser. Resolves [lat, lng].
