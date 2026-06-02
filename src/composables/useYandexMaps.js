@@ -160,18 +160,30 @@ export async function reverseGeocode(ymaps, coords, lang = 'ru_RU') {
   if (geoCache.has(key)) return geoCache.get(key)
 
   let line = ''
-  // 1) Yandex — consistent with the map, when its geocoder is authorised.
-  try {
-    line = GEOCODER_KEY
-      ? await httpReverseGeocode(coords, lang)
-      : await ymapsReverseGeocode(ymaps, coords)
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('[geocode] Yandex failed', e?.message || e)
+  // 1) Yandex HTTP Geocoder (dedicated key) — best UZ data incl. house numbers.
+  if (GEOCODER_KEY) {
+    try {
+      line = await httpReverseGeocode(coords, lang)
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('[geocode] Yandex HTTP geocoder failed', e?.message || e)
+    }
   }
 
-  // 2) Free OSM fallback — covers the case where the Yandex key can show the
-  //    map but isn't enabled for geocoding (returns '' / 403).
+  // 2) Yandex JS-API geocoder (map key) — can resolve in-browser even when the
+  //    HTTP geocoder key is missing or referrer-locked. Also yields house
+  //    numbers when Yandex has them.
+  if (!line && ymaps) {
+    try {
+      line = await ymapsReverseGeocode(ymaps, coords)
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('[geocode] Yandex JS API geocoder failed', e?.message || e)
+    }
+  }
+
+  // 3) Free OSM fallback (Photon) — street-level, no key. Covers the case where
+  //    every Yandex path is unauthorised.
   if (!line) {
     try {
       line = await photonReverseGeocode(coords)
