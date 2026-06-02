@@ -102,8 +102,10 @@ const GEOCODER_KEY = import.meta.env.VITE_YANDEX_GEOCODER_KEY || ''
 // throws on transport/auth errors so the retry loop can react.
 async function httpReverseGeocode(coords, lang) {
   const [lat, lng] = coords
+  // No `kind` filter: let Yandex return its most precise match — that's the
+  // house (with number) when it has one, the street otherwise.
   const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${GEOCODER_KEY}`
-    + `&geocode=${lng},${lat}&format=json&results=1&kind=house&lang=${lang}`
+    + `&geocode=${lng},${lat}&format=json&results=1&lang=${lang}`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`geocoder HTTP ${res.status}`)
   const data = await res.json()
