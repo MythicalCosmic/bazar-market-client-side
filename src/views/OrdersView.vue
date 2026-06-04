@@ -39,6 +39,15 @@ function getConfig(status) {
   return statusConfig[status] || statusConfig.pending
 }
 
+// i18n t() returns the key itself when a translation is missing, so a plain
+// `t(key) || status` fallback never fires. Detect the miss explicitly and fall
+// back to the raw status string for any value the backend adds later.
+function statusLabel(status) {
+  const key = 'orders.status_label.' + status
+  const label = t(key)
+  return label === key ? status : label
+}
+
 async function handleCancel(order) {
   try {
     await cancelOrder(order.orderId)
@@ -72,7 +81,7 @@ async function handleReorder(order) {
           <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style="background: var(--primary-light)">
             <span class="text-sm">{{ getConfig(order.status).icon }}</span>
             <span class="text-xs font-black" :style="{ color: getConfig(order.status).color }">
-              {{ t('orders.status_label.' + order.status) || order.status }}
+              {{ statusLabel(order.status) }}
             </span>
           </div>
         </div>

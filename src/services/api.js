@@ -109,7 +109,10 @@ function transformOrder(raw) {
   return {
     id: raw.order_number || `#ORD-${raw.id}`,
     orderId: raw.id,
-    status: raw.status,
+    // Backend Order.Status enum is PENDING/CONFIRMED/…; serialised values may
+    // arrive upper- or mixed-case. The UI keys everything lower-case, so
+    // normalise here at the single transform boundary.
+    status: (raw.status || '').toLowerCase(),
     date: raw.created_at ? new Date(raw.created_at).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
     time: raw.created_at ? new Date(raw.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : '',
     address: raw.delivery_address_text || '',
