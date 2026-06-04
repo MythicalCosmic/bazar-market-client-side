@@ -1,6 +1,12 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      # Compose auto-loads ./.env for ${...} interpolation, so the Yandex keys
+      # in .env flow into the build. Keep .env populated on the server.
+      args:
+        VITE_YANDEX_API_KEY: ${VITE_YANDEX_API_KEY:-}
+        VITE_YANDEX_GEOCODER_KEY: ${VITE_YANDEX_GEOCODER_KEY:-}
     container_name: bazar-market-client
     ports:
       - "3000:80"

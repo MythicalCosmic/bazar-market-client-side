@@ -7,12 +7,19 @@ ARG VITE_APP_NAME=Bazar\ Market
 ARG VITE_DEFAULT_LOCALE=uz
 ARG VITE_DEFAULT_LAT=40.5553
 ARG VITE_DEFAULT_LNG=71.4742
+# Yandex keys: .env is .dockerignore'd, so these must be passed as build args
+# (see docker-compose.yml, which reads them from the project .env). Without the
+# geocoder key the reverse-geocoder can't return building numbers in production.
+ARG VITE_YANDEX_API_KEY=
+ARG VITE_YANDEX_GEOCODER_KEY=
 
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_APP_NAME=$VITE_APP_NAME
 ENV VITE_DEFAULT_LOCALE=$VITE_DEFAULT_LOCALE
 ENV VITE_DEFAULT_LAT=$VITE_DEFAULT_LAT
 ENV VITE_DEFAULT_LNG=$VITE_DEFAULT_LNG
+ENV VITE_YANDEX_API_KEY=$VITE_YANDEX_API_KEY
+ENV VITE_YANDEX_GEOCODER_KEY=$VITE_YANDEX_GEOCODER_KEY
 
 COPY package.json package-lock.json ./
 RUN npm ci
