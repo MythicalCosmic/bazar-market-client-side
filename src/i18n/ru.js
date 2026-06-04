@@ -247,6 +247,7 @@ export default {
   'maps.move_hint': 'Наведите пин на нужное место',
   'maps.point_selected': 'Указанная точка на карте',
   'maps.locate_failed': 'Не удалось определить местоположение. Двигайте карту вручную.',
+  'maps.locate_denied': 'Доступ к местоположению заблокирован. Разрешите его в настройках браузера или двигайте карту вручную.',
   'addresses.choose_label': 'Выберите метку',
   'addresses.label_home': 'Дом',
   'addresses.label_work': 'Работа',

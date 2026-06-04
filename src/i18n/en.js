@@ -247,6 +247,7 @@ export default {
   'maps.move_hint': 'Drag the pin to the right spot',
   'maps.point_selected': 'Selected point on the map',
   'maps.locate_failed': 'Could not find your location. Move the map manually.',
+  'maps.locate_denied': 'Location access is blocked. Allow it in your browser settings, or move the map manually.',
   'addresses.choose_label': 'Choose a label',
   'addresses.label_home': 'Home',
   'addresses.label_work': 'Work',

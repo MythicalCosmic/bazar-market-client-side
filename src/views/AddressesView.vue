@@ -101,8 +101,8 @@ async function useMyLocation() {
     pickedLng.value = c[1]
     map.setCenter(c, 17)
     geocodeAt(c[0], c[1])
-  } catch {
-    toastError(t('maps.locate_failed'))
+  } catch (e) {
+    toastError(t(e?.code === 1 ? 'maps.locate_denied' : 'maps.locate_failed'))
   } finally {
     locating.value = false
   }

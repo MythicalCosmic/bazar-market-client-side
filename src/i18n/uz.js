@@ -247,6 +247,7 @@ export default {
   'maps.move_hint': 'Pinni kerakli joyga qo\'ying',
   'maps.point_selected': 'Xaritadagi belgilangan joy',
   'maps.locate_failed': 'Joylashuvni aniqlab bo\'lmadi. Xaritani qo\'lda suring.',
+  'maps.locate_denied': 'Joylashuvga ruxsat berilmagan. Brauzer sozlamalaridan ruxsat bering yoki xaritani qo\'lda suring.',
   'addresses.choose_label': 'Yorliq tanlang',
   'addresses.label_home': 'Uy',
   'addresses.label_work': 'Ish',

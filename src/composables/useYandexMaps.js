@@ -98,20 +98,71 @@ function rememberGeo(key, value) {
 // API's ymaps.geocode() using the map key.
 const GEOCODER_KEY = import.meta.env.VITE_YANDEX_GEOCODER_KEY || ''
 
+// Haversine distance in metres between two [lat, lng] points.
+function distMeters(a, b) {
+  const R = 6371000
+  const toRad = (d) => (d * Math.PI) / 180
+  const lat1 = toRad(a[0])
+  const lat2 = toRad(b[0])
+  const dLat = toRad(b[0] - a[0])
+  const dLng = toRad(b[1] - a[1])
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(h))
+}
+
+// Accept a house-level match only when it sits within this many metres of the
+// requested point. Reverse geocoders happily return the *nearest* building even
+// when it's across a field — beyond this radius the number would be wrong, so we
+// keep the street-level line instead.
+const HOUSE_SNAP_M = 80
+
+// --- Yandex HTTP GeoObject accessors -------------------------------------------
+function yObjKind(obj) { return obj?.metaDataProperty?.GeocoderMetaData?.kind || '' }
+function yObjLine(obj) { return obj?.metaDataProperty?.GeocoderMetaData?.text || obj?.name || '' }
+function yObjHouse(obj) {
+  const comps = obj?.metaDataProperty?.GeocoderMetaData?.Address?.Components || []
+  return comps.find((c) => c.kind === 'house')?.name || ''
+}
+function yObjCoords(obj) {
+  const pos = obj?.Point?.pos // "lng lat"
+  if (!pos) return null
+  const [lng, lat] = pos.split(' ').map(Number)
+  return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null
+}
+
+// Fetch the first GeoObject from the HTTP Geocoder for a fully-built URL.
+async function yandexFetchObj(url) {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`geocoder HTTP ${res.status}`)
+  const data = await res.json()
+  return data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject || null
+}
+
 // HTTP Geocoder API (geocode-maps.yandex.ru). Returns '' when nothing matches,
 // throws on transport/auth errors so the retry loop can react.
 async function httpReverseGeocode(coords, lang) {
   const [lat, lng] = coords
-  // No `kind` filter: let Yandex return its most precise match — that's the
-  // house (with number) when it has one, the street otherwise.
-  const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${GEOCODER_KEY}`
+  const base = `https://geocode-maps.yandex.ru/1.x/?apikey=${GEOCODER_KEY}`
     + `&geocode=${lng},${lat}&format=json&results=1&lang=${lang}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`geocoder HTTP ${res.status}`)
-  const data = await res.json()
-  const obj = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject
-  if (!obj) return ''
-  return obj.metaDataProperty?.GeocoderMetaData?.text || obj.name || ''
+
+  // General match: the most precise toponym Yandex has for the point.
+  const general = await yandexFetchObj(base)
+  if (!general) return ''
+  let line = yObjLine(general)
+
+  // When that match is a street/district (no building number) ask specifically
+  // for the nearest house and adopt its line — but only if it's close enough to
+  // actually be this point's building.
+  if (!yObjHouse(general) && (yObjKind(general) === 'street' || yObjKind(general) === 'district')) {
+    try {
+      const house = await yandexFetchObj(`${base}&kind=house`)
+      const hCoords = yObjCoords(house)
+      if (house && yObjHouse(house) && hCoords && distMeters(coords, hCoords) <= HOUSE_SNAP_M) {
+        line = yObjLine(house) || line
+      }
+    } catch { /* keep the general line */ }
+  }
+  return line
 }
 
 // JS API geocoder (uses the map key). Used when no dedicated geocoder key is set.
@@ -119,7 +170,22 @@ async function ymapsReverseGeocode(ymaps, coords) {
   const res = await ymaps.geocode(coords, { results: 1 })
   const obj = res.geoObjects.get(0)
   if (!obj) return ''
-  return obj.getAddressLine() || assembleAddress(obj)
+  let line = obj.getAddressLine() || assembleAddress(obj)
+
+  // No building number on the closest match → ask for the nearest house and use
+  // it when it snaps close to the requested point.
+  const premise = (() => { try { return (obj.getPremiseNumber && obj.getPremiseNumber()) || '' } catch { return '' } })()
+  if (!premise) {
+    try {
+      const hres = await ymaps.geocode(coords, { results: 1, kind: 'house' })
+      const hobj = hres.geoObjects.get(0)
+      const hCoords = hobj?.geometry?.getCoordinates?.()
+      if (hobj && hCoords && distMeters(coords, hCoords) <= HOUSE_SNAP_M) {
+        line = hobj.getAddressLine() || line
+      }
+    } catch { /* keep the closest-match line */ }
+  }
+  return line
 }
 
 // Build a concise line from Photon (OSM) reverse-geocode properties.
@@ -145,10 +211,23 @@ function photonLine(props) {
 // resolve even without a paid/provisioned Yandex Geocoder key.
 async function photonReverseGeocode(coords) {
   const [lat, lng] = coords
-  const res = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`)
+  const res = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&limit=10`)
   if (!res.ok) throw new Error(`photon HTTP ${res.status}`)
   const data = await res.json()
-  return photonLine(data?.features?.[0]?.properties)
+  const feats = data?.features || []
+  if (!feats.length) return ''
+
+  // Prefer the nearest feature that carries a house number (within snap range);
+  // otherwise fall back to the closest feature Photon returned.
+  let best = null
+  for (const f of feats) {
+    if (!f?.properties?.housenumber) continue
+    const g = f.geometry?.coordinates // [lng, lat]
+    const fc = g ? [g[1], g[0]] : null
+    const d = fc ? distMeters(coords, fc) : Infinity
+    if (d <= HOUSE_SNAP_M && (!best || d < best.d)) best = { props: f.properties, d }
+  }
+  return photonLine(best ? best.props : feats[0].properties)
 }
 
 // Reverse-geocode coordinates → human-readable address line. Tries Yandex first
@@ -198,17 +277,46 @@ export async function reverseGeocode(ymaps, coords, lang = 'ru_RU') {
 }
 
 // Get the device's current position via the browser. Resolves [lat, lng].
-// Rejects on denial/timeout so callers can fall back to the default center.
-export function locateMe(timeout = 8000) {
+//
+// Two-stage lookup: a quick high-accuracy fix first, then a coarse retry with a
+// longer timeout. Desktop/laptop browsers have no GPS, so the high-accuracy pass
+// often just times out waiting for a satellite fix — the low-accuracy pass then
+// resolves fine from wifi/IP. We only give up after both fail.
+//
+// Rejects with a `.code` so callers can tell apart: 1 = permission denied,
+// 2 = position unavailable, 3 = timeout, undefined = API/secure-context missing.
+export function locateMe() {
   return new Promise((resolve, reject) => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       reject(new Error('Geolocation unavailable'))
       return
     }
+    // Geolocation only works in a secure context (https or localhost). Surfacing
+    // this early avoids a confusing silent timeout when testing over a LAN IP.
+    if (typeof window !== 'undefined' && window.isSecureContext === false) {
+      const err = new Error('Geolocation requires a secure (https) context')
+      err.code = 2
+      reject(err)
+      return
+    }
+
+    const ok = (pos) => resolve([pos.coords.latitude, pos.coords.longitude])
+
+    // Second attempt: coarse but reliable (wifi/IP), generous timeout.
+    const coarse = (firstErr) => {
+      navigator.geolocation.getCurrentPosition(
+        ok,
+        () => reject(firstErr), // report the first, usually more specific, error
+        { enableHighAccuracy: false, timeout: 12000, maximumAge: 120000 },
+      )
+    }
+
+    // First attempt: precise, short. A denied permission won't change on retry,
+    // so fail fast instead of waiting out the coarse pass.
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve([pos.coords.latitude, pos.coords.longitude]),
-      (err) => reject(err),
-      { enableHighAccuracy: true, timeout, maximumAge: 30000 },
+      ok,
+      (err) => { if (err && err.code === 1) reject(err); else coarse(err) },
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 },
     )
   })
 }
