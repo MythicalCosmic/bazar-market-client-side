@@ -2,6 +2,7 @@ import { reactive, computed, ref } from 'vue'
 import { getCart, addToCartAPI, updateCartAPI, removeFromCartAPI, clearCartAPI, getDeliveryInfo } from '../services/api.js'
 import { getToken } from '../services/http.js'
 import { useToast } from '../composables/useToast.js'
+import { setStoreHours } from '../composables/useStoreHours.js'
 import { onLogout, onLogin } from './authStore.js'
 
 const state = reactive({
@@ -112,6 +113,9 @@ export function useCartStore() {
       state.deliveryCost = Number.isFinite(fee) ? fee : DEFAULT_DELIVERY
       const min = parseFloat(data.min_order_total)
       state.minOrderTotal = Number.isFinite(min) ? min : DEFAULT_MIN_ORDER
+      // API-ready: pick up working hours if the backend starts returning them.
+      // Falls back to the defaults in config.js when absent (current behaviour).
+      setStoreHours(data.opens_at ?? data.open_time, data.closes_at ?? data.close_time)
     } catch {}
   }
 

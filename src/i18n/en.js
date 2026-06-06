@@ -209,6 +209,20 @@ export default {
   'support.working_hours': 'Working hours',
   'support.every_day': 'Every day',
 
+  // Store open / closed
+  'store.open': 'Open',
+  'store.closed': 'Closed',
+  'checkout.store_closed_title': 'Store is closed',
+  'checkout.store_closed': 'We are closed right now. Orders are accepted from {open} to {close}.',
+  'checkout.store_closed_btn': 'Closed now',
+
+  // Orders — customer support
+  'orders.support_title': 'Need help?',
+  'orders.support_subtitle': 'Questions, FAQ and delivery contact',
+  'orders.help_center': 'Help center',
+  'orders.help_center_sub': 'FAQ and common questions',
+  'orders.delivery_phone': 'Delivery support',
+
   // Favorites
   'favorites.title': 'Favorites',
   'favorites.empty_title': 'No favorites yet',

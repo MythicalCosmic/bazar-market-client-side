@@ -4,10 +4,14 @@ import { useRouter } from '../router/index.js'
 import { useFormat } from '../composables/useFormat.js'
 import { useI18n } from '../i18n/index.js'
 import { getOrders, cancelOrder, reorderOrder } from '../services/api.js'
+import { SUPPORT_PHONE, SUPPORT_PHONE_HREF } from '../config.js'
 
 const { navigate } = useRouter()
 const { formatPrice } = useFormat()
 const { t, getLocalizedName } = useI18n()
+
+const supportPhone = SUPPORT_PHONE
+const supportPhoneHref = SUPPORT_PHONE_HREF
 
 const orders = ref([])
 const isLoading = ref(true)
@@ -65,7 +69,17 @@ async function handleReorder(order) {
 
 <template>
   <div class="pb-28 pt-4 px-4">
-    <h1 class="text-xl font-black mb-4" style="color: var(--text-primary)">{{ t('orders.title') }}</h1>
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-xl font-black" style="color: var(--text-primary)">{{ t('orders.title') }}</h1>
+      <button @click="navigate('support')"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl btn-press"
+        style="background: var(--primary-light)">
+        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="text-xs font-black text-primary">{{ t('orders.help_center') }}</span>
+      </button>
+    </div>
 
     <div v-if="isLoading" class="flex flex-col gap-4">
       <div v-for="i in 2" :key="i" class="skeleton h-[200px] rounded-2xl"></div>
@@ -143,6 +157,42 @@ async function handleReorder(order) {
       <p class="text-xl font-black" style="color: var(--text-primary)">{{ t('orders.empty_title') }}</p>
       <p class="text-sm font-semibold mt-2 text-center" style="color: var(--text-tertiary)">{{ t('orders.empty_subtitle') }}</p>
       <button @click="navigate('home')" class="mt-6 bg-primary text-white font-black px-8 py-3 rounded-2xl btn-press" style="box-shadow: 0 4px 16px var(--primary-glow)">{{ t('common.go_catalog') }}</button>
+    </div>
+
+    <!-- Customer support -->
+    <div v-if="!isLoading" class="mt-6 rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 14px var(--shadow)">
+      <p class="px-4 pt-4 pb-1 text-sm font-black" style="color: var(--text-primary)">{{ t('orders.support_title') }}</p>
+      <p class="px-4 pb-2 text-xs font-semibold" style="color: var(--text-tertiary)">{{ t('orders.support_subtitle') }}</p>
+
+      <!-- Help center (FAQ / questions) -->
+      <button @click="navigate('support')" class="w-full flex items-center gap-3 px-4 py-3.5 btn-press text-left border-t" :style="{ borderColor: 'var(--border)' }">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
+          <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" stroke-width="2" stroke-linecap="round"/>
+            <line x1="12" y1="17" x2="12" y2="17" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs font-bold" style="color: var(--text-primary)">{{ t('orders.help_center') }}</p>
+          <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('orders.help_center_sub') }}</p>
+        </div>
+        <svg class="w-4 h-4" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
+
+      <!-- Delivery phone -->
+      <a :href="supportPhoneHref" class="w-full flex items-center gap-3 px-4 py-3.5 btn-press text-left border-t" :style="{ borderColor: 'var(--border)' }">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-green-500/10">
+          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 21.73 16z" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs font-bold" style="color: var(--text-primary)">{{ t('orders.delivery_phone') }}</p>
+          <p class="text-[10px] font-bold" style="color: var(--text-tertiary)">{{ supportPhone }}</p>
+        </div>
+        <svg class="w-4 h-4" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </a>
     </div>
   </div>
 </template>

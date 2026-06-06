@@ -175,6 +175,13 @@ async function saveAddress() {
   }
 }
 
+// Pick the emoji for a saved address from its (possibly translated) label so the
+// list mirrors the chips used in the picker; custom labels fall back to a pin.
+function labelEmoji(addr) {
+  const match = labels.find(l => t(l.nameKey) === addr.label)
+  return match ? match.emoji : '📍'
+}
+
 function askDelete(addr) {
   deleteTarget.value = addr
 }
@@ -212,33 +219,41 @@ onUnmounted(() => {
 
     <div class="px-4 mt-4 flex flex-col gap-3">
       <div v-for="addr in addresses" :key="addr.id"
-        class="rounded-2xl p-4"
-        :style="{ background: 'var(--surface)', boxShadow: addr.isDefault ? '0 0 0 2px var(--primary), 0 2px 12px var(--shadow)' : '0 2px 12px var(--shadow)' }">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
-            <svg width="20" height="20" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
+        class="rounded-2xl overflow-hidden"
+        :style="{ background: 'var(--surface)', boxShadow: addr.isDefault ? '0 0 0 2px var(--primary), 0 4px 16px var(--shadow)' : '0 2px 12px var(--shadow)' }">
+
+        <!-- Header: emoji + label + default badge -->
+        <div class="flex items-center gap-3 px-4 pt-4">
+          <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl" style="background: var(--primary-light)">
+            {{ labelEmoji(addr) }}
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <p class="text-sm font-black" style="color: var(--text-primary)">{{ addr.label }}</p>
-              <span v-if="addr.isDefault" class="text-[9px] font-black text-primary px-1.5 py-0.5 rounded-md" style="background: var(--primary-light)">{{ t('addresses.default') }}</span>
-            </div>
-            <p class="text-xs font-semibold truncate mt-0.5" style="color: var(--text-tertiary)">{{ addr.address }}</p>
-            <p v-if="addr.comment" class="text-[10px] font-semibold truncate mt-0.5" style="color: var(--text-tertiary)">{{ addr.comment }}</p>
+          <div class="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+            <p class="text-base font-black" style="color: var(--text-primary)">{{ addr.label }}</p>
+            <span v-if="addr.isDefault" class="text-[9px] font-black text-primary px-2 py-0.5 rounded-full" style="background: var(--primary-light)">{{ t('addresses.default') }}</span>
           </div>
         </div>
+
+        <!-- Full address — wraps, fully readable -->
+        <div class="px-4 mt-3">
+          <p class="text-sm font-semibold leading-relaxed" style="color: var(--text-secondary); word-break: break-word">{{ addr.address }}</p>
+          <div v-if="addr.comment" class="flex items-start gap-2 mt-2.5 px-3 py-2 rounded-xl" style="background: var(--surface-secondary)">
+            <svg width="14" height="14" class="flex-shrink-0 mt-0.5" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p class="text-xs font-semibold leading-relaxed" style="color: var(--text-tertiary); word-break: break-word">{{ addr.comment }}</p>
+          </div>
+        </div>
+
         <!-- Action buttons -->
-        <div class="flex gap-2 mt-3 pt-3 border-t" style="border-color: var(--border)">
-          <button v-if="!addr.isDefault" @click="setDefault(addr.id)" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl btn-press" style="background: var(--surface-secondary)">
-            <svg width="14" height="14" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="text-[10px] font-bold" style="color: var(--text-secondary)">{{ t('addresses.set_default') }}</span>
+        <div class="flex gap-2 mt-4 px-4 pb-4 pt-3 border-t" style="border-color: var(--border)">
+          <button v-if="!addr.isDefault" @click="setDefault(addr.id)" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl btn-press" style="background: var(--surface-secondary)">
+            <svg width="15" height="15" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="text-xs font-bold" style="color: var(--text-secondary)">{{ t('addresses.set_default') }}</span>
           </button>
-          <button @click="openMapPicker(addr)" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl btn-press" style="background: var(--surface-secondary)">
-            <svg width="14" height="14" style="color: var(--text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" stroke-width="2"/></svg>
-            <span class="text-[10px] font-bold" style="color: var(--text-secondary)">{{ t('profile.edit') }}</span>
+          <button @click="openMapPicker(addr)" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl btn-press" style="background: var(--surface-secondary)">
+            <svg width="15" height="15" style="color: var(--text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" stroke-width="2"/></svg>
+            <span class="text-xs font-bold" style="color: var(--text-secondary)">{{ t('profile.edit') }}</span>
           </button>
-          <button @click="askDelete(addr)" :aria-label="t('addresses.delete')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl btn-press bg-red-500/10">
-            <svg width="14" height="14" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/></svg>
+          <button @click="askDelete(addr)" :aria-label="t('addresses.delete')" class="flex items-center justify-center py-2.5 px-3.5 rounded-xl btn-press bg-red-500/10">
+            <svg width="15" height="15" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </div>
       </div>
@@ -312,13 +327,13 @@ onUnmounted(() => {
           </div>
 
           <div class="px-4 pt-4 pb-6 safe-bottom overflow-y-auto" style="background: var(--surface); box-shadow: 0 -4px 20px var(--shadow); max-height: 55vh;">
-            <div class="flex items-center gap-3 mb-3">
+            <div class="flex items-start gap-3 mb-3">
               <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
                 <svg width="20" height="20" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-[10px] font-semibold" style="color: var(--text-tertiary)">{{ t('addresses.selected_address') }}</p>
-                <p class="text-sm font-bold truncate" style="color: var(--text-primary)">{{ pickingStatus || pickedAddress || t('addresses.tap_map') }}</p>
+                <p class="text-sm font-bold leading-snug" style="color: var(--text-primary); word-break: break-word">{{ pickingStatus || pickedAddress || t('addresses.tap_map') }}</p>
               </div>
             </div>
 

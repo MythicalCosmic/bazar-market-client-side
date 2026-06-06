@@ -2,9 +2,12 @@
 import { ref } from 'vue'
 import { useRouter } from '../router/index.js'
 import { useI18n } from '../i18n/index.js'
+import { useStoreHours } from '../composables/useStoreHours.js'
+import { SUPPORT_PHONE, SUPPORT_TELEGRAM, SUPPORT_PHONE_HREF, SUPPORT_TELEGRAM_HREF } from '../config.js'
 
 const { navigate } = useRouter()
 const { t } = useI18n()
+const { isOpen, openTime, closeTime } = useStoreHours()
 
 const expandedFaq = ref(null)
 
@@ -16,9 +19,8 @@ const faqs = [
 ]
 
 const contactMethods = [
-  { icon: 'phone', labelKey: 'support.call', value: '+998 71 200 00 00', color: 'text-green-500', bg: 'bg-green-500/10' },
-  { icon: 'telegram', labelKey: 'support.telegram', value: '@bazarmarket_support', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  { icon: 'email', labelKey: 'support.email', value: 'support@bazarmarket.uz', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+  { icon: 'phone', labelKey: 'support.call', value: SUPPORT_PHONE, href: SUPPORT_PHONE_HREF, color: 'text-green-500', bg: 'bg-green-500/10' },
+  { icon: 'telegram', labelKey: 'support.telegram', value: SUPPORT_TELEGRAM, href: SUPPORT_TELEGRAM_HREF, color: 'text-blue-500', bg: 'bg-blue-500/10' },
 ]
 
 function toggleFaq(idx) {
@@ -57,9 +59,12 @@ function toggleFaq(idx) {
       <!-- Contact Methods -->
       <div class="rounded-2xl overflow-hidden" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
         <p class="px-4 pt-4 pb-2 text-sm font-black" style="color: var(--text-primary)">{{ t('support.contact_us') }}</p>
-        <div
+        <a
           v-for="(method, idx) in contactMethods"
           :key="method.icon"
+          :href="method.href"
+          :target="method.icon === 'telegram' ? '_blank' : undefined"
+          rel="noopener"
           :class="['flex items-center gap-3 px-4 py-3.5 btn-press', idx < contactMethods.length - 1 ? 'border-b' : '']"
           :style="{ borderColor: 'var(--border)' }"
         >
@@ -72,11 +77,6 @@ function toggleFaq(idx) {
             <svg v-else-if="method.icon === 'telegram'" :class="['w-5 h-5', method.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M21 5L2 12.5l7 1M21 5l-4 15-8-8.5M21 5L9 13.5M9 13.5V19l3.2-3.2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            <!-- Email -->
-            <svg v-else-if="method.icon === 'email'" :class="['w-5 h-5', method.color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <rect x="2" y="4" width="20" height="16" rx="2" stroke-width="2"/>
-              <path d="M22 7l-10 7L2 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
           </div>
           <div class="flex-1">
             <p class="text-xs font-bold" style="color: var(--text-primary)">{{ t(method.labelKey) }}</p>
@@ -85,7 +85,7 @@ function toggleFaq(idx) {
           <svg class="w-4 h-4" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M9 18l6-6-6-6" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
-        </div>
+        </a>
       </div>
 
       <!-- FAQ -->
@@ -121,8 +121,14 @@ function toggleFaq(idx) {
 
       <!-- Working hours -->
       <div class="rounded-2xl p-4 text-center" style="background: var(--surface); box-shadow: 0 2px 12px var(--shadow)">
-        <p class="text-xs font-bold" style="color: var(--text-tertiary)">{{ t('support.working_hours') }}</p>
-        <p class="text-sm font-black mt-1" style="color: var(--text-primary)">09:00 - 22:00</p>
+        <div class="flex items-center justify-center gap-2">
+          <p class="text-xs font-bold" style="color: var(--text-tertiary)">{{ t('support.working_hours') }}</p>
+          <span class="text-[10px] font-black px-2 py-0.5 rounded-full"
+            :class="isOpen ? 'text-green-600 bg-green-500/10' : 'text-red-500 bg-red-500/10'">
+            {{ isOpen ? t('store.open') : t('store.closed') }}
+          </span>
+        </div>
+        <p class="text-sm font-black mt-1" style="color: var(--text-primary)">{{ openTime }} - {{ closeTime }}</p>
         <p class="text-[10px] font-semibold mt-0.5" style="color: var(--text-tertiary)">{{ t('support.every_day') }}</p>
       </div>
 

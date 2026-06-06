@@ -209,6 +209,20 @@ export default {
   'support.working_hours': 'Время работы',
   'support.every_day': 'Ежедневно',
 
+  // Store open / closed
+  'store.open': 'Открыто',
+  'store.closed': 'Закрыто',
+  'checkout.store_closed_title': 'Магазин закрыт',
+  'checkout.store_closed': 'Сейчас мы закрыты. Заказы принимаются с {open} до {close}.',
+  'checkout.store_closed_btn': 'Сейчас закрыто',
+
+  // Orders — customer support
+  'orders.support_title': 'Нужна помощь?',
+  'orders.support_subtitle': 'Вопросы, FAQ и контакт доставки',
+  'orders.help_center': 'Центр помощи',
+  'orders.help_center_sub': 'Часто задаваемые вопросы',
+  'orders.delivery_phone': 'Поддержка доставки',
+
   // Favorites
   'favorites.title': 'Избранное',
   'favorites.empty_title': 'Избранное пусто',

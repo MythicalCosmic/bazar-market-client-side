@@ -9,11 +9,13 @@ import { useAddresses } from '../stores/addressStore.js'
 import { placeOrder as placeOrderAPI } from '../services/api.js'
 import { ensureYmaps, reverseGeocode, locateMe, DEFAULT_LAT, DEFAULT_LNG } from '../composables/useYandexMaps.js'
 import { useToast } from '../composables/useToast.js'
+import { useStoreHours } from '../composables/useStoreHours.js'
 
 const { total, subtotal, deliveryCost, discount, clearCart, loadDeliveryInfo } = useCartStore()
 const { formatNum } = useFormat()
 const { navigate, routeParams } = useRouter()
 const { t } = useI18n()
+const { isOpen, openTime, closeTime } = useStoreHours()
 const { isAuthenticated, user } = useAuth()
 const { addresses, loadAddresses, addAddress, removeAddress } = useAddresses()
 const { error: toastError } = useToast()
@@ -157,6 +159,14 @@ async function handlePlaceOrder() {
   if (isPlacing.value) return
   if (!isAuthenticated.value) { navigate('login'); return }
 
+  // Store closed → block the order and notify. Hours come from config.js
+  // (Tashkent time), overridden by the API when available.
+  if (!isOpen.value) {
+    orderError.value = t('checkout.store_closed', { open: openTime.value, close: closeTime.value })
+    toastError(orderError.value)
+    return
+  }
+
   let addrId = selectedAddressId.value
   const usingMapPick = !addrId
   const addressReady = addressText.value && addressText.value !== t('checkout.detecting_address')
@@ -246,6 +256,15 @@ async function discardPickedAddress() {
     </div>
 
     <div class="px-4 mt-3 pb-32 flex flex-col gap-3">
+      <!-- Store closed notice -->
+      <div v-if="!isOpen" class="rounded-2xl p-4 flex items-start gap-3" style="background: rgba(239,68,68,0.1)">
+        <span class="text-xl leading-none">🌙</span>
+        <div>
+          <p class="text-sm font-black text-red-500">{{ t('checkout.store_closed_title') }}</p>
+          <p class="text-xs font-semibold mt-0.5" style="color: var(--text-secondary)">{{ t('checkout.store_closed', { open: openTime, close: closeTime }) }}</p>
+        </div>
+      </div>
+
       <!-- Map -->
       <div class="rounded-2xl overflow-hidden relative" style="height: 220px; box-shadow: 0 2px 12px var(--shadow)">
         <div id="checkout-map" style="width: 100%; height: 100%; z-index: 1;"></div>
@@ -400,11 +419,11 @@ async function discardPickedAddress() {
 
     <!-- Order button -->
     <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 pb-6 pt-3 z-30 safe-bottom" style="background: var(--surface); box-shadow: 0 -4px 20px var(--shadow)">
-      <button @click="handlePlaceOrder" :disabled="isPlacing"
+      <button @click="handlePlaceOrder" :disabled="isPlacing || !isOpen"
         class="w-full banner-bg text-white font-black text-base py-4 rounded-2xl btn-press transition-opacity"
-        :class="{ 'opacity-60': isPlacing }"
+        :class="{ 'opacity-60': isPlacing || !isOpen }"
         style="box-shadow: 0 6px 24px var(--primary-glow)">
-        {{ isPlacing ? t('common.loading') : t('checkout.place_order') }}
+        {{ !isOpen ? t('checkout.store_closed_btn') : (isPlacing ? t('common.loading') : t('checkout.place_order')) }}
       </button>
     </div>
 

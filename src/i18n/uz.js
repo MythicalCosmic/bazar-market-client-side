@@ -209,6 +209,20 @@ export default {
   'support.working_hours': 'Ish vaqti',
   'support.every_day': 'Har kuni',
 
+  // Store open / closed
+  'store.open': 'Ochiq',
+  'store.closed': 'Yopiq',
+  'checkout.store_closed_title': 'Do\'kon yopiq',
+  'checkout.store_closed': 'Hozir yopiqmiz. Buyurtmalar {open} dan {close} gacha qabul qilinadi.',
+  'checkout.store_closed_btn': 'Hozir yopiq',
+
+  // Orders — customer support
+  'orders.support_title': 'Yordam kerakmi?',
+  'orders.support_subtitle': 'Savollar, ko\'p so\'raladigan savollar va aloqa',
+  'orders.help_center': 'Yordam markazi',
+  'orders.help_center_sub': 'Savol-javoblar va ko\'p so\'raladigan savollar',
+  'orders.delivery_phone': 'Yetkazib berish xizmati',
+
   // Favorites
   'favorites.title': 'Sevimlilar',
   'favorites.empty_title': 'Sevimlilar bo\'sh',
