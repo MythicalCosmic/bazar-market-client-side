@@ -10,7 +10,23 @@ import { ensureYmaps, reverseGeocode, locateMe, DEFAULT_LAT, DEFAULT_LNG } from 
 const { navigate } = useRouter()
 const { t } = useI18n()
 const { addresses, addAddress, removeAddress, setDefault, loadAddresses } = useAddresses()
-const { error: toastError } = useToast()
+const { error: toastError, success: toastSuccess } = useToast()
+
+// Which card is expanded to reveal the full address + actions (accordion).
+const expandedId = ref(null)
+function toggleExpand(id) {
+  expandedId.value = expandedId.value === id ? null : id
+}
+
+async function copyAddress(addr) {
+  const text = addr.comment ? `${addr.address} (${addr.comment})` : addr.address
+  try {
+    await navigator.clipboard.writeText(text)
+    toastSuccess(t('addresses.copied'))
+  } catch {
+    toastError(t('common.error_generic'))
+  }
+}
 
 const showMapPicker = ref(false)
 const pickedAddress = ref('')
@@ -219,42 +235,57 @@ onUnmounted(() => {
 
     <div class="px-4 mt-4 flex flex-col gap-3">
       <div v-for="addr in addresses" :key="addr.id"
-        class="rounded-2xl overflow-hidden"
+        class="rounded-2xl overflow-hidden transition-shadow"
         :style="{ background: 'var(--surface)', boxShadow: addr.isDefault ? '0 0 0 2px var(--primary), 0 4px 16px var(--shadow)' : '0 2px 12px var(--shadow)' }">
 
-        <!-- Header: emoji + label + default badge -->
-        <div class="flex items-center gap-3 px-4 pt-4">
+        <!-- Tappable header → expands to reveal the full address + actions -->
+        <button @click="toggleExpand(addr.id)" class="w-full text-left flex items-start gap-3 px-4 py-4 btn-press">
           <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl" style="background: var(--primary-light)">
             {{ labelEmoji(addr) }}
           </div>
-          <div class="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
-            <p class="text-base font-black" style="color: var(--text-primary)">{{ addr.label }}</p>
-            <span v-if="addr.isDefault" class="text-[9px] font-black text-primary px-2 py-0.5 rounded-full" style="background: var(--primary-light)">{{ t('addresses.default') }}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="text-base font-black" style="color: var(--text-primary)">{{ addr.label }}</p>
+              <span v-if="addr.isDefault" class="text-[9px] font-black text-primary px-2 py-0.5 rounded-full" style="background: var(--primary-light)">{{ t('addresses.default') }}</span>
+            </div>
+            <!-- Collapsed: 2-line preview · Expanded: full untruncated address -->
+            <p class="text-xs font-semibold mt-1 leading-relaxed"
+              :class="{ 'line-clamp-2': expandedId !== addr.id }"
+              style="color: var(--text-tertiary); word-break: break-word">{{ addr.address }}</p>
           </div>
-        </div>
+          <svg width="18" height="18" class="flex-shrink-0 mt-1 transition-transform duration-200"
+            :style="{ color: 'var(--text-tertiary)', transform: expandedId === addr.id ? 'rotate(180deg)' : '' }"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
 
-        <!-- Full address — wraps, fully readable -->
-        <div class="px-4 mt-3">
-          <p class="text-sm font-semibold leading-relaxed" style="color: var(--text-secondary); word-break: break-word">{{ addr.address }}</p>
-          <div v-if="addr.comment" class="flex items-start gap-2 mt-2.5 px-3 py-2 rounded-xl" style="background: var(--surface-secondary)">
+        <!-- Expanded body -->
+        <div v-if="expandedId === addr.id" class="px-4 pb-4">
+          <!-- Comment -->
+          <div v-if="addr.comment" class="flex items-start gap-2 mb-3 px-3 py-2.5 rounded-xl" style="background: var(--surface-secondary)">
             <svg width="14" height="14" class="flex-shrink-0 mt-0.5" style="color: var(--text-tertiary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p class="text-xs font-semibold leading-relaxed" style="color: var(--text-tertiary); word-break: break-word">{{ addr.comment }}</p>
+            <p class="text-xs font-semibold leading-relaxed" style="color: var(--text-secondary); word-break: break-word">{{ addr.comment }}</p>
           </div>
-        </div>
 
-        <!-- Action buttons -->
-        <div class="flex gap-2 mt-4 px-4 pb-4 pt-3 border-t" style="border-color: var(--border)">
-          <button v-if="!addr.isDefault" @click="setDefault(addr.id)" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl btn-press" style="background: var(--surface-secondary)">
-            <svg width="15" height="15" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="text-xs font-bold" style="color: var(--text-secondary)">{{ t('addresses.set_default') }}</span>
+          <!-- Copy full address -->
+          <button @click="copyAddress(addr)" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl btn-press mb-2" style="background: var(--surface-secondary)">
+            <svg width="15" height="15" style="color: var(--text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+            <span class="text-xs font-bold" style="color: var(--text-secondary)">{{ t('addresses.copy') }}</span>
           </button>
-          <button @click="openMapPicker(addr)" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl btn-press" style="background: var(--surface-secondary)">
-            <svg width="15" height="15" style="color: var(--text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" stroke-width="2"/></svg>
-            <span class="text-xs font-bold" style="color: var(--text-secondary)">{{ t('profile.edit') }}</span>
-          </button>
-          <button @click="askDelete(addr)" :aria-label="t('addresses.delete')" class="flex items-center justify-center py-2.5 px-3.5 rounded-xl btn-press bg-red-500/10">
-            <svg width="15" height="15" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
+
+          <!-- Actions -->
+          <div class="flex gap-2">
+            <button v-if="!addr.isDefault" @click="setDefault(addr.id)" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl btn-press" style="background: var(--surface-secondary)">
+              <svg width="15" height="15" class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="text-xs font-bold" style="color: var(--text-secondary)">{{ t('addresses.set_default') }}</span>
+            </button>
+            <button @click="openMapPicker(addr)" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl btn-press bg-primary">
+              <svg width="15" height="15" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" stroke-width="2"/></svg>
+              <span class="text-xs font-bold text-white">{{ t('profile.edit') }}</span>
+            </button>
+            <button @click="askDelete(addr)" :aria-label="t('addresses.delete')" class="flex items-center justify-center py-2.5 px-3.5 rounded-xl btn-press bg-red-500/10">
+              <svg width="15" height="15" class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 

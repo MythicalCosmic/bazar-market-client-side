@@ -269,6 +269,8 @@ export default {
   'addresses.custom_label': 'Label name',
   'addresses.save_address': 'Save address',
   'addresses.set_default': 'Set as default',
+  'addresses.copy': 'Copy address',
+  'addresses.copied': 'Address copied',
   'addresses.comment': 'Comment',
   'addresses.comment_placeholder': 'Additional info (entrance, floor, door...)',
   'addresses.delete': 'Delete',

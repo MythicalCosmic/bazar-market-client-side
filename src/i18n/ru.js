@@ -269,6 +269,8 @@ export default {
   'addresses.custom_label': 'Название метки',
   'addresses.save_address': 'Сохранить адрес',
   'addresses.set_default': 'Сделать основным',
+  'addresses.copy': 'Скопировать адрес',
+  'addresses.copied': 'Адрес скопирован',
   'addresses.comment': 'Комментарий',
   'addresses.comment_placeholder': 'Доп. информация (подъезд, этаж, дверь...)',
   'addresses.delete': 'Удалить',

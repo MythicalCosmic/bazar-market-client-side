@@ -269,6 +269,8 @@ export default {
   'addresses.custom_label': 'Yorliq nomi',
   'addresses.save_address': 'Manzilni saqlash',
   'addresses.set_default': 'Asosiy qilish',
+  'addresses.copy': 'Manzildan nusxa olish',
+  'addresses.copied': 'Manzil nusxalandi',
   'addresses.comment': 'Izoh',
   'addresses.comment_placeholder': 'Qo\'shimcha ma\'lumot (kirish, qavat, eshik...)',
   'addresses.delete': 'O\'chirish',
