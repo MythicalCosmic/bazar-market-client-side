@@ -345,6 +345,9 @@ export default {
   'product.no_reviews': 'Отзывов пока нет',
   'product.login_to_review': 'Войдите, чтобы оставить отзыв',
   'product.enter_quantity': 'Введите количество',
+  'product.by_qty': 'Количество',
+  'product.by_sum': 'На сумму',
+  'product.enter_sum': 'Введите сумму',
   'cart.in_cart': 'в корзине',
 
   'verify.title': 'Подтверждение телефона',

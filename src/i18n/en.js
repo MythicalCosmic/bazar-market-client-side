@@ -345,6 +345,9 @@ export default {
   'product.no_reviews': 'No reviews yet',
   'product.login_to_review': 'Log in to leave a review',
   'product.enter_quantity': 'Enter quantity',
+  'product.by_qty': 'Quantity',
+  'product.by_sum': 'By amount',
+  'product.enter_sum': 'Enter amount',
   'cart.in_cart': 'in cart',
 
   'verify.title': 'Phone verification',

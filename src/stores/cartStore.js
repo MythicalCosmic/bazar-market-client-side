@@ -246,6 +246,32 @@ export function useCartStore() {
     }
   }
 
+  // Custom-sum purchases ("5 000 so'm worth of apples") produce weights that
+  // don't sit on the product's step grid (e.g. 0.05 kg with step 0.1), so this
+  // skips the step/min snapping that setQty does. The backend cart API takes
+  // quantity as a decimal string, so fractional weights go through unchanged.
+  function setQtyExact(productId, rawQty) {
+    const item = state.items.find((i) => i.id === productId)
+    if (!item) return
+    const stockMax = item.stockQty != null ? item.stockQty : Infinity
+    const hardMax = item.maxQty != null ? item.maxQty : Infinity
+    const max = Math.min(stockMax, hardMax)
+
+    const parsed = typeof rawQty === 'number' ? rawQty : parseFloat(String(rawQty).replace(',', '.'))
+    if (!Number.isFinite(parsed) || parsed <= 0) return
+
+    let qty = round(parsed)
+    if (qty > max) qty = round(max)
+    if (qty <= 0) return
+
+    const oldQty = parseFloat(item.quantity) || 0
+    if (qty === oldQty) return
+    item.quantity = qty
+    if (getToken()) {
+      syncQty(productId, qty, () => { item.quantity = oldQty })
+    }
+  }
+
   function getQty(productId) {
     const item = state.items.find((i) => i.id === productId)
     return item ? (parseFloat(item.quantity) || 0) : 0
@@ -268,7 +294,7 @@ export function useCartStore() {
   return {
     cartItems, totalCount, subtotal, total,
     deliveryCost, discount, appliedCoupon, minOrderTotal, syncing,
-    addToCart, decrement, deleteItem, clearCart, getQty, setQty,
+    addToCart, decrement, deleteItem, clearCart, getQty, setQty, setQtyExact,
     loadCart, loadDeliveryInfo, setDeliveryCost, setDiscount, clearDiscount,
     resetCart,
   }

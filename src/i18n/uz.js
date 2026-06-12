@@ -348,6 +348,9 @@ export default {
   'product.no_reviews': 'Hali sharhlar yo\'q',
   'product.login_to_review': 'Sharh yozish uchun kiring',
   'product.enter_quantity': 'Miqdorni kiriting',
+  'product.by_qty': 'Miqdor',
+  'product.by_sum': 'Summa bo\'yicha',
+  'product.enter_sum': 'Summani kiriting',
   'cart.in_cart': 'savatchada',
 
   // Verify

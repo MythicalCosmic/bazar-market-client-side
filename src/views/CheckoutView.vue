@@ -11,7 +11,7 @@ import { ensureYmaps, reverseGeocode, locateMe, DEFAULT_LAT, DEFAULT_LNG } from 
 import { useToast } from '../composables/useToast.js'
 import { useStoreHours } from '../composables/useStoreHours.js'
 
-const { total, subtotal, deliveryCost, discount, clearCart, loadDeliveryInfo } = useCartStore()
+const { total, subtotal, deliveryCost, discount, clearCart, loadDeliveryInfo, cartItems } = useCartStore()
 const { formatNum } = useFormat()
 const { navigate, routeParams } = useRouter()
 const { t } = useI18n()
@@ -154,6 +154,27 @@ onUnmounted(() => {
   clearTimeout(debounceTimer)
 })
 
+// The backend stores quantities but has no notion of "bought by sum", so flag
+// those lines for the admins inside user_note — the one free-text field the
+// order admin panel already shows. A quantity off the product's step grid (or
+// below its minimum) can only have come from the by-sum entry mode.
+function customSumNote() {
+  const lines = []
+  for (const item of cartItems.value) {
+    const q = parseFloat(item.quantity) || 0
+    const step = item.step || 1
+    const minQty = item.minQty || step
+    const offGrid = Math.abs(q / step - Math.round(q / step)) > 1e-6
+    if (!offGrid && q >= minQty - 1e-9) continue
+    const price = item.discountedPrice ?? item.price
+    const name = item.name?.uz || item.name?.ru || ''
+    const unit = item.unit === 'kg' ? 'kg' : item.unit === 'liter' ? 'l' : 'dona'
+    lines.push(`• ${name} — ${Number(q.toFixed(3))} ${unit} (≈ ${formatNum(Math.round(q * price))} so'm)`)
+  }
+  if (!lines.length) return ''
+  return `⚖️ Summa bo'yicha buyurtma (mijoz aniq summaga oldi):\n${lines.join('\n')}`
+}
+
 async function handlePlaceOrder() {
   // Re-entrancy guard at function entry — :disabled alone races with rapid taps.
   if (isPlacing.value) return
@@ -201,7 +222,8 @@ async function handlePlaceOrder() {
       payment_method: selectedPayment.value,
     }
     if (couponCode.value) body.coupon_code = couponCode.value
-    if (userNote.value) body.user_note = userNote.value
+    const fullNote = [userNote.value, customSumNote()].filter(Boolean).join('\n\n')
+    if (fullNote) body.user_note = fullNote
     const data = await placeOrderAPI(body)
     clearCart()
     const newOrderId = data?.order_id || data?.id

@@ -7,11 +7,12 @@ import { useCartStore } from '../stores/cartStore.js'
 import { useFavorites } from '../stores/favoritesStore.js'
 import { useAuth } from '../stores/authStore.js'
 import { getProduct } from '../services/api.js'
+import SegmentedControl from '../components/SegmentedControl.vue'
 
 const { navigate, routeParams } = useRouter()
 const { t, getLocalizedName } = useI18n()
 const { formatPrice, formatQty } = useFormat()
-const { addToCart, decrement, getQty, setQty } = useCartStore()
+const { addToCart, decrement, getQty, setQty, setQtyExact } = useCartStore()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { isLoggedIn } = useAuth()
 
@@ -54,16 +55,45 @@ const stepInfo = computed(() => {
 
 const qtyModalOpen = ref(false)
 const qtyModalDraft = ref('')
+const qtyModalMode = ref('qty') // 'qty' | 'sum' — sum lets you spend a fixed UZS amount on weighed goods
 const qtyInputRef = ref(null)
+
+const SUM_STEP = 1000
+
+const unitPrice = computed(() => {
+  const p = product.value
+  if (!p) return 0
+  return (p.discountedPrice && p.discountedPrice < p.price) ? p.discountedPrice : p.price
+})
+
+const modeOptions = computed(() => [
+  { value: 'qty', label: t('product.by_qty') },
+  { value: 'sum', label: t('product.by_sum') },
+])
 
 function trimNum(n) {
   if (!Number.isFinite(n)) return ''
   return String(Number(n.toFixed(3)))
 }
 
-function openQtyModal() {
-  qtyModalDraft.value = String(qty.value || '')
-  qtyModalOpen.value = true
+function parseDraft() {
+  return parseFloat(String(qtyModalDraft.value).replace(',', '.'))
+}
+
+// What the current draft buys: in sum mode the resulting weight, in qty mode the price.
+const draftPreview = computed(() => {
+  const p = product.value
+  if (!p) return ''
+  const val = parseDraft()
+  if (!Number.isFinite(val) || val <= 0 || unitPrice.value <= 0) return ''
+  if (qtyModalMode.value === 'sum') {
+    const w = Number((val / unitPrice.value).toFixed(3))
+    return w > 0 ? `≈ ${formatQty(w, p.unit)}` : ''
+  }
+  return `≈ ${formatPrice(Math.round(val * unitPrice.value))}`
+})
+
+function focusQtyInput() {
   nextTick(() => {
     const el = qtyInputRef.value
     if (!el) return
@@ -72,21 +102,65 @@ function openQtyModal() {
   })
 }
 
+function openQtyModal(mode = 'qty') {
+  qtyModalMode.value = mode
+  if (mode === 'sum') {
+    const cur = qty.value || 0
+    qtyModalDraft.value = cur > 0 ? String(Math.round(cur * unitPrice.value)) : ''
+  } else {
+    qtyModalDraft.value = String(qty.value || '')
+  }
+  qtyModalOpen.value = true
+  focusQtyInput()
+}
+
+// Carry the entered value across when toggling, so 0.5 kg becomes its price and back.
+function switchMode(mode) {
+  if (mode === qtyModalMode.value) return
+  const val = parseDraft()
+  if (Number.isFinite(val) && val > 0 && unitPrice.value > 0) {
+    qtyModalDraft.value = mode === 'sum'
+      ? String(Math.round(val * unitPrice.value))
+      : trimNum(val / unitPrice.value)
+  } else {
+    qtyModalDraft.value = ''
+  }
+  qtyModalMode.value = mode
+  focusQtyInput()
+}
+
 function closeQtyModal() {
   qtyModalOpen.value = false
 }
 
 function confirmQtyModal() {
   if (!product.value) { qtyModalOpen.value = false; return }
-  const parsed = parseFloat(String(qtyModalDraft.value).replace(',', '.'))
+  const parsed = parseDraft()
   if (Number.isFinite(parsed) && parsed > 0) {
-    setQty(product.value.id, parsed)
+    if (qtyModalMode.value === 'sum') {
+      if (unitPrice.value > 0) {
+        const exact = Number((parsed / unitPrice.value).toFixed(3))
+        if (exact > 0) {
+          // Not in the cart yet — add it first (at min qty), then overwrite with
+          // the exact weight; the debounced sync sends only the final value.
+          if (qty.value === 0) addToCart(product.value)
+          setQtyExact(product.value.id, exact)
+        }
+      }
+    } else {
+      setQty(product.value.id, parsed)
+    }
   }
   qtyModalOpen.value = false
 }
 
 function adjustQtyModal(direction) {
-  const cur = parseFloat(String(qtyModalDraft.value).replace(',', '.')) || 0
+  const cur = parseDraft() || 0
+  if (qtyModalMode.value === 'sum') {
+    const next = Math.max(SUM_STEP, cur + direction * SUM_STEP)
+    qtyModalDraft.value = String(Math.round(next))
+    return
+  }
   const step = stepInfo.value.step
   const next = Math.max(step, cur + direction * step)
   qtyModalDraft.value = trimNum(next)
@@ -208,12 +282,16 @@ function adjustQtyModal(direction) {
           @keydown.esc="closeQtyModal">
           <div class="qty-sheet" @click.stop>
             <div class="qty-sheet-header">
-              <p class="qty-sheet-title">{{ t('product.enter_quantity') }}</p>
+              <p class="qty-sheet-title">{{ t(qtyModalMode === 'sum' ? 'product.enter_sum' : 'product.enter_quantity') }}</p>
               <button @click="closeQtyModal" class="qty-sheet-close btn-press" :aria-label="t('profile.cancel')">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M6 6l12 12M18 6L6 18" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
               </button>
+            </div>
+
+            <div v-if="stepInfo.isFractional" class="mb-4">
+              <SegmentedControl :options="modeOptions" :model-value="qtyModalMode" @update:model-value="switchMode" />
             </div>
 
             <div class="qty-sheet-row">
@@ -227,7 +305,7 @@ function adjustQtyModal(direction) {
                 v-model="qtyModalDraft"
                 @keyup.enter="confirmQtyModal"
                 type="text"
-                :inputmode="stepInfo.isFractional ? 'decimal' : 'numeric'"
+                :inputmode="qtyModalMode === 'sum' ? 'numeric' : (stepInfo.isFractional ? 'decimal' : 'numeric')"
                 class="qty-sheet-input"
                 aria-label="Quantity" />
               <button type="button" @click="adjustQtyModal(1)" class="qty-sheet-step btn-press" aria-label="Increase">
@@ -238,7 +316,8 @@ function adjustQtyModal(direction) {
             </div>
 
             <p class="qty-sheet-unit">
-              {{ product.unit === 'kg' ? 'kg' : product.unit === 'liter' ? 'l' : t('product.piece') }}
+              {{ qtyModalMode === 'sum' ? t('currency') : (product.unit === 'kg' ? 'kg' : product.unit === 'liter' ? 'l' : t('product.piece')) }}
+              <span v-if="draftPreview" class="qty-sheet-preview">· {{ draftPreview }}</span>
             </p>
 
             <div class="qty-sheet-actions">
@@ -256,6 +335,10 @@ function adjustQtyModal(direction) {
         <div v-if="qty === 0" class="flex items-center gap-3">
           <div class="flex-1">
             <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice(hasDiscount ? product.discountedPrice : product.price) }}</p>
+            <button v-if="stepInfo.isFractional" @click.stop="openQtyModal('sum')" class="sum-link btn-press">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
+              {{ t('product.by_sum') }}
+            </button>
           </div>
           <button @click.stop="addToCart(product)" class="flex-1 add-btn btn-press">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -273,7 +356,7 @@ function adjustQtyModal(direction) {
             </button>
             <button
               type="button"
-              @click.stop="openQtyModal"
+              @click.stop="openQtyModal()"
               class="qty-display text-[15px] font-bold text-center text-primary btn-press"
               :aria-label="t('product.enter_quantity')">
               {{ formatQty(qty, product.unit) }}
@@ -547,6 +630,25 @@ function adjustQtyModal(direction) {
   margin-bottom: 16px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+.qty-sheet-preview {
+  color: var(--primary);
+  text-transform: none;
+}
+
+.sum-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .qty-sheet-actions {
