@@ -46,7 +46,7 @@ function openSearch() {
   <header class="px-4 pt-3 pb-3 sticky top-0 z-30 header-glass">
     <!-- Location -->
     <div class="flex items-center justify-between mb-2.5 relative">
-      <div class="flex items-center gap-2.5 cursor-pointer btn-press" @click="showDropdown = !showDropdown">
+      <div class="flex items-center gap-2.5 cursor-pointer btn-press flex-1 min-w-0" @click="showDropdown = !showDropdown">
         <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--primary-light)">
           <svg width="14" height="14" class="text-primary" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -55,7 +55,7 @@ function openSearch() {
         <div class="flex-1 min-w-0">
           <p class="text-[10px] font-medium tracking-wider uppercase" style="color: var(--text-tertiary)">{{ currentLabel }}</p>
           <div class="flex items-center gap-0.5">
-            <p class="text-sm font-bold leading-tight truncate" style="color: var(--text-primary)">{{ currentAddress }}</p>
+            <p class="text-sm font-bold leading-tight line-clamp-2 break-words min-w-0" style="color: var(--text-primary)">{{ currentAddress }}</p>
             <svg width="14" height="14" class="flex-shrink-0 transition-transform duration-300" :style="{ color: 'var(--text-tertiary)', transform: showDropdown ? 'rotate(180deg)' : '' }" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
           </div>
         </div>
