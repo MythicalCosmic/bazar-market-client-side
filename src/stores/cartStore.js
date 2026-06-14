@@ -80,9 +80,9 @@ function syncQty(productId, qty, onError) {
     } catch (e) {
       const { error } = useToast()
       error(e.message || 'Failed to update cart')
+      // Revert just this line. Do NOT reload the whole server cart here — that
+      // replaces what the customer is doing with stale server-side items.
       onError?.()
-      // Reconcile with server truth on any failure.
-      try { await loadCartImpl() } catch {}
     }
   }, SYNC_DELAY))
 }
@@ -196,12 +196,13 @@ export function useCartStore() {
     }
     state.items.push(newItem)
     if (getToken()) {
-      addToCartAPI(product.id, minQty).catch(async (e) => {
+      addToCartAPI(product.id, minQty).catch((e) => {
         const { error } = useToast()
         error(e.message || 'Failed to add to cart')
+        // Roll back only the item we just tried to add. Never reload the whole
+        // server cart — that surfaces unrelated leftover items as if "added".
         const idx = state.items.findIndex(i => i.id === product.id)
         if (idx !== -1) state.items.splice(idx, 1)
-        try { await loadCartImpl() } catch {}
       })
     }
   }
@@ -227,13 +228,12 @@ export function useCartStore() {
       const removed = state.items.splice(idx, 1)[0]
       clearDebounce(productId)
       if (getToken()) {
-        removeFromCartAPI(productId).catch(async (e) => {
+        removeFromCartAPI(productId).catch((e) => {
           const { error } = useToast()
           error(e.message || 'Failed to remove from cart')
           // Re-find by id — DON'T use stale idx; cart may have changed.
           const exists = state.items.some(i => i.id === productId)
           if (!exists) state.items.push(removed)
-          try { await loadCartImpl() } catch {}
         })
       }
     }
@@ -246,12 +246,11 @@ export function useCartStore() {
     clearSum(productId)
     clearDebounce(productId)
     if (getToken()) {
-      removeFromCartAPI(productId).catch(async (e) => {
+      removeFromCartAPI(productId).catch((e) => {
         const { error } = useToast()
         error(e.message || 'Failed to remove item')
         const exists = state.items.some(i => i.id === productId)
         if (!exists) state.items.push(removed)
-        try { await loadCartImpl() } catch {}
       })
     }
   }
@@ -331,13 +330,12 @@ export function useCartStore() {
         quantity: weight,
       })
       if (getToken()) {
-        addToCartAPI(product.id, weight).catch(async (e) => {
+        addToCartAPI(product.id, weight).catch((e) => {
           const { error } = useToast()
           error(e.message || 'Failed to add to cart')
           const idx = state.items.findIndex(i => i.id === product.id)
           if (idx !== -1) state.items.splice(idx, 1)
           clearSum(product.id)
-          try { await loadCartImpl() } catch {}
         })
       }
     }
