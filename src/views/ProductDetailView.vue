@@ -56,7 +56,11 @@ const stepInfo = computed(() => {
 
 // Sold by weight/volume → buy by money (so'm), regardless of the step size.
 // This is the real gate for money entry; the step only sets the +/- increment.
-const isWeighed = computed(() => ['kg', 'liter'].includes(product.value?.unit))
+// Tolerant of how the backend spells the unit (KG, Kg, litre, l, …).
+const isWeighed = computed(() => {
+  const u = String(product.value?.unit || '').trim().toLowerCase()
+  return u === 'kg' || u === 'l' || u.startsWith('kilogram') || u.startsWith('lit')
+})
 
 const qtyModalOpen = ref(false)
 const qtyModalDraft = ref('')
