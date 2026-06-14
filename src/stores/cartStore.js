@@ -256,7 +256,7 @@ export function useCartStore() {
     }
   }
 
-  function clearCart() {
+  async function clearCart() {
     state.items.splice(0)
     state.discount = 0
     state.appliedCoupon = null
@@ -264,7 +264,10 @@ export function useCartStore() {
     debounces.clear()
     wipeSums()
     if (getToken()) {
-      clearCartAPI().catch(() => {})
+      // Empty the server cart, then reload so the view reflects server truth —
+      // if the clear failed, the leftover items reappear instead of looking gone.
+      try { await clearCartAPI() } catch {}
+      try { await loadCartImpl() } catch {}
     }
   }
 
