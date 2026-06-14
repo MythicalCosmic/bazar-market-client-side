@@ -11,10 +11,10 @@ import { ensureYmaps, reverseGeocode, locateMe, DEFAULT_LAT, DEFAULT_LNG } from 
 import { useToast } from '../composables/useToast.js'
 import { useStoreHours } from '../composables/useStoreHours.js'
 
-const { total, subtotal, deliveryCost, discount, clearCart, loadDeliveryInfo, cartItems } = useCartStore()
-const { formatNum } = useFormat()
+const { total, subtotal, deliveryCost, discount, clearCart, loadDeliveryInfo, sumOrderItems } = useCartStore()
+const { formatNum, formatQty } = useFormat()
 const { navigate, routeParams } = useRouter()
-const { t } = useI18n()
+const { t, getLocalizedName } = useI18n()
 const { isOpen, openTime, closeTime } = useStoreHours()
 const { isAuthenticated, user } = useAuth()
 const { addresses, loadAddresses, addAddress, removeAddress } = useAddresses()
@@ -154,25 +154,18 @@ onUnmounted(() => {
   clearTimeout(debounceTimer)
 })
 
-// The backend stores quantities but has no notion of "bought by sum", so flag
-// those lines for the admins inside user_note — the one free-text field the
-// order admin panel already shows. A quantity off the product's step grid (or
-// below its minimum) can only have come from the by-sum entry mode.
+// The backend stores only weight, with no notion of "bought by sum", so spell
+// out each by-sum line for the admins inside user_note — the one free-text
+// field the order admin panel already shows. The so'm amount the customer chose
+// is the headline; the weight it buys is in parentheses for the picker.
 function customSumNote() {
-  const lines = []
-  for (const item of cartItems.value) {
-    const q = parseFloat(item.quantity) || 0
-    const step = item.step || 1
-    const minQty = item.minQty || step
-    const offGrid = Math.abs(q / step - Math.round(q / step)) > 1e-6
-    if (!offGrid && q >= minQty - 1e-9) continue
-    const price = item.discountedPrice ?? item.price
-    const name = item.name?.uz || item.name?.ru || ''
-    const unit = item.unit === 'kg' ? 'kg' : item.unit === 'liter' ? 'l' : 'dona'
-    lines.push(`• ${name} — ${Number(q.toFixed(3))} ${unit} (≈ ${formatNum(Math.round(q * price))} so'm)`)
-  }
-  if (!lines.length) return ''
-  return `⚖️ Summa bo'yicha buyurtma (mijoz aniq summaga oldi):\n${lines.join('\n')}`
+  const items = sumOrderItems.value
+  if (!items.length) return ''
+  const lines = items.map((it) => {
+    const name = it.name?.uz || it.name?.ru || ''
+    return `• ${name} — ${formatNum(it.sumAmount)} so'm (${formatQty(it.quantity, it.unit)})`
+  })
+  return `⚖️ SUMMA BO'YICHA BUYURTMA — mijoz belgilangan summaga sotib oldi:\n${lines.join('\n')}`
 }
 
 async function handlePlaceOrder() {
@@ -408,6 +401,22 @@ async function discardPickedAddress() {
           </div>
           <div class="radio-outer" :class="{ active: selectedPayment === method.id }">
             <div v-if="selectedPayment === method.id" class="radio-inner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buy-by-sum items: surface the chosen so'm amounts so they're unmissable -->
+      <div v-if="sumOrderItems.length" class="rounded-2xl p-4" style="background: var(--primary-light); box-shadow: 0 2px 12px var(--shadow)">
+        <p class="text-xs font-black mb-2.5 flex items-center gap-1.5" style="color: var(--text-primary)">
+          <span>⚖️</span> {{ t('checkout.by_sum_title') }}
+        </p>
+        <div class="flex flex-col gap-2">
+          <div v-for="it in sumOrderItems" :key="it.id" class="flex items-center justify-between gap-3">
+            <span class="text-xs font-semibold truncate" style="color: var(--text-secondary)">{{ getLocalizedName(it.name) }}</span>
+            <span class="text-xs font-black whitespace-nowrap text-primary">
+              {{ formatNum(it.sumAmount) }} {{ t('currency') }}
+              <span class="font-semibold" style="color: var(--text-tertiary)">· {{ formatQty(it.quantity, it.unit) }}</span>
+            </span>
           </div>
         </div>
       </div>

@@ -362,6 +362,7 @@ export default {
 
   'checkout.note': 'Комментарий',
   'checkout.note_placeholder': 'Дополнительные пожелания к заказу...',
+  'checkout.by_sum_title': 'Куплено на сумму',
   'checkout.select_address': 'Выберите адрес',
   'checkout.save_address_title': 'Сохранить адрес?',
   'checkout.save_address_yes': 'Да, сохранить',

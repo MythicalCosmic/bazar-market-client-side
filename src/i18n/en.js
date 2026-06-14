@@ -362,6 +362,7 @@ export default {
 
   'checkout.note': 'Note',
   'checkout.note_placeholder': 'Additional instructions for your order...',
+  'checkout.by_sum_title': 'Bought by amount',
   'checkout.select_address': 'Select an address',
   'checkout.save_address_title': 'Save this address?',
   'checkout.save_address_yes': 'Yes, save it',

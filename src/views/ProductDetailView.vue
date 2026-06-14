@@ -11,8 +11,8 @@ import SegmentedControl from '../components/SegmentedControl.vue'
 
 const { navigate, routeParams } = useRouter()
 const { t, getLocalizedName } = useI18n()
-const { formatPrice, formatQty } = useFormat()
-const { addToCart, decrement, getQty, setQty, setQtyExact } = useCartStore()
+const { formatPrice, formatQty, formatNum } = useFormat()
+const { addToCart, decrement, getQty, setQty, setBySum, getSumOrder, MIN_SUM } = useCartStore()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { isLoggedIn } = useAuth()
 
@@ -30,6 +30,8 @@ onMounted(async () => {
 })
 
 const qty = computed(() => product.value ? getQty(product.value.id) : 0)
+// The so'm amount this line was bought for, if it was a buy-by-sum purchase.
+const qtySum = computed(() => product.value ? getSumOrder(product.value.id) : null)
 const fav = computed(() => product.value ? isFavorite(product.value.id) : false)
 const desc = computed(() => product.value ? getLocalizedName(product.value.description) : '')
 const hasDiscount = computed(() => product.value?.discountedPrice && product.value.discountedPrice < product.value.price)
@@ -58,7 +60,7 @@ const qtyModalDraft = ref('')
 const qtyModalMode = ref('qty') // 'qty' | 'sum' — sum lets you spend a fixed UZS amount on weighed goods
 const qtyInputRef = ref(null)
 
-const SUM_STEP = 1000
+const SUM_STEP = MIN_SUM // step and floor are both the 1 000 so'm minimum
 
 const unitPrice = computed(() => {
   const p = product.value
@@ -105,8 +107,8 @@ function focusQtyInput() {
 function openQtyModal(mode = 'qty') {
   qtyModalMode.value = mode
   if (mode === 'sum') {
-    const cur = qty.value || 0
-    qtyModalDraft.value = cur > 0 ? String(Math.round(cur * unitPrice.value)) : ''
+    // Prefer the exact amount already chosen; else start at the minimum.
+    qtyModalDraft.value = String(qtySum.value || MIN_SUM)
   } else {
     qtyModalDraft.value = String(qty.value || '')
   }
@@ -114,16 +116,17 @@ function openQtyModal(mode = 'qty') {
   focusQtyInput()
 }
 
-// Carry the entered value across when toggling, so 0.5 kg becomes its price and back.
+// Carry the entered value across when toggling: a so'm amount becomes the weight
+// it buys, and a weight becomes its price (kept at or above the 1 000 floor).
 function switchMode(mode) {
   if (mode === qtyModalMode.value) return
   const val = parseDraft()
   if (Number.isFinite(val) && val > 0 && unitPrice.value > 0) {
     qtyModalDraft.value = mode === 'sum'
-      ? String(Math.round(val * unitPrice.value))
+      ? String(Math.max(MIN_SUM, Math.round(val * unitPrice.value)))
       : trimNum(val / unitPrice.value)
   } else {
-    qtyModalDraft.value = ''
+    qtyModalDraft.value = mode === 'sum' ? String(MIN_SUM) : ''
   }
   qtyModalMode.value = mode
   focusQtyInput()
@@ -138,15 +141,9 @@ function confirmQtyModal() {
   const parsed = parseDraft()
   if (Number.isFinite(parsed) && parsed > 0) {
     if (qtyModalMode.value === 'sum') {
-      if (unitPrice.value > 0) {
-        const exact = Number((parsed / unitPrice.value).toFixed(3))
-        if (exact > 0) {
-          // Not in the cart yet — add it first (at min qty), then overwrite with
-          // the exact weight; the debounced sync sends only the final value.
-          if (qty.value === 0) addToCart(product.value)
-          setQtyExact(product.value.id, exact)
-        }
-      }
+      // setBySum clamps to the 1 000 so'm minimum, converts to weight, and adds
+      // the line if it isn't in the cart yet — all in one synced step.
+      setBySum(product.value, parsed)
     } else {
       setQty(product.value.id, parsed)
     }
@@ -319,6 +316,9 @@ function adjustQtyModal(direction) {
               {{ qtyModalMode === 'sum' ? t('currency') : (product.unit === 'kg' ? 'kg' : product.unit === 'liter' ? 'l' : t('product.piece')) }}
               <span v-if="draftPreview" class="qty-sheet-preview">· {{ draftPreview }}</span>
             </p>
+            <p v-if="qtyModalMode === 'sum'" class="qty-sheet-minhint">
+              {{ t('product.min') }}: {{ formatNum(MIN_SUM) }} {{ t('currency') }}
+            </p>
 
             <div class="qty-sheet-actions">
               <button @click="closeQtyModal" class="qty-sheet-cancel btn-press">{{ t('profile.cancel') }}</button>
@@ -332,31 +332,55 @@ function adjustQtyModal(direction) {
     <!-- ── Bottom action bar ── -->
     <div v-if="product" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 safe-bottom bottom-bar">
       <div class="px-4 py-3">
-        <div v-if="qty === 0" class="flex items-center gap-3">
-          <div class="flex-1">
-            <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice(hasDiscount ? product.discountedPrice : product.price) }}</p>
-            <button v-if="stepInfo.isFractional" @click.stop="openQtyModal('sum')" class="sum-link btn-press">
-              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
-              {{ t('product.by_sum') }}
+        <!-- Not in cart yet -->
+        <div v-if="qty === 0">
+          <!-- Weighed goods: money entry is the primary action so the customer
+               can pick how many so'm to spend instead of a whole kg. -->
+          <template v-if="stepInfo.isFractional">
+            <div class="flex items-baseline justify-between mb-2.5">
+              <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice(hasDiscount ? product.discountedPrice : product.price) }}</p>
+              <span class="text-[11px] font-semibold" style="color: var(--text-tertiary)">/ {{ product.unit === 'kg' ? 'kg' : 'l' }}</span>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <button @click.stop="openQtyModal('sum')" class="flex-1 sum-btn btn-press">
+                <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
+                {{ t('product.enter_sum') }}
+              </button>
+              <button @click.stop="addToCart(product)" class="flex-1 add-btn btn-press">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+                {{ t('cart.add') }}
+              </button>
+            </div>
+          </template>
+          <!-- Counted goods: plain add. -->
+          <div v-else class="flex items-center gap-3">
+            <div class="flex-1">
+              <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice(hasDiscount ? product.discountedPrice : product.price) }}</p>
+            </div>
+            <button @click.stop="addToCart(product)" class="flex-1 add-btn btn-press">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
+              {{ t('cart.add') }}
             </button>
           </div>
-          <button @click.stop="addToCart(product)" class="flex-1 add-btn btn-press">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
-            {{ t('cart.add') }}
-          </button>
         </div>
+        <!-- In cart -->
         <div v-else class="flex items-center gap-3">
-          <div class="flex-1">
-            <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice((hasDiscount ? product.discountedPrice : product.price) * qty) }}</p>
+          <div class="flex-1 min-w-0">
+            <!-- Bought by sum → lead with the money chosen; weight is secondary. -->
+            <p v-if="qtySum" class="text-[18px] font-bold text-primary">{{ formatNum(qtySum) }} {{ t('currency') }}</p>
+            <p v-else class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice((hasDiscount ? product.discountedPrice : product.price) * qty) }}</p>
             <p class="text-[10px] font-medium" style="color: var(--text-tertiary)">{{ formatQty(qty, product.unit) }} {{ t('cart.in_cart') }}</p>
           </div>
+          <button v-if="stepInfo.isFractional" @click.stop="openQtyModal('sum')" class="sum-edit btn-press" :aria-label="t('product.enter_sum')">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
+          </button>
           <div class="qty-row">
             <button @click.stop="decrement(product.id)" class="qty-btn btn-press">
               <svg width="18" height="18" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
             <button
               type="button"
-              @click.stop="openQtyModal()"
+              @click.stop="openQtyModal(qtySum ? 'sum' : 'qty')"
               class="qty-display text-[15px] font-bold text-center text-primary btn-press"
               :aria-label="t('product.enter_quantity')">
               {{ formatQty(qty, product.unit) }}
@@ -635,20 +659,52 @@ function adjustQtyModal(direction) {
   color: var(--primary);
   text-transform: none;
 }
-
-.sum-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 2px;
+.qty-sheet-minhint {
+  text-align: center;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-top: -10px;
+  margin-bottom: 16px;
+}
+
+/* Prominent "enter so'm" button shown alongside Add for weighed goods. */
+.sum-btn {
+  padding: 14px 0;
+  border-radius: 16px;
+  background: var(--primary-light);
   color: var(--primary);
-  background: none;
-  border: none;
-  padding: 0;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1.5px solid var(--primary);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+.sum-btn:active {
+  transform: scale(0.97);
+}
+
+/* Small money-icon button to re-edit the chosen amount on an in-cart line. */
+.sum-edit {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sum-edit:active {
+  transform: scale(0.92);
 }
 
 .qty-sheet-actions {

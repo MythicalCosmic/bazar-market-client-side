@@ -367,6 +367,7 @@ export default {
 
   'checkout.note': 'Izoh',
   'checkout.note_placeholder': 'Buyurtma uchun qo\'shimcha izoh...',
+  'checkout.by_sum_title': 'Summa bo\'yicha olingan',
   'checkout.select_address': 'Manzilni tanlang',
   'checkout.save_address_title': 'Manzilni saqlaymizmi?',
   'checkout.save_address_yes': 'Ha, saqlash',

@@ -1,5 +1,5 @@
 <script setup>
-
+import { computed } from 'vue'
 import { useCartStore } from '../stores/cartStore.js'
 import { useFormat } from '../composables/useFormat.js'
 import { useI18n } from '../i18n/index.js'
@@ -8,9 +8,12 @@ const props = defineProps({
   item: { type: Object, required: true },
 })
 
-const { addToCart, decrement } = useCartStore()
-const { formatPrice, formatQty } = useFormat()
-const { getLocalizedName } = useI18n()
+const { addToCart, decrement, getSumOrder } = useCartStore()
+const { formatPrice, formatQty, formatNum } = useFormat()
+const { t, getLocalizedName } = useI18n()
+
+// Set when this line was bought by a fixed so'm amount ("5 000 so'm of apples").
+const sumAmount = computed(() => getSumOrder(props.item.id))
 </script>
 
 <template>
@@ -26,10 +29,17 @@ const { getLocalizedName } = useI18n()
     <!-- Info -->
     <div class="flex-1 min-w-0">
       <p class="text-[13px] font-semibold truncate" style="color: var(--text-primary)">{{ getLocalizedName(item.name) }}</p>
-      <p class="text-[13px] font-bold mt-0.5" style="color: var(--text-primary)">{{ formatPrice(item.price) }}</p>
-      <p v-if="parseFloat(item.quantity) !== (item.step || 1)" class="text-[10px] font-medium" style="color: var(--text-tertiary)">
-        {{ formatPrice(item.price) }} × {{ formatQty(item.quantity, item.unit) }}
-      </p>
+      <!-- Bought by sum → lead with the money the customer chose to spend. -->
+      <template v-if="sumAmount">
+        <p class="text-[13px] font-bold mt-0.5 text-primary">{{ formatNum(sumAmount) }} {{ t('currency') }}</p>
+        <p class="text-[10px] font-medium" style="color: var(--text-tertiary)">⚖️ {{ formatQty(item.quantity, item.unit) }}</p>
+      </template>
+      <template v-else>
+        <p class="text-[13px] font-bold mt-0.5" style="color: var(--text-primary)">{{ formatPrice(item.price) }}</p>
+        <p v-if="parseFloat(item.quantity) !== (item.step || 1)" class="text-[10px] font-medium" style="color: var(--text-tertiary)">
+          {{ formatPrice(item.price) }} × {{ formatQty(item.quantity, item.unit) }}
+        </p>
+      </template>
     </div>
 
     <!-- Qty controls -->
