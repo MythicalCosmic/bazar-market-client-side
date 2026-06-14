@@ -54,11 +54,15 @@ const stepInfo = computed(() => {
   return { step, isFractional: step < 1 }
 })
 
+// Sold by weight/volume → buy by money (so'm), regardless of the step size.
+// This is the real gate for money entry; the step only sets the +/- increment.
+const isWeighed = computed(() => ['kg', 'liter'].includes(product.value?.unit))
+
 const qtyModalOpen = ref(false)
 const qtyModalDraft = ref('')
 // Weighed goods (kg/liter) are entered by MONEY (so'm); counted goods by piece.
 // This is derived from the product, never toggled — there is no weight input.
-const qtyModalMode = computed(() => stepInfo.value.isFractional ? 'sum' : 'qty')
+const qtyModalMode = computed(() => isWeighed.value ? 'sum' : 'qty')
 const qtyInputRef = ref(null)
 
 const SUM_STEP = MIN_SUM // step and floor are both the 1 000 so'm minimum
@@ -313,7 +317,7 @@ function adjustQtyModal(direction) {
         <div v-if="qty === 0">
           <!-- Weighed goods: money entry is the primary action so the customer
                can pick how many so'm to spend instead of a whole kg. -->
-          <template v-if="stepInfo.isFractional">
+          <template v-if="isWeighed">
             <div class="flex items-baseline justify-between mb-2.5">
               <p class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice(hasDiscount ? product.discountedPrice : product.price) }}</p>
               <span class="text-[11px] font-semibold" style="color: var(--text-tertiary)">/ {{ product.unit === 'kg' ? 'kg' : 'l' }}</span>
@@ -348,7 +352,7 @@ function adjustQtyModal(direction) {
             <p v-else class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice((hasDiscount ? product.discountedPrice : product.price) * qty) }}</p>
             <p class="text-[10px] font-medium" style="color: var(--text-tertiary)">{{ formatQty(qty, product.unit) }} {{ t('cart.in_cart') }}</p>
           </div>
-          <button v-if="stepInfo.isFractional" @click.stop="openQtyModal()" class="sum-edit btn-press" :aria-label="t('product.enter_sum')">
+          <button v-if="isWeighed" @click.stop="openQtyModal()" class="sum-edit btn-press" :aria-label="t('product.enter_sum')">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
           </button>
           <div class="qty-row">
