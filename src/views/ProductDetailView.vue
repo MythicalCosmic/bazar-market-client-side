@@ -7,7 +7,6 @@ import { useCartStore } from '../stores/cartStore.js'
 import { useFavorites } from '../stores/favoritesStore.js'
 import { useAuth } from '../stores/authStore.js'
 import { getProduct } from '../services/api.js'
-import SegmentedControl from '../components/SegmentedControl.vue'
 
 const { navigate, routeParams } = useRouter()
 const { t, getLocalizedName } = useI18n()
@@ -57,7 +56,9 @@ const stepInfo = computed(() => {
 
 const qtyModalOpen = ref(false)
 const qtyModalDraft = ref('')
-const qtyModalMode = ref('qty') // 'qty' | 'sum' — sum lets you spend a fixed UZS amount on weighed goods
+// Weighed goods (kg/liter) are entered by MONEY (so'm); counted goods by piece.
+// This is derived from the product, never toggled — there is no weight input.
+const qtyModalMode = computed(() => stepInfo.value.isFractional ? 'sum' : 'qty')
 const qtyInputRef = ref(null)
 
 const SUM_STEP = MIN_SUM // step and floor are both the 1 000 so'm minimum
@@ -68,11 +69,6 @@ const unitPrice = computed(() => {
   return (p.discountedPrice && p.discountedPrice < p.price) ? p.discountedPrice : p.price
 })
 
-const modeOptions = computed(() => [
-  { value: 'qty', label: t('product.by_qty') },
-  { value: 'sum', label: t('product.by_sum') },
-])
-
 function trimNum(n) {
   if (!Number.isFinite(n)) return ''
   return String(Number(n.toFixed(3)))
@@ -82,7 +78,7 @@ function parseDraft() {
   return parseFloat(String(qtyModalDraft.value).replace(',', '.'))
 }
 
-// What the current draft buys: in sum mode the resulting weight, in qty mode the price.
+// In money mode, show the weight the entered so'm buys; in count mode, the price.
 const draftPreview = computed(() => {
   const p = product.value
   if (!p) return ''
@@ -104,31 +100,16 @@ function focusQtyInput() {
   })
 }
 
-function openQtyModal(mode = 'qty') {
-  qtyModalMode.value = mode
-  if (mode === 'sum') {
-    // Prefer the exact amount already chosen; else start at the minimum.
-    qtyModalDraft.value = String(qtySum.value || MIN_SUM)
+function openQtyModal() {
+  if (qtyModalMode.value === 'sum') {
+    // Money input: prefer the amount already chosen, else the money-equivalent
+    // of any current weight, else the 1 000 so'm minimum.
+    const fromWeight = qty.value > 0 ? Math.max(MIN_SUM, Math.round(qty.value * unitPrice.value)) : MIN_SUM
+    qtyModalDraft.value = String(qtySum.value || fromWeight)
   } else {
     qtyModalDraft.value = String(qty.value || '')
   }
   qtyModalOpen.value = true
-  focusQtyInput()
-}
-
-// Carry the entered value across when toggling: a so'm amount becomes the weight
-// it buys, and a weight becomes its price (kept at or above the 1 000 floor).
-function switchMode(mode) {
-  if (mode === qtyModalMode.value) return
-  const val = parseDraft()
-  if (Number.isFinite(val) && val > 0 && unitPrice.value > 0) {
-    qtyModalDraft.value = mode === 'sum'
-      ? String(Math.max(MIN_SUM, Math.round(val * unitPrice.value)))
-      : trimNum(val / unitPrice.value)
-  } else {
-    qtyModalDraft.value = mode === 'sum' ? String(MIN_SUM) : ''
-  }
-  qtyModalMode.value = mode
   focusQtyInput()
 }
 
@@ -141,8 +122,8 @@ function confirmQtyModal() {
   const parsed = parseDraft()
   if (Number.isFinite(parsed) && parsed > 0) {
     if (qtyModalMode.value === 'sum') {
-      // setBySum clamps to the 1 000 so'm minimum, converts to weight, and adds
-      // the line if it isn't in the cart yet — all in one synced step.
+      // The entered value is MONEY (so'm). setBySum clamps to the 1 000 minimum,
+      // converts the amount to weight, and adds the line if it isn't in the cart.
       setBySum(product.value, parsed)
     } else {
       setQty(product.value.id, parsed)
@@ -287,10 +268,6 @@ function adjustQtyModal(direction) {
               </button>
             </div>
 
-            <div v-if="stepInfo.isFractional" class="mb-4">
-              <SegmentedControl :options="modeOptions" :model-value="qtyModalMode" @update:model-value="switchMode" />
-            </div>
-
             <div class="qty-sheet-row">
               <button type="button" @click="adjustQtyModal(-1)" class="qty-sheet-step btn-press" aria-label="Decrease">
                 <svg width="22" height="22" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,7 +319,7 @@ function adjustQtyModal(direction) {
               <span class="text-[11px] font-semibold" style="color: var(--text-tertiary)">/ {{ product.unit === 'kg' ? 'kg' : 'l' }}</span>
             </div>
             <div class="flex items-center gap-2.5">
-              <button @click.stop="openQtyModal('sum')" class="flex-1 sum-btn btn-press">
+              <button @click.stop="openQtyModal()" class="flex-1 sum-btn btn-press">
                 <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
                 {{ t('product.enter_sum') }}
               </button>
@@ -371,7 +348,7 @@ function adjustQtyModal(direction) {
             <p v-else class="text-[18px] font-bold" style="color: var(--text-primary)">{{ formatPrice((hasDiscount ? product.discountedPrice : product.price) * qty) }}</p>
             <p class="text-[10px] font-medium" style="color: var(--text-tertiary)">{{ formatQty(qty, product.unit) }} {{ t('cart.in_cart') }}</p>
           </div>
-          <button v-if="stepInfo.isFractional" @click.stop="openQtyModal('sum')" class="sum-edit btn-press" :aria-label="t('product.enter_sum')">
+          <button v-if="stepInfo.isFractional" @click.stop="openQtyModal()" class="sum-edit btn-press" :aria-label="t('product.enter_sum')">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
           </button>
           <div class="qty-row">
@@ -380,7 +357,7 @@ function adjustQtyModal(direction) {
             </button>
             <button
               type="button"
-              @click.stop="openQtyModal(qtySum ? 'sum' : 'qty')"
+              @click.stop="openQtyModal()"
               class="qty-display text-[15px] font-bold text-center text-primary btn-press"
               :aria-label="t('product.enter_quantity')">
               {{ formatQty(qty, product.unit) }}
