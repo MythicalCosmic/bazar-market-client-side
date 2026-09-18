@@ -9,5 +9,5 @@ services:
         VITE_YANDEX_GEOCODER_KEY: ${VITE_YANDEX_GEOCODER_KEY:-}
     container_name: bazar-market-client
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
     restart: unless-stopped
