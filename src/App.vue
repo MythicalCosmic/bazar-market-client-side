@@ -1,8 +1,9 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, computed } from 'vue'
 import { currentRoute, transitionName, useRouter } from './router/index.js'
 import { useToast } from './composables/useToast.js'
 import { useI18n } from './i18n/index.js'
+import TelegramGate from './components/TelegramGate.vue'
 
 import SplashView         from './views/SplashView.vue'
 import HomeView           from './views/HomeView.vue'
@@ -31,6 +32,16 @@ const { toasts, info } = useToast()
 const { navigate } = useRouter()
 const { t } = useI18n()
 
+// ── Telegram-only access ──
+// Real users launch the Mini App from the bot, so Telegram fills initData.
+// A plain browser hitting bazarmarket.org gets an empty string → show the gate.
+// Exceptions: localhost (dev) and the standalone /promo marketing reel.
+const isTelegram = !!window.Telegram?.WebApp?.initData
+const isDev = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)
+const insideApp = computed(
+  () => isTelegram || isDev || currentRoute.value === 'promo'
+)
+
 function onAuthExpired() {
   if (currentRoute.value !== 'login') {
     info(t('common.session_expired'))
@@ -43,7 +54,8 @@ onUnmounted(() => window.removeEventListener('bazar:auth-expired', onAuthExpired
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen">
+  <TelegramGate v-if="!insideApp" />
+  <div v-else class="flex flex-col min-h-screen">
     <main class="flex-1 overflow-y-auto">
       <Transition :name="transitionName" mode="out-in">
         <SplashView         v-if="currentRoute === 'splash'"          key="splash"   />

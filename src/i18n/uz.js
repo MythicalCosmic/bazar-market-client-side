@@ -1,4 +1,10 @@
 export default {
+
+  // Telegram access gate
+  'gate.title': 'Bazar Market — Telegram ilovasi',
+  'gate.subtitle': 'Bu do\'kon Telegram orqali ishlaydi. Xarid qilish uchun uni Telegram ilovasida oching.',
+  'gate.open_button': 'Telegramda ochish',
+  'gate.hint': '@BazarMarketRobot',
   // Navigation
   'nav.home': 'Bosh sahifa',
   'nav.categories': 'Kategoriyalar',

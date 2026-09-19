@@ -16,12 +16,20 @@ const fruits = [
 function sched(fn, ms) { timers.push(setTimeout(fn, ms)) }
 
 onMounted(() => {
-  sched(() => stage.value = 1, 100)
-  sched(() => stage.value = 2, 2500)
-  sched(() => stage.value = 3, 3100)
-  sched(() => stage.value = 4, 3900)
-  sched(() => stage.value = 5, 4700)
-  sched(() => { stage.value = 6; sched(() => navigate('home'), 650) }, 5600)
+  // Respect reduced-motion: skip the choreography, brief fade to home.
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+  if (reduce) {
+    stage.value = 5
+    sched(() => { stage.value = 6; sched(() => navigate('home'), 350) }, 550)
+    return
+  }
+  // Snappier timeline (~3.4s) — reads as premium without stalling the shopper.
+  sched(() => stage.value = 1, 60)
+  sched(() => stage.value = 2, 1000)
+  sched(() => stage.value = 3, 1450)
+  sched(() => stage.value = 4, 1850)
+  sched(() => stage.value = 5, 2250)
+  sched(() => { stage.value = 6; sched(() => navigate('home'), 550) }, 2900)
 })
 
 onUnmounted(() => timers.forEach(t => clearTimeout(t)))
@@ -113,6 +121,9 @@ onUnmounted(() => timers.forEach(t => clearTimeout(t)))
 
     <!-- ── Final shimmer ── -->
     <div v-if="stage >= 5" class="shm"></div>
+
+    <!-- ── Progress bar ── -->
+    <div class="pbar" :class="{ go: stage >= 1 }"><span></span></div>
   </div>
 </template>
 
@@ -342,5 +353,26 @@ onUnmounted(() => timers.forEach(t => clearTimeout(t)))
 @keyframes _sh {
   0%   { translate: -50% 0; }
   100% { translate: 250% 0; }
+}
+
+/* ══ PROGRESS BAR ══ */
+.pbar {
+  position: absolute; bottom: 46px; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 3px; border-radius: 3px;
+  background: rgba(255,255,255,.18);
+  overflow: hidden; z-index: 26;
+}
+.pbar span {
+  display: block; height: 100%; width: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(255,255,255,.6), #fff);
+  box-shadow: 0 0 10px rgba(255,255,255,.5);
+}
+.pbar.go span { animation: _pb 2.9s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes _pb {
+  0%   { width: 0; }
+  70%  { width: 82%; }
+  100% { width: 100%; }
 }
 </style>

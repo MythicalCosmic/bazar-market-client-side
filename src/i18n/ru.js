@@ -1,4 +1,10 @@
 export default {
+
+  // Telegram access gate
+  'gate.title': 'Bazar Market — приложение Telegram',
+  'gate.subtitle': 'Магазин работает через Telegram. Откройте его в приложении, чтобы сделать заказ.',
+  'gate.open_button': 'Открыть в Telegram',
+  'gate.hint': '@BazarMarketRobot',
   // Navigation
   'nav.home': 'Главная',
   'nav.categories': 'Категории',
